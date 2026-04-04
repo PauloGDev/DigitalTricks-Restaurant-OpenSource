@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Bell,
   ShoppingBag,
@@ -18,7 +19,6 @@ import GerenciarCupons from "../components/dashboard/cupons/GerenciarCupons";
 import { useRestaurantNotifications } from "../context/RestaurantNotificationContext";
 import DashboardAnalytics from "../components/dashboard/analytics/DashboardAnalytics";
 import { useAuth } from "../context/AuthContext";
-
 const formatCurrency = (value) =>
   new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -26,6 +26,7 @@ const formatCurrency = (value) =>
   }).format(Number(value || 0));
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [section, setSection] = useState("pedidos");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -34,7 +35,14 @@ const Dashboard = () => {
     localStorage.getItem("navbar-theme-override") || "dark"
   );
 
-  const { user } = useAuth();
+  const { user, loadingAuth } = useAuth();
+
+  // Redirect to admin login if not authenticated
+  useEffect(() => {
+    if (!loadingAuth && !user) {
+      navigate("/dashboard/login", { replace: true });
+    }
+  }, [user, loadingAuth, navigate]);
 
   const empresaId = user?.empresaId;
 
@@ -224,6 +232,15 @@ const Dashboard = () => {
       helper: `Você está gerenciando ${sectionDescription}`,
     },
   ];
+
+  // Show loading while checking auth
+  if (loadingAuth || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <section
