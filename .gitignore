@@ -1,0 +1,20 @@
+# Node.js
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# Java / Spring Boot
+backend/target/
+*.class
+backend/src/main/java/com/ecommerce/digitaltricks/utils/AdminInitializer.java
+
+# Arquivos de configuração locais
+digitaltricks/src/main/resources/application.properties
+.env
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store

@@ -1,0 +1,172 @@
+package com.ecommerce.digitaltricks.controller;
+
+import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.model.Cliente;
+import com.ecommerce.digitaltricks.model.ClientePerfil;
+import com.ecommerce.digitaltricks.model.Pedido;
+import com.ecommerce.digitaltricks.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.repository.PedidoRepository;
+import com.ecommerce.digitaltricks.service.MercadoPagoService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/pagamentos")
+@CrossOrigin(origins="*")
+public class PagamentoController {
+
+    private final PedidoRepository pedidoRepository;
+    private final ClienteRepository clienteRepository;
+    private final MercadoPagoService mercadoPagoService;
+
+    public PagamentoController(
+            PedidoRepository pedidoRepository,
+            ClienteRepository clienteRepository,
+            MercadoPagoService mercadoPagoService
+    ) {
+        this.pedidoRepository = pedidoRepository;
+        this.clienteRepository = clienteRepository;
+        this.mercadoPagoService = mercadoPagoService;
+    }
+
+    private Cliente getCliente(Authentication auth) {
+        String telefone = auth.getName();
+
+        return clienteRepository.findByTelefone(telefone)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
+
+    @PostMapping("/{pedidoId}/pix")
+    public ResponseEntity<?> pagarPix(
+            @PathVariable Long pedidoId,
+            Authentication auth
+    ) {
+
+        Cliente cliente = getCliente(auth);
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        // 🔥 valida dono do pedido
+        if (pedido.getCliente() == null ||
+                !pedido.getCliente().getId().equals(cliente.getId())) {
+            return ResponseEntity.status(403).body(Map.of("erro", "Acesso negado"));
+        }
+
+        if (pedido.getTipoPagamento() != TipoPagamento.PIX) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "erro", "Este pedido não está configurado para PIX."
+            ));
+        }
+
+        ClientePerfil perfil = cliente.getPerfil();
+        if (perfil == null) throw new RuntimeException("Perfil não encontrado");
+
+        BigDecimal value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP);
+
+        Map<String, Object> payment = mercadoPagoService.criarPix(
+                String.valueOf(pedido.getId()),
+                "Pedido #" + pedido.getId(),
+                value,
+                perfil.getEmail(), // 🔥 agora vem do perfil
+                null // 🔥 CPF removido
+        );
+
+        String mpPaymentId = String.valueOf(payment.get("id"));
+        String status = String.valueOf(payment.get("status"));
+
+        Map<String, Object> poi = (Map<String, Object>) payment.get("point_of_interaction");
+        Map<String, Object> tx = poi != null ? (Map<String, Object>) poi.get("transaction_data") : null;
+
+        String qrCode = tx != null ? (String) tx.get("qr_code") : null;
+        String qrBase64 = tx != null ? (String) tx.get("qr_code_base64") : null;
+        String ticketUrl = tx != null ? (String) tx.get("ticket_url") : null;
+
+        pedido.setTipoPagamento(TipoPagamento.PIX);
+        pedido.setInvoiceUrl(ticketUrl);
+        pedido.setPixPayload(qrCode);
+        pedido.setPixQrCodeBase64(qrBase64);
+        pedido.setMpPaymentId(mpPaymentId);
+        pedido.setMpStatus(status);
+        pedido.setPaymentProvider("MERCADO_PAGO");
+
+        pedidoRepository.save(pedido);
+
+        return ResponseEntity.ok(Map.of(
+                "pedidoId", pedido.getId(),
+                "mpPaymentId", mpPaymentId,
+                "status", status,
+                "invoiceUrl", ticketUrl,
+                "pixPayload", qrCode,
+                "pixQrCodeBase64", qrBase64
+        ));
+    }
+
+    public record CartaoDTO(String token, Integer installments, String paymentMethodId) {}
+
+    @PostMapping("/{pedidoId}/cartao")
+    public ResponseEntity<?> pagarCartao(
+            @PathVariable Long pedidoId,
+            Authentication auth,
+            @RequestBody CartaoDTO cartao
+    ) {
+
+        if (cartao == null || cartao.token() == null || cartao.token().isBlank()
+                || cartao.paymentMethodId() == null || cartao.paymentMethodId().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("erro", "token e paymentMethodId são obrigatórios"));
+        }
+
+        Cliente cliente = getCliente(auth);
+
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new RuntimeException("Pedido não encontrado"));
+
+        if (pedido.getCliente() == null ||
+                !pedido.getCliente().getId().equals(cliente.getId())) {
+            return ResponseEntity.status(403).body(Map.of("erro", "Acesso negado"));
+        }
+
+        if (pedido.getTipoPagamento() != TipoPagamento.CREDIT_CARD) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "erro", "Este pedido não está configurado para Cartão."
+            ));
+        }
+
+        ClientePerfil perfil = cliente.getPerfil();
+        if (perfil == null) throw new RuntimeException("Perfil não encontrado");
+
+        double value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP).doubleValue();
+
+        Map<String, Object> payment = mercadoPagoService.criarCartao(
+                String.valueOf(pedido.getId()),
+                "Pedido #" + pedido.getId(),
+                value,
+                cartao.token(),
+                cartao.installments() != null ? cartao.installments() : 1,
+                cartao.paymentMethodId(),
+                perfil.getEmail(),
+                null // 🔥 CPF removido
+        );
+
+        String mpPaymentId = String.valueOf(payment.get("id"));
+        String status = String.valueOf(payment.get("status"));
+
+        pedido.setTipoPagamento(TipoPagamento.CREDIT_CARD);
+        pedido.setMpPaymentId(mpPaymentId);
+        pedido.setMpStatus(status);
+        pedido.setPaymentProvider("MERCADO_PAGO");
+
+        pedidoRepository.save(pedido);
+
+        return ResponseEntity.ok(Map.of(
+                "pedidoId", pedido.getId(),
+                "mpPaymentId", mpPaymentId,
+                "status", status
+        ));
+    }
+}
