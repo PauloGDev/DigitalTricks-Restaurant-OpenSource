@@ -1,111 +1,74 @@
-# 💎 E-commerce – Sublime Perfumes
+# 🍽️ Digital Tricks — Sistema para Restaurantes
 
-## 🌐 Demonstração ao Vivo
-
-🛒 **Acesse o projeto:** [sublimeperfumes.com.br](https://sublimeperfumes.com.br)
-
-📱 Site 100% responsivo, desenvolvido pela [Digital Tricks](https://digitaltricks.com.br)  
-💳 Integração completa com **Stripe** e painel administrativo em tempo real.
-
----
-
-## 💼 Resumo do Projeto
-
-O **E-commerce Sublime Perfumes** foi desenvolvido para oferecer uma experiência de compra moderna e fluida para uma marca de perfumes importados.  
-O projeto inclui catálogo dinâmico, carrinho de compras, checkout com integração de pagamentos e um painel administrativo para controle de estoque e pedidos.
-
-**Principais objetivos:**
-- Criar uma plataforma elegante e intuitiva para aumentar as vendas online  
-- Automatizar o processo de pedidos e pagamentos  
-- Fornecer painel administrativo para o gestor acompanhar métricas e produtos  
-
-**Resultado:**  
-Um site completo, responsivo e otimizado, preparado para campanhas de marketing digital e SEO.
-
----
-
-## 🖼️ Prévia do Projeto
-
-| Home | Catálogo | Checkout | Painel Admin |
-|------|-----------|-----------|--------------|
-| ![Home](./docs/home.gif) | ![Catálogo](./docs/catalogo.gif) | ![Checkout](./docs/checkout.png) | ![Painel](./docs/dashboard.gif) |
-
-> *As imagens acima são demonstrativas do fluxo real de navegação e gerenciamento da loja.*
-
----
-
-## ⚙️ Destaques Técnicos
-
-- 🔐 Autenticação e autorização com **JWT**
-- 🧩 API RESTful desenvolvida com **Spring Boot**
-- 💳 Integração completa com **Stripe** (pagamentos reais)
-- 🗄️ Banco **PostgreSQL** com **JPA/Hibernate**
-- ⚙️ Containerização com **Docker Compose**
-- 🖥️ Frontend moderno com **ReactJS + Tailwind CSS**
-- 🚀 Deploy otimizado em servidor **Linux (NGINX + SSL)**
-- 📦 Estrutura escalável para novos módulos (ex.: blog, automação de marketing)
-
----
-
-## 🛠 Tecnologias
-
-![Java](https://img.shields.io/badge/Java-ED8B00?style=for-the-badge&logo=java&logoColor=white)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-![Stripe](https://img.shields.io/badge/Stripe-635BFF?style=for-the-badge&logo=stripe&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+Plataforma completa de gestão para restaurantes, com cardápio digital, carrinho de compras, checkout com pagamento via Mercado Pago, painel administrativo Kanban e notificações em tempo real via WebSocket.
 
 ---
 
 ## 🌟 Funcionalidades
 
-- Cadastro, login e gerenciamento de usuários  
-- Painel administrativo completo  
-- Catálogo dinâmico de perfumes importados  
-- Carrinho de compras com atualização em tempo real  
-- Processamento de pedidos e pagamentos via **Stripe**  
-- Cálculo automático de frete  
-- Integração com **PostgreSQL**  
-- Interface moderna e responsiva (**React + Tailwind**)  
+- 🛒 **Cardápio digital** com categorias, variações, opcionais e observações
+- 📱 **Carrinho guest** (sem login) com sincronização automática ao logar
+- 💳 **Checkout** com Mercado Pago (PIX, Crédito, Boleto)
+- 🔔 **Notificações em tempo real** via WebSocket para novos pedidos
+- 📋 **Painel Kanban** para gerenciar pedidos (Recebido → Em Preparo → Pronto → Entrega → Entregue)
+- 📊 **Dashboard** com métricas e análises
+- 👥 **Gestão de clientes, produtos, cupons e equipe**
+- 🔐 **Autenticação JWT** para clientes e equipe administrativa
 
 ---
 
-## ⚙️ Configuração e Execução
+## ⚙️ Tecnologias
 
-### 🔧 Variáveis de Ambiente
+| Camada     | Tecnologia                        |
+|------------|-----------------------------------|
+| Backend    | Java 17 / Spring Boot 3           |
+| Frontend   | React 18 + Vite + Tailwind CSS    |
+| Banco      | PostgreSQL                        |
+| Pagamento  | Mercado Pago SDK                  |
+| Real-time  | WebSocket (STOMP)                 |
+| Notificação| WhatsApp (Twilio API) / Toast     |
 
-Crie um arquivo **.env** na raiz do projeto com as seguintes chaves:
+---
 
-```env
-# Stripe
-STRIPE_SECRET_KEY=sk_test_XXXXXX
+## 📂 Estrutura
 
-# Banco de Dados (PostgreSQL)
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ecommerce
-SPRING_DATASOURCE_USERNAME=postgres
-SPRING_DATASOURCE_PASSWORD=senha
-
-# Segurança
-JWT_SECRET=umSegredoMuitoSeguro
+```
+Digital Tricks - Restaurantes/
+├── restaurante/            # Spring Boot (backend)
+│   └── src/main/java/com/ecommerce/digitaltricks
+│       ├── config/         # CORS, Security, WebSocket
+│       ├── controller/     # REST endpoints
+│       ├── dto/            # Request/Response DTOs
+│       ├── enums/          # Enums (status pedido, etc)
+│       ├── model/          # Entidades JPA
+│       ├── repository/     # Spring Data JPA
+│       ├── security/       # JWT util
+│       └── service/        # Camada de serviço
+├── frontend/               # React (Vite + Tailwind)
+│   └── src/
+│       ├── components/     # Componentes reutilizáveis
+│       │   ├── dashboard/  # Painel admin (Kanban, etc.)
+│       │   └── carrinho/   # Carrinho e checkout
+│       ├── context/        # Providers (Auth, Carrinho, etc.)
+│       └── pages/          # Páginas (Cardápio, Login, etc.)
+└── docs/                   # Imagens e documentação
 ```
 
 ---
 
-### 🖥️ Backend (Spring Boot)
+## ▶️ Execução
+
+### Backend
 
 ```bash
-cd backend
+cd restaurante
 mvn clean package
 mvn spring-boot:run
 ```
 
-O backend estará disponível em:  
-➡️ **http://localhost:8080**
+Configure o `application.yml` com as credenciais do banco de dados e chaves de API.
 
----
-
-### 💻 Frontend (React)
+### Frontend
 
 ```bash
 cd frontend
@@ -113,59 +76,46 @@ npm install
 npm run dev
 ```
 
-O frontend abrirá em:  
-➡️ **http://localhost:3000**
-
-Para gerar o build de produção:
-
-```bash
-npm run build
-```
+O frontend abre em `http://localhost:5173`.  
+O backend em `http://localhost:8080`.
 
 ---
 
-## 🧠 Aprendizados e Desafios
+## 🛒 Fluxo do Carrinho
 
-Durante o desenvolvimento, alguns dos principais desafios enfrentados incluíram:
-
-- 🔐 Configuração de **CORS** e autenticação **JWT** entre o backend e frontend  
-- 🔄 Sincronização de estados entre o **React** e a **API REST**  
-- 💳 Implementação **segura de pagamentos com Stripe**  
-- 🚀 Deploy otimizado com **NGINX + SSL** em ambiente Linux  
-- ⚡ Otimização de performance e build para produção  
-
-Essas etapas fortaleceram minha experiência com **arquiteturas full stack modernas**, **integração segura de APIs** e **deploy em produção com Docker**.
+1. **Guest**: usuário adiciona itens ao carrinho sem login (localStorage)
+2. **Login**: ao logar, itens do localStorage são sincronizados para o backend automaticamente
+3. **Logado**: todo carrinho é gerenciado pelo backend (dados completos)
 
 ---
 
-## 🔐 Observações Importantes
+## 📋 Painel Kanban
 
-⚠️ **Nunca exponha** a variável `STRIPE_SECRET_KEY` em repositórios públicos.  
-⚙️ Revise suas configurações no `application.yml` ou `application.properties` antes do deploy.  
-🌐 Ajuste o **CORS** para permitir apenas o domínio de produção:  
-`https://sublimeperfumes.com.br`
+O painel de pedidos usa drag-and-drop para mover pedidos entre status:
+
+| Coluna        | Status                           |
+|---------------|----------------------------------|
+| Recebido      | `AGUARDANDO_PAGAMENTO`, `RECEBIDO` |
+| Preparo       | `EM_PREPARO`, `PRONTO`            |
+| Logística     | `SAIU_PARA_ENTREGA`, `AGUARDANDO_RETIRADA` |
+| Finalizados   | `ENTREGUE`, `RETIRADO`, `CANCELADO` |
+
+**Mudança de status:**
+- Transições diretas → realizadas sem confirmação
+- Pular etapas → abre modal mostrando o caminho intermediário
+- O backend registra cada etapa no `PedidoStatusLog`
 
 ---
 
-## 🤝 Créditos
+## 🔐 Observações
 
-👨‍💻 **Desenvolvido por [Digital Tricks](https://digitaltricks.com.br)**  
-🚀 Projeto real: [sublimeperfumes.com.br](https://sublimeperfumes.com.br)  
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para **fins comerciais e de demonstração**.  
-Qualquer reprodução, redistribuição ou uso sem autorização é **estritamente proibida**.
+- ⚠️ Nunca comite o `.env` ou `application.yml` com credenciais reais
+- 🔑 O token JWT é armazenado no `localStorage`
+- 🔄 O WebSocket conecta automaticamente ao logar no painel admin
 
 ---
 
 ## 📬 Contato
 
-📧 **E-mail:** contato@digitaltricks.com.br  
-🌐 **Site:** [digitaltricks.com.br](https://digitaltricks.com.br)  
-📱 **WhatsApp:** +55 (85) 92174-3200 
-
-💼 **Digital Tricks – Transformando ideias em experiências digitais.**
-# Restaurante
+👨‍💻 **Digital Tricks**  
+🌐 [digitaltricks.com.br](https://digitaltricks.com.br)
