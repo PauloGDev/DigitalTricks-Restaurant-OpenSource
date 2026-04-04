@@ -1,5 +1,5 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { Loader2, ShieldAlert, Lock, Store, User } from "lucide-react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Loader2, ShieldAlert, Lock, Store, User, LogOut } from "lucide-react";
 import { useAuth } from "./AuthContext";
 
 /* =========================
@@ -169,9 +169,11 @@ const PrivateRoute = ({
   empresaOnly = false,
   fallback,
   showDeniedScreen = false,
+  redirectToLoginIfDenied = false,
 }) => {
-  const { user, loadingAuth } = useAuth();
+  const { user, loadingAuth, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loadingAuth) {
     return (
@@ -220,6 +222,49 @@ const PrivateRoute = ({
     return <Navigate to={redirectTo} replace />;
   }
 
+  // Cliente tentando acessar dashboard → aviso interativo com botão de deslogar
+  if (redirectToLoginIfDenied) {
+    return (
+      <section className="min-h-screen bg-[#0D0D0D] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-6 sm:p-8 text-center">
+          <div className="mx-auto h-14 w-14 rounded-3xl bg-amber-500/10 border border-amber-500/20 grid place-items-center">
+            <ShieldAlert className="w-7 h-7 text-amber-400" />
+          </div>
+
+          <h2 className="mt-4 text-xl font-extrabold text-white">
+            Área restrita
+          </h2>
+
+          <p className="mt-2 text-sm text-white/55 leading-relaxed">
+            Esta área é reservada para a equipe do restaurante.
+          </p>
+
+          {user && (
+            <p className="mt-1 text-xs text-white/40">
+              Logado como <strong className="text-white/70">{user.username}</strong>
+            </p>
+          )}
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => { logout(); navigate("/dashboard/login", { replace: true }); }}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] px-5 py-2.5 text-sm font-bold text-white shadow-[0_14px_35px_rgba(229,37,42,0.25)] hover:opacity-90 transition"
+            >
+              <LogOut className="w-4 h-4" />
+              Fazer Login como admin
+            </button>
+            <button
+              onClick={() => navigate("/", { replace: true })}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-bold text-white/80 hover:bg-white/10 transition"
+            >
+              Ir para a Home
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   if (!empresaAllowed) {
     return (
       <AccessDenied
@@ -249,6 +294,14 @@ const PrivateRoute = ({
       />
     );
   }
+
+  return (
+    <AccessDenied
+      icon="lock"
+      title="Acesso negado"
+      description="Você não possui permissão para acessar esta área."
+    />
+  );
 
   return (
     <AccessDenied

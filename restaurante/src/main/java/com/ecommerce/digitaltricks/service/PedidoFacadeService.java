@@ -376,6 +376,7 @@ public class PedidoFacadeService {
                 pedido.getId(),
                 pedido.getData(),
                 pedido.getTotal(),
+                pedido.getSubtotal() != null ? pedido.getSubtotal() : BigDecimal.ZERO,
                 pedido.getTipoPagamento(),
                 pedido.getStatus(),
                 pedido.getStatusPagamento(),

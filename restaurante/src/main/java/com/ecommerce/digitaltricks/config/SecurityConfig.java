@@ -94,6 +94,8 @@ public class SecurityConfig {
                         // PERFIL / ENDEREÇOS / USUÁRIO LOGADO
                         // =========================
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/clientes/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/clientes/me").authenticated()
                         .requestMatchers("/api/enderecos/me/**").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers("/api/perfis/me/**").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers("/api/payment/**").hasAnyRole("CLIENTE", "ADMIN")

@@ -3,8 +3,13 @@ package com.ecommerce.digitaltricks.utils;
 import com.ecommerce.digitaltricks.enums.pedido.MetodoPagamentoNaEntrega;
 import com.ecommerce.digitaltricks.enums.pedido.StatusPagamento;
 import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
+import com.ecommerce.digitaltricks.enums.pedido.TipoCupomDesconto;
+import com.ecommerce.digitaltricks.enums.pedido.TipoDescontoPromocao;
 import com.ecommerce.digitaltricks.enums.pedido.TipoEntrega;
+import com.ecommerce.digitaltricks.enums.pedido.TipoItemPedidoOpcional;
 import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.enums.produtos.TipoGrupoProduto;
+import com.ecommerce.digitaltricks.enums.produtos.TipoSelecaoOpcional;
 import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
 import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
 import com.ecommerce.digitaltricks.enums.usuarios.admin.StatusEmpresa;
@@ -19,13 +24,19 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Inicializa dados de demonstracão para testes.
+ *
+ * Cria: 1 empresa, 3 usuários internos, 4 clientes,
+ * 5 categorias, 12 produtos (com variações e opcionais),
+ * 3 cupons e 20 pedidos distribuídos.
+ */
 @Component
 @Profile("!test")
 public class ProdutoInitializer implements CommandLineRunner {
@@ -40,6 +51,7 @@ public class ProdutoInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final EnderecoGeocodingService enderecoGeocodingService;
     private final CategoriaRepository categoriaRepository;
+    private final CupomRepository cupomRepository;
 
     public ProdutoInitializer(
             ProdutoRepository produtoRepository,
@@ -51,7 +63,8 @@ public class ProdutoInitializer implements CommandLineRunner {
             PedidoRepository pedidoRepository,
             PasswordEncoder passwordEncoder,
             EnderecoGeocodingService enderecoGeocodingService,
-            CategoriaRepository categoriaRepository) {
+            CategoriaRepository categoriaRepository,
+            CupomRepository cupomRepository) {
         this.produtoRepository = produtoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -62,6 +75,7 @@ public class ProdutoInitializer implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
         this.enderecoGeocodingService = enderecoGeocodingService;
         this.categoriaRepository = categoriaRepository;
+        this.cupomRepository = cupomRepository;
     }
 
     @Override
@@ -73,9 +87,11 @@ public class ProdutoInitializer implements CommandLineRunner {
         inicializarClientes(empresa);
         List<Categoria> categorias = criarCategorias(empresa);
         inicializarProdutos(empresa, categorias);
-
+        criarCupons(empresa);
         gerarPedidosFake(empresa);
     }
+
+    // ──────────────────── EMPRESA ────────────────────
 
     private Empresa getOrCreateEmpresaSeed() {
         return empresaRepository.findBySlugIgnoreCase("sabor-da-praca")
@@ -88,7 +104,6 @@ public class ProdutoInitializer implements CommandLineRunner {
                     empresa.setEmail("contato@sabordapraca.com");
                     empresa.setTelefone("85999999999");
                     empresa.setStatus(StatusEmpresa.ATIVA);
-
                     empresa.setMpContaConectada(false);
 
                     empresa.setCep("60040-531");
@@ -97,7 +112,6 @@ public class ProdutoInitializer implements CommandLineRunner {
                     empresa.setBairro("Benfica");
                     empresa.setCidade("Fortaleza");
                     empresa.setUf("CE");
-                    empresa.setComplemento(null);
 
                     empresa.setAceitaRetirada(true);
                     empresa.setAceitaDelivery(true);
@@ -116,21 +130,7 @@ public class ProdutoInitializer implements CommandLineRunner {
                 });
     }
 
-    private List<Categoria> criarCategorias(Empresa empresa) {
-        List<Categoria> existentes = categoriaRepository.findByEmpresaId(empresa.getId());
-
-        if (!existentes.isEmpty()) return existentes;
-
-        List<Categoria> categorias = List.of(
-                new Categoria("Lanches", empresa),
-                new Categoria("Pizzas", empresa),
-                new Categoria("Massas", empresa),
-                new Categoria("Bebidas", empresa),
-                new Categoria("Sobremesas", empresa)
-        );
-
-        return categoriaRepository.saveAll(categorias);
-    }
+    // ──────────────────── USUÁRIOS ────────────────────
 
     private void inicializarUsuariosInternos(Empresa empresa) {
         Usuario admin = getOrCreateUsuario(
@@ -141,6 +141,15 @@ public class ProdutoInitializer implements CommandLineRunner {
                 Set.of("ROLE_ADMIN")
         );
         getOrCreateUsuarioEmpresa(admin, empresa, PapelEmpresa.DONO);
+
+        Usuario gerente = getOrCreateUsuario(
+                "gerente.demo",
+                "Gerente Demo",
+                "gerente.demo@restaurante.com",
+                "123456",
+                Set.of("ROLE_ADMIN")
+        );
+        getOrCreateUsuarioEmpresa(gerente, empresa, PapelEmpresa.GERENTE);
 
         Usuario atendente = getOrCreateUsuario(
                 "atendente.demo",
@@ -187,69 +196,39 @@ public class ProdutoInitializer implements CommandLineRunner {
         usuarioEmpresaRepository.save(rel);
     }
 
+    // ──────────────────── CLIENTES ────────────────────
+
     private void inicializarClientes(Empresa empresa) {
         Cliente cliente1 = getOrCreateCliente(
-                "85999991001",
-                "123456",
-                "Cliente Demo 1",
-                "cliente1@email.com",
-                LocalDate.of(1998, 5, 10),
-                Genero.MASCULINO,
-                "Rua Joaquim Torres",
-                "120",
-                "Joaquim Távora",
-                "Fortaleza",
-                "60135-130",
-                "Apto 201",
-                "CE"
+                "85999991001", "123456",
+                "João da Silva", "cliente1@email.com",
+                java.time.LocalDate.of(1998, 5, 10), Genero.MASCULINO,
+                "Rua Joaquim Torres", "120", "Joaquim Távora",
+                "Fortaleza", "60135-130", "Apto 201", "CE"
         );
 
         Cliente cliente2 = getOrCreateCliente(
-                "85999991002",
-                "123456",
-                "Cliente Demo 2",
-                "cliente2@email.com",
-                LocalDate.of(1994, 9, 3),
-                Genero.FEMININO,
-                "Rua Visconde do Rio Branco",
-                "955",
-                "Centro",
-                "Fortaleza",
-                "60055-170",
-                null,
-                "CE"
+                "85999991002", "123456",
+                "Maria Santos", "cliente2@email.com",
+                java.time.LocalDate.of(1994, 9, 3), Genero.FEMININO,
+                "Rua Visconde do Rio Branco", "955", "Centro",
+                "Fortaleza", "60055-170", null, "CE"
         );
 
         Cliente cliente3 = getOrCreateCliente(
-                "85999991003",
-                "123456",
-                "Cliente Demo 3",
-                null,
-                null,
-                Genero.PREFIRO_NAO_DIZER,
-                "Rua Padre Valdevino",
-                "430",
-                "Aldeota",
-                "Fortaleza",
-                "60135-040",
-                null,
-                "CE"
+                "85999991003", "123456",
+                "Pedro Oliveira", null,
+                null, Genero.PREFIRO_NAO_DIZER,
+                "Rua Padre Valdevino", "430", "Aldeota",
+                "Fortaleza", "60135-040", null, "CE"
         );
 
         Cliente cliente4 = getOrCreateCliente(
-                "85999991004",
-                "123456",
-                "Cliente Demo 4",
-                "cliente4@email.com",
-                null,
-                Genero.MASCULINO,
-                "Av. da Universidade",
-                "1550",
-                "Benfica",
-                "Fortaleza",
-                "60020-181",
-                "Casa",
-                "CE"
+                "85999991004", "123456",
+                "Ana Costa", "cliente4@email.com",
+                null, Genero.FEMININO,
+                "Av. da Universidade", "1550", "Benfica",
+                "Fortaleza", "60020-181", "Casa", "CE"
         );
 
         getOrCreateClienteEmpresa(cliente1, empresa);
@@ -259,19 +238,11 @@ public class ProdutoInitializer implements CommandLineRunner {
     }
 
     private Cliente getOrCreateCliente(
-            String telefone,
-            String senha,
-            String nomeCompleto,
-            String email,
-            LocalDate dataNascimento,
-            Genero genero,
-            String logradouro,
-            String numero,
-            String bairro,
-            String cidade,
-            String cep,
-            String complemento,
-            String uf
+            String telefone, String senha,
+            String nomeCompleto, String email,
+            java.time.LocalDate dataNascimento, Genero genero,
+            String logradouro, String numero, String bairro,
+            String cidade, String cep, String complemento, String uf
     ) {
         return clienteRepository.findByTelefone(telefone)
                 .orElseGet(() -> {
@@ -323,53 +294,491 @@ public class ProdutoInitializer implements CommandLineRunner {
         clienteEmpresaRepository.save(rel);
     }
 
-    private void inicializarProdutos(Empresa empresa, List<Categoria> categorias){
+    // ──────────────────── CATEGORIAS ────────────────────
+
+    private List<Categoria> criarCategorias(Empresa empresa) {
+        List<Categoria> existentes = categoriaRepository.findByEmpresaId(empresa.getId());
+        if (!existentes.isEmpty()) return existentes;
+
+        List<Categoria> categorias = List.of(
+                new Categoria("Lanches", empresa),
+                new Categoria("Pizzas", empresa),
+                new Categoria("Massas", empresa),
+                new Categoria("Bebidas", empresa),
+                new Categoria("Sobremesas", empresa)
+        );
+
+        return categoriaRepository.saveAll(categorias);
+    }
+
+    // ──────────────────── PRODUTOS ────────────────────
+
+    private void inicializarProdutos(Empresa empresa, List<Categoria> categorias) {
         Categoria lanches = categorias.get(0);
         Categoria pizzas = categorias.get(1);
         Categoria massas = categorias.get(2);
         Categoria bebidas = categorias.get(3);
         Categoria sobremesas = categorias.get(4);
 
-        upsertProduto(empresa, "X-Burger Especial", "...", new BigDecimal("24.90"), 120, true, lanches);
-        upsertProduto(empresa, "Pizza Calabresa", "...", new BigDecimal("42.90"), 80, true, pizzas);
-        upsertProduto(empresa, "Macarrão Artesanal", "...", new BigDecimal("29.90"), 60, true, massas);
-        upsertProduto(empresa, "Refrigerante Lata", "...", new BigDecimal("6.50"), 200, false, bebidas);
-        upsertProduto(empresa, "Brownie da Casa", "...", new BigDecimal("11.90"), 70, true, sobremesas);
+        long totalProdutos = produtoRepository.count();
+        if (totalProdutos >= 12) return; // já inicializado
+
+        /* ── 1. X-Burger Especial (com variação + opcional) ── */
+        criarXBurger(empresa, lanches);
+
+        /* ── 2. Pizza Calabresa (simples, sem variação) ── */
+        criarPizzaCalabresa(empresa, pizzas);
+
+        /* ── 3. Pizza Margherita (com opcional de borda) ── */
+        criarPizzaMargherita(empresa, pizzas);
+
+        /* ── 4. Macarrão Artesanal (sem variação) ── */
+        criarMacarrao(empresa, massas);
+
+        /* ── 5. Lasanha Bolonhesa (com variação) ── */
+        criarLasanha(empresa, massas);
+
+        /* ── 6. Refrigerante Lata (simples) ── */
+        criarRefrigerante(empresa, bebidas);
+
+        /* ── 7. Suco Natural (com variação de sabor) ── */
+        criarSuco(empresa, bebidas);
+
+        /* ── 8. Água Mineral (simples) ── */
+        criarAgua(empresa, bebidas);
+
+        /* ── 9. Brownie da Casa (com opcional) ── */
+        criarBrownie(empresa, sobremesas);
+
+        /* ── 10. Petit Gâteau (com opcional) ── */
+        criarPetitGateau(empresa, sobremesas);
+
+        /* ── 11. Combo Família (produto promocional) ── */
+        criarComboFamilia(empresa, lanches);
+
+        /* ── 12. Açaí 300ml (com variações de tamanho + opcionais de cobertura) ── */
+        criarAcai(empresa, sobremesas);
     }
 
-    private void upsertProduto(
-            Empresa empresa,
-            String nome,
-            String descricao,
-            BigDecimal precoBase,
-            Integer estoque,
-            boolean permiteObservacao,
-            Categoria categoria
-    ) {
-        boolean exists = produtoRepository.findAll()
-                .stream()
-                .anyMatch(p ->
-                        p.getEmpresa() != null
-                                && p.getEmpresa().getId().equals(empresa.getId())
-                                && nome.equalsIgnoreCase(p.getNome())
-                );
+    // ─── Produto 1: X-Burger Especial ───
 
-        if (exists) return;
+    private void criarXBurger(Empresa empresa, Categoria lanches) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("X-Burger Especial");
+        p.setDescricao("Pão brioche, blend artesanal 180g, queijo cheddar, bacon crocante, alface e tomate.");
+        p.setPrecoBase(new BigDecimal("24.90"));
+        p.setEstoque(120);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(180);
+        p.setCategorias(List.of(lanches));
 
-        Produto produto = new Produto();
-        produto.setEmpresa(empresa);
-        produto.setNome(nome);
-        produto.setDescricao(descricao);
-        produto.setPrecoBase(precoBase);
-        produto.setEstoque(estoque);
-        produto.setAtivo(true);
-        produto.setPermiteObservacao(permiteObservacao);
-        produto.setMaxObservacaoChars(180);
+        // Variação de tamanho
+        Variacao vP = new Variacao();
+        vP.setNome("P — 150g");
+        vP.setPreco(new BigDecimal("19.90"));
+        vP.setEstoque(120);
+        p.getVariacoes().add(vP);
+        p.atualizarPrecoMinimo();
 
-        produto.setCategorias(List.of(categoria));
+        // Grupo: Ponto da Carne
+        ProdutoOpcionalGrupo pontoGrupo = new ProdutoOpcionalGrupo();
+        pontoGrupo.setNome("Ponto da carne");
+        pontoGrupo.setObrigatorio(true);
+        pontoGrupo.setMinSelecionaveis(1);
+        pontoGrupo.setMaxSelecionaveis(1);
+        pontoGrupo.setTipoSelecao(TipoSelecaoOpcional.SINGLE);
+        pontoGrupo.setOrdem(1);
 
-        produtoRepository.save(produto);
+        pontoGrupo.getItens().add(makeOpcionalItem("Ao ponto", BigDecimal.ZERO, 1));
+        pontoGrupo.getItens().add(makeOpcionalItem("Bem passado", BigDecimal.ZERO, 2));
+        pontoGrupo.getItens().add(makeOpcionalItem("Mal passado", BigDecimal.ZERO, 3));
+
+        p.getGruposOpcionais().add(pontoGrupo);
+
+        produtoRepository.save(p);
     }
+
+    // ─── Produto 2: Pizza Calabresa ───
+
+    private void criarPizzaCalabresa(Empresa empresa, Categoria pizzas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Pizza Calabresa");
+        p.setDescricao("Calabresa fatiada, cebola roxa, azeitonas pretas, orégano e molho de tomate artesanal.");
+        p.setPrecoBase(new BigDecimal("42.90"));
+        p.setEstoque(80);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(pizzas));
+
+        // Variação de tamanho
+        Variacao m = new Variacao();
+        m.setNome("Média — 6 fatias");
+        m.setPreco(new BigDecimal("42.90"));
+        m.setEstoque(80);
+        p.getVariacoes().add(m);
+
+        Variacao g = new Variacao();
+        g.setNome("Grande — 8 fatias");
+        g.setPreco(new BigDecimal("52.90"));
+        g.setEstoque(80);
+        p.getVariacoes().add(g);
+
+        Variacao gg = new Variacao();
+        gg.setNome("GG — 12 fatias");
+        gg.setPreco(new BigDecimal("62.90"));
+        gg.setEstoque(60);
+        p.getVariacoes().add(gg);
+
+        p.atualizarPrecoMinimo();
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 3: Pizza Margherita ───
+
+    private void criarPizzaMargherita(Empresa empresa, Categoria pizzas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Pizza Margherita");
+        p.setDescricao("Molho de tomate San Marzano, mussarela de búfala fresca, manjericão e azeite trufado.");
+        p.setPrecoBase(new BigDecimal("39.90"));
+        p.setEstoque(80);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(pizzas));
+
+        Variacao v = new Variacao("Grande — 8 fatias", new BigDecimal("39.90"), 80, p);
+        p.getVariacoes().add(v);
+        p.atualizarPrecoMinimo();
+
+        // Opcional: Borda
+        ProdutoOpcionalGrupo borda = new ProdutoOpcionalGrupo();
+        borda.setNome("Borda recheada");
+        borda.setObrigatorio(false);
+        borda.setMinSelecionaveis(0);
+        borda.setMaxSelecionaveis(1);
+        borda.setTipoSelecao(TipoSelecaoOpcional.SINGLE);
+        borda.setOrdem(1);
+
+        borda.getItens().add(makeOpcionalItem("Borda de catupiry", new BigDecimal("6.00"), 1));
+        borda.getItens().add(makeOpcionalItem("Borda de cheddar", new BigDecimal("6.00"), 2));
+
+        p.getGruposOpcionais().add(borda);
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 4: Macarrão Artesanal ───
+
+    private void criarMacarrao(Empresa empresa, Categoria massas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Macarrão Artesanal");
+        p.setDescricao("Fettucine fresco com molho bolonhesa da casa, parmesão ralado e ervas finas.");
+        p.setPrecoBase(new BigDecimal("29.90"));
+        p.setEstoque(60);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setCategorias(List.of(massas));
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 5: Lasanha Bolonhesa ───
+
+    private void criarLasanha(Empresa empresa, Categoria massas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Lasanha Bolonhesa");
+        p.setDescricao("Camadas generosas de massa fresca, bolonhesa artesanal, bechamel e gratinado de parmesão.");
+        p.setPrecoBase(new BigDecimal("34.90"));
+        p.setEstoque(50);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(massas));
+
+        Variacao indiv = new Variacao();
+        indiv.setNome("Individual");
+        indiv.setPreco(new BigDecimal("34.90"));
+        indiv.setEstoque(50);
+        p.getVariacoes().add(indiv);
+
+        Variacao dupla = new Variacao();
+        dupla.setNome("Serve 2 pessoas");
+        dupla.setPreco(new BigDecimal("54.90"));
+        dupla.setEstoque(40);
+        p.getVariacoes().add(dupla);
+
+        Variacao familia = new Variacao();
+        familia.setNome("Serve 4 pessoas");
+        familia.setPreco(new BigDecimal("79.90"));
+        familia.setEstoque(30);
+        p.getVariacoes().add(familia);
+
+        p.atualizarPrecoMinimo();
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 6: Refrigerante Lata ───
+
+    private void criarRefrigerante(Empresa empresa, Categoria bebidas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Refrigerante Lata");
+        p.setDescricao("Refrigerante gelado à sua escolha — 350ml.");
+        p.setPrecoBase(new BigDecimal("6.50"));
+        p.setEstoque(200);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(bebidas));
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 7: Suco Natural ───
+
+    private void criarSuco(Empresa empresa, Categoria bebidas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Suco Natural");
+        p.setDescricao("Suco natural da fruta, feito na hora — 400ml.");
+        p.setPrecoBase(new BigDecimal("9.90"));
+        p.setEstoque(150);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(bebidas));
+
+        Variacao laranja = new Variacao("Laranja", new BigDecimal("9.90"), 150, p);
+        Variacao limao = new Variacao("Limão", new BigDecimal("9.90"), 150, p);
+        Variacao maracuja = new Variacao("Maracujá", new BigDecimal("10.90"), 100, p);
+        Variacao abacaxi = new Variacao("Abacaxi com hortelã", new BigDecimal("10.90"), 100, p);
+
+        p.getVariacoes().addAll(List.of(laranja, limao, maracuja, abacaxi));
+        p.atualizarPrecoMinimo();
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 8: Água Mineral ───
+
+    private void criarAgua(Empresa empresa, Categoria bebidas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Água Mineral");
+        p.setDescricao("Água sem gás — 500ml.");
+        p.setPrecoBase(new BigDecimal("3.50"));
+        p.setEstoque(500);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(bebidas));
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 9: Brownie da Casa ───
+
+    private void criarBrownie(Empresa empresa, Categoria sobremesas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Brownie da Casa");
+        p.setDescricao("Brownie de chocolate belga com nozes, úmido por dentro e crocante por fora.");
+        p.setPrecoBase(new BigDecimal("11.90"));
+        p.setEstoque(70);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setCategorias(List.of(sobremesas));
+
+        // Opcional: Cobertura
+        ProdutoOpcionalGrupo cobertura = new ProdutoOpcionalGrupo();
+        cobertura.setNome("Cobertura extra");
+        cobertura.setObrigatorio(false);
+        cobertura.setMinSelecionaveis(0);
+        cobertura.setMaxSelecionaveis(3);
+        cobertura.setTipoSelecao(TipoSelecaoOpcional.MULTIPLE);
+        cobertura.setOrdem(1);
+
+        cobertura.getItens().add(makeOpcionalItem("Calda de chocolate", new BigDecimal("3.50"), 1));
+        cobertura.getItens().add(makeOpcionalItem("Creme de leite ninho", new BigDecimal("4.00"), 2));
+        cobertura.getItens().add(makeOpcionalItem("Sorvete de baunilha", new BigDecimal("5.00"), 3));
+
+        p.getGruposOpcionais().add(cobertura);
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 10: Petit Gâteau ───
+
+    private void criarPetitGateau(Empresa empresa, Categoria sobremesas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Petit Gâteau");
+        p.setDescricao("Bolo de chocolate com recheio cremoso, servido com sorvete de creme e frutas vermelhas.");
+        p.setPrecoBase(new BigDecimal("16.90"));
+        p.setEstoque(50);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setCategorias(List.of(sobremesas));
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 11: Combo Família (promocional) ───
+
+    private void criarComboFamilia(Empresa empresa, Categoria lanches) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Combo Família");
+        p.setDescricao("2 pizzas grandes + 1 refrigerante 2L + 1 sobremesa do dia. Economia de até 30%.");
+        p.setPrecoBase(new BigDecimal("139.90"));
+        p.setEstoque(30);
+        p.setAtivo(true);
+        p.setEmOferta(true);
+        p.setTipoDesconto(TipoDescontoPromocao.PERCENTUAL);
+        p.setValorDesconto(new BigDecimal("20"));
+        p.setTituloOferta("20% OFF Combo Família!");
+        p.setInicioOferta(LocalDateTime.now().minusDays(1));
+        p.setFimOferta(LocalDateTime.now().plusDays(30));
+        p.setPermiteObservacao(true);
+        p.setCategorias(List.of(lanches));
+        produtoRepository.save(p);
+    }
+
+    // ─── Produto 12: Açaí 300ml ───
+
+    private void criarAcai(Empresa empresa, Categoria sobremesas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Açaí");
+        p.setDescricao("Açaí cremoso da Amazônia com granola, banana e leite condensado.");
+        p.setPrecoBase(new BigDecimal("14.90"));
+        p.setEstoque(100);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setCategorias(List.of(sobremesas));
+
+        // Variação de tamanho
+        Variacao v300 = new Variacao();
+        v300.setNome("300ml");
+        v300.setPreco(new BigDecimal("14.90"));
+        v300.setEstoque(100);
+        p.getVariacoes().add(v300);
+
+        Variacao v400 = new Variacao();
+        v400.setNome("400ml");
+        v400.setPreco(new BigDecimal("18.90"));
+        v400.setEstoque(80);
+        p.getVariacoes().add(v400);
+
+        Variacao v500 = new Variacao();
+        v500.setNome("500ml");
+        v500.setPreco(new BigDecimal("22.90"));
+        v500.setEstoque(60);
+        p.getVariacoes().add(v500);
+
+        p.atualizarPrecoMinimo();
+
+        // Opcional: Coberturas
+        ProdutoOpcionalGrupo coberturas = new ProdutoOpcionalGrupo();
+        coberturas.setNome("Coberturas extras");
+        coberturas.setObrigatorio(false);
+        coberturas.setMinSelecionaveis(0);
+        coberturas.setMaxSelecionaveis(5);
+        coberturas.setTipoSelecao(TipoSelecaoOpcional.MULTIPLE);
+        coberturas.setTipoGrupo(TipoGrupoProduto.OPCIONAL_SELECAO);
+        coberturas.setOrdem(1);
+
+        coberturas.getItens().add(makeOpcionalItem("Leite Ninho", new BigDecimal("4.00"), 1));
+        coberturas.getItens().add(makeOpcionalItem("Morango", new BigDecimal("3.00"), 2));
+        coberturas.getItens().add(makeOpcionalItem("Paçoca", new BigDecimal("2.00"), 3));
+        coberturas.getItens().add(makeOpcionalItem("Granola extra", new BigDecimal("1.50"), 4));
+        coberturas.getItens().add(makeOpcionalItem("Mel", new BigDecimal("1.50"), 5));
+
+        p.getGruposOpcionais().add(coberturas);
+
+        produtoRepository.save(p);
+    }
+
+    // ─── Helper: Criar item opcional ───
+
+    private ProdutoOpcionalItem makeOpcionalItem(String nome, BigDecimal precoExtra, int ordem) {
+        ProdutoOpcionalItem item = new ProdutoOpcionalItem();
+        item.setNome(nome);
+        item.setPrecoExtra(precoExtra);
+        item.setAtivo(true);
+        item.setOrdem(ordem);
+        return item;
+    }
+
+    // ──────────────────── CUPONS ────────────────────
+
+    private void criarCupons(Empresa empresa) {
+        if (cupomRepository.findByEmpresaId(empresa.getId()).size() >= 3) return;
+
+        // 1. Cupom percentual
+        Cupom cupomPct = new Cupom();
+        cupomPct.setEmpresa(empresa);
+        cupomPct.setCodigo("BEMVINDO10");
+        cupomPct.setNome("Boas-vindas");
+        cupomPct.setDescricao("10% de desconto no primeiro pedido");
+        cupomPct.setAtivo(true);
+        cupomPct.setTipoDesconto(TipoCupomDesconto.PERCENTUAL);
+        cupomPct.setValorDesconto(new BigDecimal("10"));
+        cupomPct.setValorMaximoDesconto(new BigDecimal("15"));
+        cupomPct.setValorMinimoPedido(new BigDecimal("30"));
+        cupomPct.setApenasPrimeiraCompra(true);
+        cupomPct.setLimiteUsoTotal(100);
+        cupomPct.setLimiteUsoPorUsuario(1);
+        cupomPct.setTotalUsado(0);
+        cupomPct.setDataInicio(LocalDateTime.now());
+        cupomPct.setDataFim(LocalDateTime.now().plusMonths(6));
+        cupomRequestValidateFields(cupomPct);
+        cupomRepository.save(cupomPct);
+
+        // 2. Cupom frete grátis
+        Cupom cupomFrete = new Cupom();
+        cupomFrete.setEmpresa(empresa);
+        cupomFrete.setCodigo("FRETEGRATIS");
+        cupomFrete.setNome("Frete Grátis");
+        cupomFrete.setDescricao("Frete grátis para pedidos a partir de R$ 50");
+        cupomFrete.setAtivo(true);
+        cupomFrete.setTipoDesconto(TipoCupomDesconto.PERCENTUAL);
+        cupomFrete.setValorDesconto(new BigDecimal("100"));
+        cupomFrete.setValorMaximoDesconto(new BigDecimal("15"));
+        cupomFrete.setValorMinimoPedido(new BigDecimal("50"));
+        cupomFrete.setFreteGratis(true);
+        cupomFrete.setLimiteUsoTotal(null);
+        cupomFrete.setLimiteUsoPorUsuario(null);
+        cupomFrete.setTotalUsado(0);
+        cupomFrete.setDataInicio(LocalDateTime.now());
+        cupomRequestValidateFields(cupomFrete);
+        cupomRepository.save(cupomFrete);
+
+        // 3. Cupom valor fixo
+        Cupom cupomFixo = new Cupom();
+        cupomFixo.setEmpresa(empresa);
+        cupomFixo.setCodigo("DESCONTO10");
+        cupomFixo.setNome("R$ 10 OFF");
+        cupomFixo.setDescricao("Desconto fixo de R$ 10 no pedido");
+        cupomFixo.setAtivo(true);
+        cupomFixo.setTipoDesconto(TipoCupomDesconto.VALOR_FIXO);
+        cupomFixo.setValorDesconto(new BigDecimal("10"));
+        cupomFixo.setValorMinimoPedido(new BigDecimal("60"));
+        cupomFixo.setLimiteUsoTotal(50);
+        cupomFixo.setLimiteUsoPorUsuario(2);
+        cupomFixo.setTotalUsado(0);
+        cupomFixo.setDataInicio(LocalDateTime.now());
+        cupomFixo.setDataFim(LocalDateTime.now().plusMonths(3));
+        cupomRequestValidateFields(cupomFixo);
+        cupomRepository.save(cupomFixo);
+    }
+
+    /**
+     * Helper para preencher campos null obrigatórios do Cupom.
+     */
+    private void cupomRequestValidateFields(Cupom cupom) {
+        // Campos boolean que podem ser null
+        if (cupom.getApenasPrimeiraCompra() == null) cupom.setApenasPrimeiraCompra(false);
+        if (cupom.getApenasNovoUsuario() == null) cupom.setApenasNovoUsuario(false);
+        if (cupom.getAplicaEmItensPromocionais() == null) cupom.setAplicaEmItensPromocionais(true);
+        if (cupom.getFreteGratis() == null) cupom.setFreteGratis(false);
+    }
+
+    // ──────────────────── PEDIDOS FAKES ────────────────────
 
     private void gerarPedidosFake(Empresa empresa) {
         if (pedidoRepository.count() >= 30) return;
@@ -390,7 +799,6 @@ public class ProdutoInitializer implements CommandLineRunner {
         for (int i = 0; i < 20; i++) {
             Cliente cliente = clientes.get(randomInt(0, clientes.size() - 1));
             ClientePerfil perfil = cliente.getPerfil();
-
             if (perfil == null) continue;
 
             Pedido pedido = new Pedido();
@@ -403,14 +811,10 @@ public class ProdutoInitializer implements CommandLineRunner {
                     : TipoEntrega.RETIRADA;
 
             TipoPagamento tipoPagamento;
-            int sorteioPagamento = randomInt(1, 100);
-            if (sorteioPagamento <= 40) {
-                tipoPagamento = TipoPagamento.PIX;
-            } else if (sorteioPagamento <= 70) {
-                tipoPagamento = TipoPagamento.CREDIT_CARD;
-            } else {
-                tipoPagamento = TipoPagamento.PAY_ON_DELIVERY;
-            }
+            int sorteio = randomInt(1, 100);
+            if (sorteio <= 40) tipoPagamento = TipoPagamento.PIX;
+            else if (sorteio <= 70) tipoPagamento = TipoPagamento.CREDIT_CARD;
+            else tipoPagamento = TipoPagamento.PAY_ON_DELIVERY;
 
             pedido.setTipoEntrega(tipoEntrega);
             pedido.setTipoPagamento(tipoPagamento);
@@ -423,78 +827,100 @@ public class ProdutoInitializer implements CommandLineRunner {
                         .filter(Endereco::isPadrao)
                         .findFirst()
                         .orElse(perfil.getEnderecos().isEmpty() ? null : perfil.getEnderecos().get(0));
-
                 pedido.setEnderecoEntrega(endereco);
                 pedido.setServicoFrete("Entrega padrão");
                 pedido.setValorFrete(empresa.getTaxaEntregaFixa() != null ? empresa.getTaxaEntregaFixa() : 5.99);
                 pedido.setPrazoFrete("30-45 min");
-            } else {
-                pedido.setEnderecoEntrega(null);
-                pedido.setServicoFrete(null);
-                pedido.setValorFrete(0.0);
-                pedido.setPrazoFrete(null);
             }
 
             configurarPagamentoFake(pedido);
-
-            int quantidadeItens = randomInt(1, 3);
-            List<ItemPedido> itens = new ArrayList<>();
-
-            for (int j = 0; j < quantidadeItens; j++) {
-                Produto produto = produtos.get(randomInt(0, produtos.size() - 1));
-                int quantidade = randomInt(1, 2);
-
-                ItemPedido item = new ItemPedido(
-                        produto,
-                        produto.getNome(),
-                        quantidade,
-                        produto.getPrecoBase(),
-                        produto.getImagemUrl()
-                );
-
-                if (produto.isPermiteObservacao() && randomInt(1, 100) <= 25) {
-                    item.setObservacao("Sem cebola / molho à parte");
-                }
-
-                item.recalcularTotalOpcionais();
-                itens.add(item);
-            }
-
-            pedido.setItens(itens);
-
-            BigDecimal subtotal = itens.stream()
-                    .map(ItemPedido::getTotalItem)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            pedido.setSubtotal(subtotal);
-            pedido.setDescontoCupom(BigDecimal.ZERO);
-            pedido.setCupomCodigo(null);
-
-            BigDecimal total = subtotal.add(BigDecimal.valueOf(
-                    pedido.getValorFrete() != null ? pedido.getValorFrete() : 0.0
-            ));
-            pedido.setTotal(total);
+            criarItensFake(pedido, produtos);
 
             definirStatusFake(pedido);
-
             Pedido salvo = pedidoRepository.save(pedido);
 
-            ClienteEmpresa clienteEmpresa = clienteEmpresaRepository
+            // Atualiza stats do cliente-empresa
+            ClienteEmpresa ce = clienteEmpresaRepository
                     .findByClienteIdAndEmpresaId(cliente.getId(), empresa.getId())
                     .orElse(null);
-
-            if (clienteEmpresa != null) {
-                clienteEmpresa.setTotalPedidos(
-                        (clienteEmpresa.getTotalPedidos() != null ? clienteEmpresa.getTotalPedidos() : 0) + 1
-                );
-                clienteEmpresa.setTotalGasto(
-                        (clienteEmpresa.getTotalGasto() != null ? clienteEmpresa.getTotalGasto() : BigDecimal.ZERO)
-                                .add(salvo.getTotal() != null ? salvo.getTotal() : BigDecimal.ZERO)
-                );
-                clienteEmpresa.setUltimoPedidoEm(salvo.getData());
-                clienteEmpresaRepository.save(clienteEmpresa);
+            if (ce != null) {
+                ce.setTotalPedidos((ce.getTotalPedidos() != null ? ce.getTotalPedidos() : 0) + 1);
+                ce.setTotalGasto(
+                        (ce.getTotalGasto() != null ? ce.getTotalGasto() : BigDecimal.ZERO)
+                                .add(salvo.getTotal() != null ? salvo.getTotal() : BigDecimal.ZERO));
+                ce.setUltimoPedidoEm(salvo.getData());
+                clienteEmpresaRepository.save(ce);
             }
         }
+
+        System.out.println("[ProdutoInitializer] " + pedidoRepository.count() + " pedidos criados no total.");
+    }
+
+    private void criarItensFake(Pedido pedido, List<Produto> produtos) {
+        int numItens = randomInt(1, 3);
+        List<ItemPedido> itens = new ArrayList<>();
+
+        for (int j = 0; j < numItens; j++) {
+            Produto produto = produtos.get(randomInt(0, produtos.size() - 1));
+
+            // Escolhe variação se existir
+            Variacao variacao = null;
+            BigDecimal precoUnitario = produto.getPrecoBase();
+            if (produto.getVariacoes() != null && !produto.getVariacoes().isEmpty()) {
+                variacao = produto.getVariacoes().get(randomInt(0, produto.getVariacoes().size() - 1));
+                precoUnitario = variacao.getPreco() != null ? variacao.getPreco() : produto.getPrecoBase();
+            }
+
+            int quantidade = randomInt(1, 2);
+            ItemPedido item = new ItemPedido();
+            item.setProduto(produto);
+            item.setNomeProduto(produto.getNome());
+            item.setQuantidade(quantidade);
+            item.setPrecoUnitario(precoUnitario);
+            item.setImagemUrl(produto.getImagemUrl());
+            item.setVariacao(variacao);
+
+            // Observação aleatória
+            if (produto.isPermiteObservacao() && randomInt(1, 100) <= 25) {
+                item.setObservacao("Sem cebola / molho à parte");
+            }
+
+            // Adiciona opcionais se o produto tem grupos e o item for selecionado
+            if (!produto.getGruposOpcionais().isEmpty() && randomInt(1, 100) <= 40) {
+                for (ProdutoOpcionalGrupo grupo : produto.getGruposOpcionais()) {
+                    if (grupo.isObrigatorio() || randomInt(1, 100) <= 50) {
+                        // Escolhe 1 item obrigatório ou 1-2 opcionais aleatórios
+                        int numSelecionados = grupo.isObrigatorio() ? 1 : (grupo.getTipoSelecao() == TipoSelecaoOpcional.MULTIPLE ? randomInt(1, Math.min(2, grupo.getItens().size())) : 1);
+                        for (int k = 0; k < numSelecionados && k < grupo.getItens().size(); k++) {
+                            ProdutoOpcionalItem opcItem = grupo.getItens().get(k);
+                            ItemPedidoOpcional itemOpcional = new ItemPedidoOpcional();
+                            itemOpcional.setOpcionalItemId(opcItem.getId());
+                            itemOpcional.setNome(opcItem.getNome());
+                            itemOpcional.setPrecoExtra(opcItem.getPrecoExtra());
+                            itemOpcional.setQuantidade(1);
+                            itemOpcional.setTipo(TipoItemPedidoOpcional.OPCIONAL_SELECAO);
+                            itemOpcional.setGrupoId(grupo.getId());
+                            itemOpcional.setGrupoNome(grupo.getNome());
+                            item.addOpcional(itemOpcional);
+                        }
+                    }
+                }
+            }
+
+            itens.add(item);
+        }
+
+        pedido.setItens(itens);
+
+        BigDecimal subtotal = itens.stream()
+                .map(ItemPedido::getTotalItem)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        pedido.setSubtotal(subtotal);
+        pedido.setDescontoCupom(BigDecimal.ZERO);
+        pedido.setCupomCodigo(null);
+
+        BigDecimal frete = BigDecimal.valueOf(pedido.getValorFrete() != null ? pedido.getValorFrete() : 0.0);
+        pedido.setTotal(subtotal.add(frete));
     }
 
     private void configurarPagamentoFake(Pedido pedido) {
@@ -506,22 +932,18 @@ public class ProdutoInitializer implements CommandLineRunner {
 
         if (pedido.getTipoPagamento() == TipoPagamento.PAY_ON_DELIVERY) {
             PagamentoNaEntrega pne = new PagamentoNaEntrega();
-
-            int sorteio = randomInt(1, 100);
-            if (sorteio <= 50) {
+            int s = randomInt(1, 100);
+            if (s <= 50) {
                 pne.setMetodo(MetodoPagamentoNaEntrega.CASH);
                 pne.setPrecisaTroco(randomInt(1, 100) <= 35);
                 pne.setTrocoPara(Boolean.TRUE.equals(pne.getPrecisaTroco()) ? new BigDecimal("100.00") : null);
-            } else if (sorteio <= 75) {
+            } else if (s <= 75) {
                 pne.setMetodo(MetodoPagamentoNaEntrega.DEBIT_CARD);
                 pne.setPrecisaTroco(false);
-                pne.setTrocoPara(null);
             } else {
                 pne.setMetodo(MetodoPagamentoNaEntrega.CREDIT_CARD);
                 pne.setPrecisaTroco(false);
-                pne.setTrocoPara(null);
             }
-
             pedido.setPagamentoNaEntrega(pne);
             return;
         }
@@ -530,7 +952,6 @@ public class ProdutoInitializer implements CommandLineRunner {
             pedido.setPaymentProvider("MERCADO_PAGO");
             pedido.setMpPaymentId("MP-" + System.nanoTime());
             pedido.setMpStatus("approved");
-            return;
         }
 
         if (pedido.getTipoPagamento() == TipoPagamento.CREDIT_CARD) {
@@ -552,48 +973,35 @@ public class ProdutoInitializer implements CommandLineRunner {
         }
 
         if (pedido.getTipoEntrega() == TipoEntrega.RETIRADA) {
-            if (chance <= 20) {
-                pedido.setStatus(StatusPedido.RECEBIDO);
-                pedido.setStatusPagamento(StatusPagamento.PENDENTE);
-            } else if (chance <= 45) {
-                pedido.setStatus(StatusPedido.EM_PREPARO);
-                pedido.setStatusPagamento(resolvePagamento(pedido));
-            } else if (chance <= 65) {
-                pedido.setStatus(StatusPedido.PRONTO);
-                pedido.setStatusPagamento(resolvePagamento(pedido));
-            } else if (chance <= 90) {
-                pedido.setStatus(StatusPedido.RETIRADO);
-                pedido.setStatusPagamento(StatusPagamento.APROVADO);
-            } else {
+            if (chance <= 20) pedido.setStatus(StatusPedido.RECEBIDO);
+            else if (chance <= 45) pedido.setStatus(StatusPedido.EM_PREPARO);
+            else if (chance <= 65) pedido.setStatus(StatusPedido.PRONTO);
+            else if (chance <= 90) pedido.setStatus(StatusPedido.RETIRADO);
+            else {
                 pedido.setStatus(StatusPedido.CANCELADO);
                 pedido.setStatusPagamento(StatusPagamento.CANCELADO);
+                return;
             }
+            pedido.setStatusPagamento(resolvePagamento(pedido));
             return;
         }
 
-        if (chance <= 20) {
-            pedido.setStatus(StatusPedido.RECEBIDO);
-            pedido.setStatusPagamento(StatusPagamento.PENDENTE);
-        } else if (chance <= 45) {
-            pedido.setStatus(StatusPedido.EM_PREPARO);
-            pedido.setStatusPagamento(resolvePagamento(pedido));
-        } else if (chance <= 65) {
-            pedido.setStatus(StatusPedido.PRONTO);
-            pedido.setStatusPagamento(resolvePagamento(pedido));
-        } else if (chance <= 82) {
-            pedido.setStatus(StatusPedido.SAIU_PARA_ENTREGA);
-            pedido.setStatusPagamento(resolvePagamento(pedido));
-        } else if (chance <= 95) {
-            pedido.setStatus(StatusPedido.ENTREGUE);
-            pedido.setStatusPagamento(StatusPagamento.APROVADO);
-        } else {
+        if (chance <= 20) pedido.setStatus(StatusPedido.RECEBIDO);
+        else if (chance <= 45) pedido.setStatus(StatusPedido.EM_PREPARO);
+        else if (chance <= 65) pedido.setStatus(StatusPedido.PRONTO);
+        else if (chance <= 82) pedido.setStatus(StatusPedido.SAIU_PARA_ENTREGA);
+        else if (chance <= 95) pedido.setStatus(StatusPedido.ENTREGUE);
+        else {
             pedido.setStatus(StatusPedido.CANCELADO);
             pedido.setStatusPagamento(StatusPagamento.CANCELADO);
+            return;
         }
+        pedido.setStatusPagamento(resolvePagamento(pedido));
     }
 
     private StatusPagamento resolvePagamento(Pedido pedido) {
-        if (pedido.getTipoPagamento() == TipoPagamento.PIX || pedido.getTipoPagamento() == TipoPagamento.CREDIT_CARD) {
+        if (pedido.getTipoPagamento() == TipoPagamento.PIX
+                || pedido.getTipoPagamento() == TipoPagamento.CREDIT_CARD) {
             return StatusPagamento.APROVADO;
         }
         return StatusPagamento.PENDENTE;
@@ -603,7 +1011,6 @@ public class ProdutoInitializer implements CommandLineRunner {
         int diasAtras = randomInt(0, 14);
         int hora = randomInt(11, 22);
         int minuto = randomInt(0, 59);
-
         return LocalDateTime.now()
                 .minusDays(diasAtras)
                 .withHour(hora)

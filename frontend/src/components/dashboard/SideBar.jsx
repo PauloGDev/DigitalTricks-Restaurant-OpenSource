@@ -189,11 +189,12 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
     localStorage.removeItem("empresaId");
     localStorage.removeItem("usuarioId");
     localStorage.removeItem("username");
     setRole(null);
-    navigate("/login");
+    window.location.href = "/dashboard/login";
   };
 
   const toggleTheme = () => {
@@ -534,7 +535,7 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                   </button>
                 ) : (
                   <Link
-                    to="/login"
+                    to="/dashboard/login"
                     onClick={closeMobile}
                     className="block rounded-2xl bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] px-4 py-3 text-center font-extrabold text-white transition-all duration-300 hover:shadow-[0_14px_30px_rgba(229,37,42,0.25)]"
                   >

@@ -320,6 +320,7 @@ const App = () => {
               permissions={["canAccessDashboard"]}
               empresaOnly
               showDeniedScreen
+              redirectToLoginIfDenied
             >
               <RestaurantNotificationProvider
                 empresaId={Number(localStorage.getItem("empresaId") || 0)}
@@ -338,6 +339,7 @@ const App = () => {
               permissions={["canAccessDashboard"]}
               empresaOnly
               showDeniedScreen
+              redirectToLoginIfDenied
             >
               <RestaurantNotificationProvider
                 empresaId={Number(localStorage.getItem("empresaId") || 0)}

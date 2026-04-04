@@ -16,6 +16,7 @@ public record PedidoDTO(
         Long id,
         LocalDateTime data,
         BigDecimal total,
+        BigDecimal subTotal,
         TipoPagamento tipoPagamento,
         StatusPedido status,
         StatusPagamento statusPagamento,

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { LogIn, Loader2, Lock, Eye, EyeOff, User } from "lucide-react";
+import { LogIn, Loader2, Lock, Eye, EyeOff, User, LogOut } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import PageTitle from "../../context/PageTitle";
 
@@ -40,7 +40,15 @@ export default function LoginAdmin() {
 
   const navigate = useNavigate();
   const msgRef = useRef(null);
-  const { login: authLogin, user } = useAuth();
+  const { login: authLogin, logout: authLogout, user } = useAuth();
+  const isLoggedClient = !!user && !user.roles?.some((r) =>
+    ["ROLE_ADMIN", "ROLE_GERENTE", "ROLE_FUNCIONARIO", "ROLE_SUPER_ADMIN", "ADMIN", "GERENTE", "FUNCIONARIO", "SUPER_ADMIN"].includes(r.toUpperCase())
+  );
+
+  const handleLogout = () => {
+    authLogout();
+    navigate("/dashboard/login", { replace: true });
+  };
   const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -94,6 +102,23 @@ export default function LoginAdmin() {
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <PageTitle title="Login Admin | Painel" />
 
+      {isLoggedClient && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4">
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 shadow-sm flex items-center justify-between gap-3">
+            <span>
+              Logado como <strong>{user.username}</strong>. Para acessar o painel, deslogue e entre com uma conta admin.
+            </span>
+            <button
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-red-500 shrink-0"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Deslogar
+            </button>
+          </div>
+        </div>
+      )}
+
       <motion.div
         variants={containerVariants}
         initial="initial"
@@ -104,7 +129,7 @@ export default function LoginAdmin() {
           variants={itemVariants}
           className="bg-white rounded-3xl p-6 shadow-xl"
         >
-          <h2 className="text-xl font-bold mb-4 text-zinc-900">
+          <h2 className={`text-xl font-bold text-zinc-900 ${isLoggedClient ? "mb-2" : "mb-4"}`}>
             Painel do Restaurante
           </h2>
 
