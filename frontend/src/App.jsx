@@ -23,6 +23,7 @@ import DireitosPage from "./pages/Direitos";
 import PedidoConfirmadoPage from "./components/carrinhoPage/PedidoConfirmadoPage";
 import { initMercadoPago } from "@mercadopago/sdk-react";
 import UserPanel from "./pages/painel-usuario/UserPanel";
+import Perfil from "./pages/Perfil";
 import PedidosPage from "./pages/painel-usuario/PedidosPage";
 import Login from "./pages/Login";
 import CarrinhoPage from "./components/CarrinhoPage";
@@ -261,6 +262,17 @@ const App = () => {
         {/* Cliente */}
         <Route
           path="/perfil"
+          element={
+            <PrivateRoute
+              roles={["USER", "ADMIN", "GERENTE", "FUNCIONARIO", "SUPER_ADMIN"]}
+              showDeniedScreen
+            >
+              <Perfil />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/meu-painel"
           element={
             <PrivateRoute
               roles={["USER", "ADMIN", "GERENTE", "FUNCIONARIO", "SUPER_ADMIN"]}
