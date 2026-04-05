@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.costumer.enums;
+package com.ecommerce.digitaltricks.customer.enums;
 
 public enum Genero {
     MASCULINO,

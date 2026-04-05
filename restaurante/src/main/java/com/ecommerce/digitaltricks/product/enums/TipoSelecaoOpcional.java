@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.produtos;
+package com.ecommerce.digitaltricks.product.enums;
 
 public enum TipoSelecaoOpcional {
     SINGLE, // 1 escolha (radio)

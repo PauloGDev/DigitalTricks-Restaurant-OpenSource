@@ -1,6 +1,6 @@
 package com.ecommerce.digitaltricks.config;
 
-import com.ecommerce.digitaltricks.security.JwtAuthenticationFilter;
+import com.ecommerce.digitaltricks.shared.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;

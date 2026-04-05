@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.product.repository;
 
 import com.ecommerce.digitaltricks.product.model.Variacao;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.product.model;
 
-import com.ecommerce.digitaltricks.enums.produtos.TipoGrupoProduto;
-import com.ecommerce.digitaltricks.enums.produtos.TipoSelecaoOpcional;
+import com.ecommerce.digitaltricks.product.enums.TipoGrupoProduto;
+import com.ecommerce.digitaltricks.product.enums.TipoSelecaoOpcional;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

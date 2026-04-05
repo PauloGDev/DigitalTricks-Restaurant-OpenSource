@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.admin.service;
 
-import com.ecommerce.digitaltricks.dto.UsuarioDTO;
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.dto.UsuarioDTO;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
 import com.ecommerce.digitaltricks.shared.exception.BadRequestException;
 import com.ecommerce.digitaltricks.shared.exception.NotFoundException;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.repository.UsuarioRepository;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

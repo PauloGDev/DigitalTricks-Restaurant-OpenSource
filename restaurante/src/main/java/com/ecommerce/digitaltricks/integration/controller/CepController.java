@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.integration.controller;
 
 import com.ecommerce.digitaltricks.integration.ViaCepClient;
 import com.ecommerce.digitaltricks.integration.dto.ViaCepResponse;

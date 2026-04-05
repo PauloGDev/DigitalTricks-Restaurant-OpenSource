@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.product.service;
 
-import com.ecommerce.digitaltricks.model.Categoria;
+import com.ecommerce.digitaltricks.product.model.Categoria;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.model.Produto;
-import com.ecommerce.digitaltricks.repository.CategoriaRepository;
+import com.ecommerce.digitaltricks.product.model.Produto;
+import com.ecommerce.digitaltricks.product.repository.CategoriaRepository;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
-import com.ecommerce.digitaltricks.repository.ProdutoRepository;
+import com.ecommerce.digitaltricks.product.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;

@@ -1,18 +1,18 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.admin.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.ecommerce.digitaltricks.dto.empresa.*;
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.dto.*;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
 import com.ecommerce.digitaltricks.shared.exception.BadRequestException;
 import com.ecommerce.digitaltricks.shared.exception.ForbiddenException;
 import com.ecommerce.digitaltricks.shared.exception.NotFoundException;
-import com.ecommerce.digitaltricks.model.Empresa;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.model.UsuarioEmpresa;
-import com.ecommerce.digitaltricks.repository.EmpresaRepository;
-import com.ecommerce.digitaltricks.repository.UsuarioEmpresaRepository;
-import com.ecommerce.digitaltricks.repository.UsuarioRepository;
+import com.ecommerce.digitaltricks.admin.model.Empresa;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.admin.model.UsuarioEmpresa;
+import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;

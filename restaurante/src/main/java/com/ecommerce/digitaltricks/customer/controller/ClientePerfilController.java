@@ -1,10 +1,10 @@
-package com.ecommerce.digitaltricks.costumer.controller;
+package com.ecommerce.digitaltricks.customer.controller;
 
-import com.ecommerce.digitaltricks.costumer.enums.Genero;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.repository.ClientePerfilRepository;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.customer.enums.Genero;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.repository.ClientePerfilRepository;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

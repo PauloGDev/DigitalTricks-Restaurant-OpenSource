@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.utils;
+package com.ecommerce.digitaltricks.shared.validation;
 
 public class CpfValidator {
 

@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.admin.model;
 
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;

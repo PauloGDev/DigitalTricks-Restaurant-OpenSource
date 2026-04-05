@@ -1,8 +1,8 @@
-package com.ecommerce.digitaltricks.costumer.controller;
+package com.ecommerce.digitaltricks.customer.controller;
 
 import com.ecommerce.digitaltricks.order.dto.pedido.PedidoDTO;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.order.service.PedidoFacadeService;
 import org.springframework.http.ResponseEntity;

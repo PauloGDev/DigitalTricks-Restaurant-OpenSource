@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.costumer.dto;
+package com.ecommerce.digitaltricks.customer.dto;
 
-import com.ecommerce.digitaltricks.costumer.enums.Genero;
+import com.ecommerce.digitaltricks.customer.enums.Genero;
 
 import java.time.LocalDate;
 

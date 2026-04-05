@@ -1,14 +1,14 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.shared.mapper;
 
-import com.ecommerce.digitaltricks.dto.*;
-import com.ecommerce.digitaltricks.dto.pedido.CarrinhoDTO;
-import com.ecommerce.digitaltricks.dto.pedido.CarrinhoItemDTO;
-import com.ecommerce.digitaltricks.dto.pedido.CarrinhoOpcionalGrupoDTO;
-import com.ecommerce.digitaltricks.dto.pedido.CarrinhoOpcionalItemDTO;
-import com.ecommerce.digitaltricks.model.Carrinho;
-import com.ecommerce.digitaltricks.model.CarrinhoItem;
-import com.ecommerce.digitaltricks.model.ProdutoOpcionalItem;
-import com.ecommerce.digitaltricks.repository.ProdutoOpcionalItemRepository;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoDTO;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoItemDTO;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoOpcionalGrupoDTO;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoOpcionalItemDTO;
+import com.ecommerce.digitaltricks.cart.model.Carrinho;
+import com.ecommerce.digitaltricks.cart.model.CarrinhoItem;
+import com.ecommerce.digitaltricks.order.dto.cupom.CupomAplicadoDTO;
+import com.ecommerce.digitaltricks.product.model.ProdutoOpcionalItem;
+import com.ecommerce.digitaltricks.product.repository.ProdutoOpcionalItemRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
 package com.ecommerce.digitaltricks.config;
 
-import com.ecommerce.digitaltricks.security.JwtUtil;
+import com.ecommerce.digitaltricks.shared.security.JwtUtil;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;

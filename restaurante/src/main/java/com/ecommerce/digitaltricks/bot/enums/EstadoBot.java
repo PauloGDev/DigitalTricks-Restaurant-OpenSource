@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.bot;
+package com.ecommerce.digitaltricks.bot.enums;
 
 public enum EstadoBot {
     INICIO,

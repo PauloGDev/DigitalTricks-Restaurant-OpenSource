@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.costumer.model;
+package com.ecommerce.digitaltricks.customer.model;
 
-import com.ecommerce.digitaltricks.costumer.enums.Genero;
+import com.ecommerce.digitaltricks.customer.enums.Genero;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;

@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.product.dto;
 
 import com.ecommerce.digitaltricks.product.model.Variacao;
 

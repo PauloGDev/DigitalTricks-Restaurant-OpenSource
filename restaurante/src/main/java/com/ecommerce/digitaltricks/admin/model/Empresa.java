@@ -1,7 +1,9 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.admin.model;
 
-import com.ecommerce.digitaltricks.admin.model.UsuarioEmpresa;
-import com.ecommerce.digitaltricks.enums.usuarios.admin.StatusEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.StatusEmpresa;
+import com.ecommerce.digitaltricks.product.model.Categoria;
+import com.ecommerce.digitaltricks.order.model.Pedido;
+import com.ecommerce.digitaltricks.product.model.Produto;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 

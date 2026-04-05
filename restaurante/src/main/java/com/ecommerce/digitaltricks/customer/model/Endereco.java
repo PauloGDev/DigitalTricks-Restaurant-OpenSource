@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.costumer.model;
+package com.ecommerce.digitaltricks.customer.model;
 
 import jakarta.persistence.*;
 

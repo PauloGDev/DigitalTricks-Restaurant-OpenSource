@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.product.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
@@ -7,11 +7,16 @@ import com.ecommerce.digitaltricks.admin.model.Usuario;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
-import com.ecommerce.digitaltricks.dto.*;
 import com.ecommerce.digitaltricks.admin.enums.TipoDescontoPromocao;
-import com.ecommerce.digitaltricks.enums.produtos.TipoGrupoProduto;
-import com.ecommerce.digitaltricks.model.*;
-import com.ecommerce.digitaltricks.repository.*;
+import com.ecommerce.digitaltricks.product.enums.TipoGrupoProduto;
+import com.ecommerce.digitaltricks.product.dto.ProdutoDTO;
+import com.ecommerce.digitaltricks.product.dto.ProdutoOpcionalGrupoDTO;
+import com.ecommerce.digitaltricks.product.dto.ProdutoOpcionalItemDTO;
+import com.ecommerce.digitaltricks.product.dto.VariacaoDTO;
+import com.ecommerce.digitaltricks.product.model.*;
+import com.ecommerce.digitaltricks.product.repository.CategoriaRepository;
+import com.ecommerce.digitaltricks.product.repository.ProdutoRepository;
+import com.ecommerce.digitaltricks.product.repository.VariacaoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.transaction.Transactional;

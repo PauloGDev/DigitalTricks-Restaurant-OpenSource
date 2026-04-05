@@ -1,12 +1,12 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.order.dto.pedido;
 
-import com.ecommerce.digitaltricks.costumer.dto.EnderecoDTO;
-import com.ecommerce.digitaltricks.enums.pedido.MotivoCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.OrigemCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPagamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
-import com.ecommerce.digitaltricks.enums.pedido.TipoEntrega;
-import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
+import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
+import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPagamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
+import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
+import com.ecommerce.digitaltricks.order.enums.TipoPagamento;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

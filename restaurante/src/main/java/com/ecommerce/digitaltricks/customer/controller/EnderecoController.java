@@ -1,13 +1,13 @@
-package com.ecommerce.digitaltricks.costumer.controller;
+package com.ecommerce.digitaltricks.customer.controller;
 
-import com.ecommerce.digitaltricks.costumer.dto.EnderecoDTO;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
-import com.ecommerce.digitaltricks.costumer.repository.ClientePerfilRepository;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.costumer.repository.EnderecoRepository;
-import com.ecommerce.digitaltricks.costumer.service.EnderecoService;
+import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.repository.ClientePerfilRepository;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.customer.repository.EnderecoRepository;
+import com.ecommerce.digitaltricks.customer.service.EnderecoService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

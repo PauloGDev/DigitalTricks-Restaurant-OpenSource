@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.product.dto;
 
-import com.ecommerce.digitaltricks.enums.produtos.TipoSelecaoOpcional;
+import com.ecommerce.digitaltricks.product.enums.TipoSelecaoOpcional;
 import java.util.List;
 
 public record ProdutoOpcionalGrupoDTO(

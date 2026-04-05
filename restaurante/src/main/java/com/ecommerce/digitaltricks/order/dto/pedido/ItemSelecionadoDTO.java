@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.order.dto.pedido;
 
 public record ItemSelecionadoDTO(
         Long itemId,

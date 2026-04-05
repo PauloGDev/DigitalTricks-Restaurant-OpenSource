@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.costumer.dto;
+package com.ecommerce.digitaltricks.customer.dto;
 
 public record ClienteLoginRequest(
         String telefone,

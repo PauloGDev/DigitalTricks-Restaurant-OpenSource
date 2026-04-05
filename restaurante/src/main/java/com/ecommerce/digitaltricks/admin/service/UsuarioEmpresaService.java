@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.admin.service;
 
-import com.ecommerce.digitaltricks.dto.empresa.UsuarioEmpresaResponseDTO;
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.model.UsuarioEmpresa;
-import com.ecommerce.digitaltricks.repository.UsuarioEmpresaRepository;
+import com.ecommerce.digitaltricks.admin.dto.UsuarioEmpresaResponseDTO;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.admin.model.UsuarioEmpresa;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

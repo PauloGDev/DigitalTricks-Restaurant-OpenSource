@@ -1,12 +1,12 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.order.controller;
 
-import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.model.Pedido;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.repository.PedidoRepository;
-import com.ecommerce.digitaltricks.service.MercadoPagoService;
+import com.ecommerce.digitaltricks.order.enums.TipoPagamento;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.order.model.Pedido;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
+import com.ecommerce.digitaltricks.order.service.MercadoPagoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

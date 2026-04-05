@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
 import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;

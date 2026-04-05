@@ -1,15 +1,16 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.cart.controller;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
-import com.ecommerce.digitaltricks.dto.pedido.CarrinhoDTO;
-import com.ecommerce.digitaltricks.model.*;
+import com.ecommerce.digitaltricks.cart.model.Carrinho;
+import com.ecommerce.digitaltricks.cart.model.CarrinhoItem;
+import com.ecommerce.digitaltricks.cart.repository.CarrinhoRepository;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoDTO;
 import com.ecommerce.digitaltricks.product.model.Produto;
 import com.ecommerce.digitaltricks.product.model.Variacao;
 import com.ecommerce.digitaltricks.product.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.product.repository.VariacaoRepository;
-import com.ecommerce.digitaltricks.repository.*;
-import com.ecommerce.digitaltricks.service.CarrinhoAdicionarRequest;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoAdicionarRequest;
 import com.ecommerce.digitaltricks.shared.mapper.CarrinhoMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

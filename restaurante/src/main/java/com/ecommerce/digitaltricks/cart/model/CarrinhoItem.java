@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.cart.model;
 
 import com.ecommerce.digitaltricks.product.model.Produto;
 import com.ecommerce.digitaltricks.product.model.Variacao;

@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.product.controller;
 
-import com.ecommerce.digitaltricks.dto.CategoriaDTO;
+import com.ecommerce.digitaltricks.product.dto.CategoriaDTO;
 import com.ecommerce.digitaltricks.admin.dto.EmpresaDTO;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.repository.CategoriaRepository;
+import com.ecommerce.digitaltricks.product.repository.CategoriaRepository;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

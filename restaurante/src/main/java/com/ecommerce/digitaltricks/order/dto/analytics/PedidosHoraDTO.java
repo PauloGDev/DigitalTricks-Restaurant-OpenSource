@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.analytics;
+package com.ecommerce.digitaltricks.order.dto.analytics;
 
 public class PedidosHoraDTO {
     public int hora;

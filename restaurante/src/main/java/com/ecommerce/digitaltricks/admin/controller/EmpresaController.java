@@ -1,10 +1,10 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.admin.controller;
 
-import com.ecommerce.digitaltricks.dto.analytics.AnalyticsDTO;
-import com.ecommerce.digitaltricks.dto.empresa.*;
-import com.ecommerce.digitaltricks.service.AnalyticsService;
-import com.ecommerce.digitaltricks.service.ClienteEmpresaService;
-import com.ecommerce.digitaltricks.service.EmpresaService;
+import com.ecommerce.digitaltricks.admin.dto.*;
+import com.ecommerce.digitaltricks.order.dto.analytics.AnalyticsDTO;
+import com.ecommerce.digitaltricks.order.service.AnalyticsService;
+import com.ecommerce.digitaltricks.customer.service.ClienteEmpresaService;
+import com.ecommerce.digitaltricks.admin.service.EmpresaService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

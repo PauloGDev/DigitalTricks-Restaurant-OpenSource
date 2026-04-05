@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
-import NavBar from "./components/NavbBar";
+import NavBar from "./components/NavBar";
 import Footer from "./components/Footer";
 import { ToastContainer } from "react-toastify";
-import ScrollToTop from "./context/ScrollToTop";
+import ScrollToTop from "./utils/ScrollToTop";
 import Error404 from "./pages/Error404";
 import CookieConsent from "./components/CookieConsent";
 import LoadingScreen from "./components/LoadingScreen";
@@ -32,78 +32,7 @@ import { RestaurantNotificationProvider } from "./context/RestaurantNotification
 import DashboardTV from "./components/dashboard/pedidos/DashboardTV";
 import { useAuth } from "./context/AuthContext";
 import LoginAdmin from "./pages/login-admin/LoginAdmin";
-
-/* =========================
-   HELPERS DE PAPEL / ACL
-========================= */
-
-const ROLE_ALIASES = {
-  ADMIN: "ROLE_ADMIN",
-  USER: "ROLE_USER",
-  GERENTE: "ROLE_GERENTE",
-  FUNCIONARIO: "ROLE_FUNCIONARIO",
-  SUPER_ADMIN: "ROLE_SUPER_ADMIN",
-};
-
-function normalizeRole(role) {
-  if (!role) return null;
-  const raw = String(role).trim().toUpperCase();
-  return ROLE_ALIASES[raw] || raw;
-}
-
-function normalizeRoles(roles) {
-  if (!roles) return [];
-  if (Array.isArray(roles)) {
-    return roles.map(normalizeRole).filter(Boolean);
-  }
-  return [normalizeRole(roles)].filter(Boolean);
-}
-
-function getPrimaryRole(roles = []) {
-  const normalized = normalizeRoles(roles);
-
-  const priority = [
-    "ROLE_SUPER_ADMIN",
-    "ROLE_ADMIN",
-    "ROLE_GERENTE",
-    "ROLE_FUNCIONARIO",
-    "ROLE_USER",
-  ];
-
-  return priority.find((role) => normalized.includes(role)) || normalized[0] || null;
-}
-
-function buildPermissions(roles = []) {
-  const normalized = normalizeRoles(roles);
-  const has = (role) => normalized.includes(normalizeRole(role));
-
-  return {
-    roles: normalized,
-    primaryRole: getPrimaryRole(normalized),
-
-    isSuperAdmin: has("ROLE_SUPER_ADMIN"),
-    isAdmin: has("ROLE_ADMIN"),
-    isGerente: has("ROLE_GERENTE"),
-    isFuncionario: has("ROLE_FUNCIONARIO"),
-    isUser: has("ROLE_USER"),
-
-    isRestaurantStaff:
-      has("ROLE_ADMIN") || has("ROLE_GERENTE") || has("ROLE_FUNCIONARIO"),
-
-    isClientOnly:
-      has("ROLE_USER") &&
-      !has("ROLE_ADMIN") &&
-      !has("ROLE_GERENTE") &&
-      !has("ROLE_FUNCIONARIO") &&
-      !has("ROLE_SUPER_ADMIN"),
-
-    canAccessDashboard:
-      has("ROLE_SUPER_ADMIN") ||
-      has("ROLE_ADMIN") ||
-      has("ROLE_GERENTE") ||
-      has("ROLE_FUNCIONARIO"),
-  };
-}
+import { normalizeRoles, getPrimaryRole, buildPermissions } from "./utils/acl";
 
 const App = () => {
   const [loadingInicial, setLoadingInicial] = useState(true);

@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.pedido;
+package com.ecommerce.digitaltricks.order.enums;
 
 public enum TipoItemPedidoOpcional {
     OPCIONAL_SELECAO,

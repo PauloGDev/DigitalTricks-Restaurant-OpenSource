@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.order.dto.pedido;
 
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -1,12 +1,12 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.order.enums.StatusPagamento;
 import com.ecommerce.digitaltricks.order.enums.StatusPedido;
 import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
 import com.ecommerce.digitaltricks.cart.model.Carrinho;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
 import com.ecommerce.digitaltricks.order.model.ItemPedido;
 import com.ecommerce.digitaltricks.order.model.Pedido;
 import com.ecommerce.digitaltricks.product.model.Produto;

@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.order.dto.pedido.CalculoFreteResponseDTO;
 import com.ecommerce.digitaltricks.order.dto.pedido.FreteDTO;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;

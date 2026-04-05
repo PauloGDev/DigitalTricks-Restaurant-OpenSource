@@ -1,11 +1,13 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.cart.service;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.model.*;
+import com.ecommerce.digitaltricks.cart.model.Carrinho;
+import com.ecommerce.digitaltricks.cart.model.CarrinhoItem;
+import com.ecommerce.digitaltricks.cart.repository.CarrinhoRepository;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.product.model.Produto;
 import com.ecommerce.digitaltricks.product.model.ProdutoOpcionalItem;
@@ -13,7 +15,8 @@ import com.ecommerce.digitaltricks.product.model.Variacao;
 import com.ecommerce.digitaltricks.product.repository.ProdutoOpcionalItemRepository;
 import com.ecommerce.digitaltricks.product.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.product.repository.VariacaoRepository;
-import com.ecommerce.digitaltricks.repository.*;
+import com.ecommerce.digitaltricks.cart.dto.CarrinhoAdicionarRequest;
+import com.ecommerce.digitaltricks.order.service.CupomService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;

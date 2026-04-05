@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.product.repository;
 
 import com.ecommerce.digitaltricks.product.model.Produto;
 import org.springframework.data.domain.Page;

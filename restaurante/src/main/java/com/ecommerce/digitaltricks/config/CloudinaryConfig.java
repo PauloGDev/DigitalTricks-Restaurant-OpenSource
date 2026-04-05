@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.utils;
+package com.ecommerce.digitaltricks.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

@@ -1,8 +1,8 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.admin.controller;
 
-import com.ecommerce.digitaltricks.dto.UsuarioDTO;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.service.UsuarioService;
+import com.ecommerce.digitaltricks.admin.dto.UsuarioDTO;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.admin.service.UsuarioService;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;

@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.cart.model;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import com.ecommerce.digitaltricks.order.model.Cupom;
 import jakarta.persistence.*;
 

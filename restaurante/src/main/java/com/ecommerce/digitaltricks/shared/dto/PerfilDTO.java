@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.shared.dto;
 
-import com.ecommerce.digitaltricks.dto.cliente.EnderecoDTO;
+import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
 
 import java.util.List;
 

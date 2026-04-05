@@ -1,13 +1,13 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.order.controller;
 
-import com.ecommerce.digitaltricks.enums.pedido.MotivoCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.OrigemCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPagamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
-import com.ecommerce.digitaltricks.model.Pedido;
-import com.ecommerce.digitaltricks.repository.PedidoRepository;
-import com.ecommerce.digitaltricks.service.MercadoPagoService;
-import com.ecommerce.digitaltricks.service.PedidoStatusService;
+import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
+import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPagamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
+import com.ecommerce.digitaltricks.order.model.Pedido;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
+import com.ecommerce.digitaltricks.order.service.MercadoPagoService;
+import com.ecommerce.digitaltricks.order.service.PedidoStatusService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

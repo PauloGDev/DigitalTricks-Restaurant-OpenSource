@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.exception;
+package com.ecommerce.digitaltricks.shared.exception;
 
 import java.util.List;
 import java.util.Map;

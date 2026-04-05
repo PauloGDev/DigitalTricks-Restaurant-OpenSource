@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.order.repository;
 
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import com.ecommerce.digitaltricks.order.model.Pedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

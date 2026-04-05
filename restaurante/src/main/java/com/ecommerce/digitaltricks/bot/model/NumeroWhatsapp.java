@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.bot.model;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import jakarta.persistence.*;

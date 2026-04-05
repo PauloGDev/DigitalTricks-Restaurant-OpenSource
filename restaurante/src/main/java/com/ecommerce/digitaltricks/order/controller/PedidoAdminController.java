@@ -1,16 +1,16 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.order.controller;
 
-import com.ecommerce.digitaltricks.dto.pedido.PedidoDTO;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
+import com.ecommerce.digitaltricks.order.dto.pedido.PedidoDTO;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
 import com.ecommerce.digitaltricks.shared.exception.ForbiddenException;
 import com.ecommerce.digitaltricks.shared.exception.NotFoundException;
-import com.ecommerce.digitaltricks.model.Pedido;
+import com.ecommerce.digitaltricks.order.model.Pedido;
 import com.ecommerce.digitaltricks.admin.model.Usuario;
-import com.ecommerce.digitaltricks.repository.PedidoRepository;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
-import com.ecommerce.digitaltricks.service.PedidoFacadeService;
-import com.ecommerce.digitaltricks.service.PedidoStatusService;
+import com.ecommerce.digitaltricks.order.service.PedidoFacadeService;
+import com.ecommerce.digitaltricks.order.service.PedidoStatusService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

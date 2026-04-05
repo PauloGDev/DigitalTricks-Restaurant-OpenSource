@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository.bot;
+package com.ecommerce.digitaltricks.bot.repository;
 
 import com.ecommerce.digitaltricks.bot.model.NumeroWhatsapp;
 import org.springframework.data.jpa.repository.JpaRepository;

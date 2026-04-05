@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.analytics;
+package com.ecommerce.digitaltricks.order.dto.analytics;
 
 import java.util.List;
 import java.util.Map;

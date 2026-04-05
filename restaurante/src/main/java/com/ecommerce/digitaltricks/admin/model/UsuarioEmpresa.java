@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.admin.model;
 
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
 import jakarta.persistence.*;
 
 @Entity

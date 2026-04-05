@@ -1,14 +1,14 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.order.model;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
-import com.ecommerce.digitaltricks.enums.pedido.MotivoCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.OrigemCancelamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPagamento;
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
-import com.ecommerce.digitaltricks.enums.pedido.TipoEntrega;
-import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
+import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
+import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPagamento;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
+import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
+import com.ecommerce.digitaltricks.order.enums.TipoPagamento;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

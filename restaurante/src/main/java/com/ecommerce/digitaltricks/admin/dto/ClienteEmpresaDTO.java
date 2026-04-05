@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.empresa;
+package com.ecommerce.digitaltricks.admin.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

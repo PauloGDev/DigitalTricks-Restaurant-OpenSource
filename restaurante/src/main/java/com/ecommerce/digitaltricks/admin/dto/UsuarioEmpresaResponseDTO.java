@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.dto.empresa;
+package com.ecommerce.digitaltricks.admin.dto;
 
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
 
 import java.util.Set;
 

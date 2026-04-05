@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.admin.repository;
 
 import com.ecommerce.digitaltricks.admin.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;

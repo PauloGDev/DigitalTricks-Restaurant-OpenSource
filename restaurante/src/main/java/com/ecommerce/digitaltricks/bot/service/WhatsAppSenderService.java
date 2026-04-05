@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.service.bot;
+package com.ecommerce.digitaltricks.bot.service;
 
-import com.ecommerce.digitaltricks.model.NumeroWhatsapp;
+import com.ecommerce.digitaltricks.bot.model.NumeroWhatsapp;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 

@@ -1,10 +1,12 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.admin.controller;
 
-import com.ecommerce.digitaltricks.dto.*;
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.repository.UsuarioEmpresaRepository;
-import com.ecommerce.digitaltricks.repository.UsuarioRepository;
+import com.ecommerce.digitaltricks.admin.dto.AuthResponse;
+import com.ecommerce.digitaltricks.admin.dto.LoginRequest;
+import com.ecommerce.digitaltricks.admin.dto.RegisterRequest;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import com.ecommerce.digitaltricks.shared.security.JwtUtil;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;

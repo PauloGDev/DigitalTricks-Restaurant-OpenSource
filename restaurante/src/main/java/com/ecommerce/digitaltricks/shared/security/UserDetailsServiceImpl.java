@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.security;
+package com.ecommerce.digitaltricks.shared.security;
 
-import com.ecommerce.digitaltricks.model.Cliente;
-import com.ecommerce.digitaltricks.model.Usuario;
-import com.ecommerce.digitaltricks.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.repository.UsuarioRepository;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.admin.model.Usuario;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;

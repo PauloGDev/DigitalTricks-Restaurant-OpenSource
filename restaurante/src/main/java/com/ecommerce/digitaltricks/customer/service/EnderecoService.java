@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.costumer.service;
+package com.ecommerce.digitaltricks.customer.service;
 
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
-import com.ecommerce.digitaltricks.costumer.repository.ClientePerfilRepository;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.costumer.repository.EnderecoRepository;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.repository.ClientePerfilRepository;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.customer.repository.EnderecoRepository;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import org.springframework.stereotype.Service;
 

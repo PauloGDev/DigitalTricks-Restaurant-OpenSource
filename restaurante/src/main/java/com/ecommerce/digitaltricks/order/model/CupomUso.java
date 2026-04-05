@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.order.model;
 
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

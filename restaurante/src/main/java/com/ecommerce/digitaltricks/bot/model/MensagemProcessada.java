@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.bot.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;

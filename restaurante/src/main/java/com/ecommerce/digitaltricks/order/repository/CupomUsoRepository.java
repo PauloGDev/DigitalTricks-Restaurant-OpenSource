@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.order.repository;
 
 import com.ecommerce.digitaltricks.order.model.CupomUso;
 import org.springframework.data.jpa.repository.JpaRepository;

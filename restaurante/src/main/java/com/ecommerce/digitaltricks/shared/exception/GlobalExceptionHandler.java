@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.exception;
+package com.ecommerce.digitaltricks.shared.exception;
 
-import com.ecommerce.digitaltricks.dto.ApiErrorDTO;
+import com.ecommerce.digitaltricks.shared.dto.ApiErrorDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

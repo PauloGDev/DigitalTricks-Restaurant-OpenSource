@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.produtos;
+package com.ecommerce.digitaltricks.product.enums;
 
 public enum TipoGrupoProduto {
     OPCIONAL_SELECAO,     // escolhe item(s), sem quantidade por item

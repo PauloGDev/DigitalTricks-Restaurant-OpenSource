@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.usuarios;
+package com.ecommerce.digitaltricks.admin.enums;
 
 public enum StatusUsuario {
     ATIVO,

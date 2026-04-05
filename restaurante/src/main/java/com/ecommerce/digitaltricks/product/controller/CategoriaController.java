@@ -1,8 +1,8 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.product.controller;
 
-import com.ecommerce.digitaltricks.dto.CategoriaDTO;
-import com.ecommerce.digitaltricks.model.Categoria;
-import com.ecommerce.digitaltricks.service.CategoriaService;
+import com.ecommerce.digitaltricks.product.dto.CategoriaDTO;
+import com.ecommerce.digitaltricks.product.model.Categoria;
+import com.ecommerce.digitaltricks.product.service.CategoriaService;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 

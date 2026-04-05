@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.order.controller;
 
-import com.ecommerce.digitaltricks.dto.pedido.PedidoDTO;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.model.Pedido;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
-import com.ecommerce.digitaltricks.repository.PedidoRepository;
-import com.ecommerce.digitaltricks.service.PedidoFacadeService;
+import com.ecommerce.digitaltricks.order.dto.pedido.PedidoDTO;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.order.model.Pedido;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
+import com.ecommerce.digitaltricks.order.service.PedidoFacadeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;

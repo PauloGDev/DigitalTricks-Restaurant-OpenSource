@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto.empresa;
+package com.ecommerce.digitaltricks.admin.dto;
 
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
 
 public record UsuarioEmpresaDTO(
         Long usuarioEmpresaId,

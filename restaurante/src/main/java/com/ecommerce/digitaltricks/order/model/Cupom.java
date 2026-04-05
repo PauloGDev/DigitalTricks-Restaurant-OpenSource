@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.order.model;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.enums.pedido.TipoCupomDesconto;
-import com.ecommerce.digitaltricks.enums.pedido.TipoEntrega;
-import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.order.enums.TipoCupomDesconto;
+import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
+import com.ecommerce.digitaltricks.order.enums.TipoPagamento;
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

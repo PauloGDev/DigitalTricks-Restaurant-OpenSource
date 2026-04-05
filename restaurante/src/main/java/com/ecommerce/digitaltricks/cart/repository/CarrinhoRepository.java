@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.cart.repository;
 
 import com.ecommerce.digitaltricks.cart.model.Carrinho;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.costumer.service;
+package com.ecommerce.digitaltricks.customer.service;
 
 import com.ecommerce.digitaltricks.integration.NominatimClient;
 import com.ecommerce.digitaltricks.integration.ViaCepClient;
 import com.ecommerce.digitaltricks.integration.dto.CoordenadaDTO;
 import com.ecommerce.digitaltricks.integration.dto.ViaCepResponse;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
 import org.springframework.stereotype.Service;
 
 @Service

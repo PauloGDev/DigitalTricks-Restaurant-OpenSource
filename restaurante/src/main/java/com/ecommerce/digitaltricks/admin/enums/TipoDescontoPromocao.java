@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.enums.pedido;
+package com.ecommerce.digitaltricks.admin.enums;
 
 public enum TipoDescontoPromocao {
     PERCENTUAL,

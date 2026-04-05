@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.order.controller;
 
-import com.ecommerce.digitaltricks.model.Cupom;
+import com.ecommerce.digitaltricks.order.model.Cupom;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.admin.model.Usuario;
-import com.ecommerce.digitaltricks.repository.CupomRepository;
+import com.ecommerce.digitaltricks.order.repository.CupomRepository;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;

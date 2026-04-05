@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.security;
+package com.ecommerce.digitaltricks.shared.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

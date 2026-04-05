@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.admin.dto;
 
 public class LoginRequest {
     private String username;

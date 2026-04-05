@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.admin.dto;
 
-import com.ecommerce.digitaltricks.dto.cliente.EnderecoDTO;
+import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;

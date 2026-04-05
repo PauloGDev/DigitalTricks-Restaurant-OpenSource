@@ -1,10 +1,10 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.product.controller;
 
-import com.ecommerce.digitaltricks.dto.*;
-import com.ecommerce.digitaltricks.model.Categoria;
-import com.ecommerce.digitaltricks.model.Produto;
+import com.ecommerce.digitaltricks.product.dto.*;
+import com.ecommerce.digitaltricks.product.model.Categoria;
+import com.ecommerce.digitaltricks.product.model.Produto;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
-import com.ecommerce.digitaltricks.service.ProdutoService;
+import com.ecommerce.digitaltricks.product.service.ProdutoService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

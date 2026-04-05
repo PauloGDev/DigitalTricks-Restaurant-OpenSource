@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.service.ClienteEmpresaService;
-import com.ecommerce.digitaltricks.costumer.model.Endereco;
-import com.ecommerce.digitaltricks.costumer.dto.EnderecoDTO;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.service.ClienteEmpresaService;
+import com.ecommerce.digitaltricks.customer.model.Endereco;
+import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
 import com.ecommerce.digitaltricks.order.dto.pedido.*;
 import com.ecommerce.digitaltricks.order.enums.*;
 import com.ecommerce.digitaltricks.order.model.ItemPedido;

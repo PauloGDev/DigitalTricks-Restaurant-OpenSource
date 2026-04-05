@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.cart.dto;
 
 import java.util.List;
 

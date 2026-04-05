@@ -1,8 +1,8 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.cart.model.Carrinho;
 import com.ecommerce.digitaltricks.cart.model.CarrinhoItem;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import com.ecommerce.digitaltricks.order.enums.TipoCupomDesconto;
 import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
 import com.ecommerce.digitaltricks.order.enums.TipoPagamento;

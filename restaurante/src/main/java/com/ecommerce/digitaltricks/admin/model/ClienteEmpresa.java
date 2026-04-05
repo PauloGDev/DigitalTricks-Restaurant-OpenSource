@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.admin.model;
 
-import com.ecommerce.digitaltricks.admin.model.Empresa;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

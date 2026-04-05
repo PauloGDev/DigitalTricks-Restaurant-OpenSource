@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.admin.dto;
 
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
 import java.util.Set;
 
 public record UsuarioDTO(

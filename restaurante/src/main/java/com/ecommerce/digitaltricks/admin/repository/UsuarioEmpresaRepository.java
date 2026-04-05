@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.repository;
+package com.ecommerce.digitaltricks.admin.repository;
 
-import com.ecommerce.digitaltricks.enums.usuarios.StatusUsuario;
-import com.ecommerce.digitaltricks.enums.usuarios.admin.PapelEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
+import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
 import com.ecommerce.digitaltricks.admin.model.UsuarioEmpresa;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.order.dto;
+package com.ecommerce.digitaltricks.order.dto.cupom;
 
 
 import java.math.BigDecimal;

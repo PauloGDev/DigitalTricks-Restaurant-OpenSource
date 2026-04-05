@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto;
+package com.ecommerce.digitaltricks.shared.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;

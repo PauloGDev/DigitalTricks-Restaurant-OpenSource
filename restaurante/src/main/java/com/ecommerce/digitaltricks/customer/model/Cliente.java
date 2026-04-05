@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.costumer.model;
+package com.ecommerce.digitaltricks.customer.model;
 
 import com.ecommerce.digitaltricks.admin.model.ClienteEmpresa;
 import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;

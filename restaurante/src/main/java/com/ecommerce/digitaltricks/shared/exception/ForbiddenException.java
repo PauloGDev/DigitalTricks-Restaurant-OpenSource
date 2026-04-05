@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.exception;
+package com.ecommerce.digitaltricks.shared.exception;
 
 public class ForbiddenException extends RuntimeException {
     public ForbiddenException(String message) {

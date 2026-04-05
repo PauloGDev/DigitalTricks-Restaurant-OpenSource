@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.cart.dto;
 
 import java.math.BigDecimal;
 import java.util.List;

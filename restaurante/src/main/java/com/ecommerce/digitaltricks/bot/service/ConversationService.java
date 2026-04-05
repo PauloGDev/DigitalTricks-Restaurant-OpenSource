@@ -1,8 +1,8 @@
-package com.ecommerce.digitaltricks.service.bot;
+package com.ecommerce.digitaltricks.bot.service;
 
-import com.ecommerce.digitaltricks.enums.bot.EstadoBot;
-import com.ecommerce.digitaltricks.model.Conversa;
-import com.ecommerce.digitaltricks.repository.bot.ConversaRepository;
+import com.ecommerce.digitaltricks.bot.enums.EstadoBot;
+import com.ecommerce.digitaltricks.bot.model.Conversa;
+import com.ecommerce.digitaltricks.bot.repository.ConversaRepository;
 import org.springframework.stereotype.Service;
 
 @Service

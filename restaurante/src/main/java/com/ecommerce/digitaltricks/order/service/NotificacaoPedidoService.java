@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.service;
+package com.ecommerce.digitaltricks.order.service;
 
 import com.ecommerce.digitaltricks.order.dto.pedido.PedidoNotificacaoDTO;
 import com.ecommerce.digitaltricks.order.model.Pedido;

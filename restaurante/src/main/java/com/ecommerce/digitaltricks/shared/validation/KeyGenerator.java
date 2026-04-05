@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.utils;
+package com.ecommerce.digitaltricks.shared.validation;
 
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;

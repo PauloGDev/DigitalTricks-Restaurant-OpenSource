@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.bot.model;
 
-import com.ecommerce.digitaltricks.enums.bot.EstadoBot;
+import com.ecommerce.digitaltricks.bot.enums.EstadoBot;
 import jakarta.persistence.*;
 
 @Entity

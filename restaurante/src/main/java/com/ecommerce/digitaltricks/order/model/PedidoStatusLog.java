@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.order.model;
 
-import com.ecommerce.digitaltricks.enums.pedido.StatusPedido;
+import com.ecommerce.digitaltricks.order.enums.StatusPedido;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;

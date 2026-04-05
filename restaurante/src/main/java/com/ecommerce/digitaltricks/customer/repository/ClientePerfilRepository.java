@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.costumer.repository;
+package com.ecommerce.digitaltricks.customer.repository;
 
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,7 +1,7 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.order.dto.pedido;
 
-import com.ecommerce.digitaltricks.enums.pedido.TipoEntrega;
-import com.ecommerce.digitaltricks.enums.pedido.TipoPagamento;
+import com.ecommerce.digitaltricks.order.enums.TipoEntrega;
+import com.ecommerce.digitaltricks.order.enums.TipoPagamento;
 
 import java.util.List;
 

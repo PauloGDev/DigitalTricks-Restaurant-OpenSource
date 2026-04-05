@@ -1,9 +1,9 @@
-package com.ecommerce.digitaltricks.costumer.service;
+package com.ecommerce.digitaltricks.customer.service;
 
 import com.ecommerce.digitaltricks.admin.dto.ClienteEmpresaDTO;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
 import com.ecommerce.digitaltricks.admin.model.ClienteEmpresa;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.order.model.Pedido;
 import com.ecommerce.digitaltricks.admin.repository.ClienteEmpresaRepository;

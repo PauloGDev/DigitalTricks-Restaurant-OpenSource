@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.controller;
+package com.ecommerce.digitaltricks.bot.controller;
 
-import com.ecommerce.digitaltricks.service.bot.WhatsAppService;
+import com.ecommerce.digitaltricks.bot.service.WhatsAppService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

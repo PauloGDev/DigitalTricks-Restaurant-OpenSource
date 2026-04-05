@@ -1,10 +1,10 @@
-package com.ecommerce.digitaltricks.service.bot;
+package com.ecommerce.digitaltricks.bot.service;
 
-import com.ecommerce.digitaltricks.model.Conversa;
-import com.ecommerce.digitaltricks.model.MensagemProcessada;
-import com.ecommerce.digitaltricks.model.NumeroWhatsapp;
-import com.ecommerce.digitaltricks.repository.bot.MensagemProcessadaRepository;
-import com.ecommerce.digitaltricks.repository.bot.NumeroWhatsappRepository;
+import com.ecommerce.digitaltricks.bot.model.Conversa;
+import com.ecommerce.digitaltricks.bot.model.MensagemProcessada;
+import com.ecommerce.digitaltricks.bot.model.NumeroWhatsapp;
+import com.ecommerce.digitaltricks.bot.repository.MensagemProcessadaRepository;
+import com.ecommerce.digitaltricks.bot.repository.NumeroWhatsappRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

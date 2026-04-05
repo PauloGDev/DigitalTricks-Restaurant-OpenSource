@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.security;
+package com.ecommerce.digitaltricks.shared.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

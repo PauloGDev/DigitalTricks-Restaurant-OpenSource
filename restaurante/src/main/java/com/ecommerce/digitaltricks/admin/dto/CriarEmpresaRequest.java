@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.dto.empresa;
+package com.ecommerce.digitaltricks.admin.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

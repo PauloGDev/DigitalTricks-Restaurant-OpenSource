@@ -1,6 +1,6 @@
-package com.ecommerce.digitaltricks.dto.pedido;
+package com.ecommerce.digitaltricks.order.dto.pedido;
 
-import com.ecommerce.digitaltricks.enums.pedido.TipoItemPedidoOpcional;
+import com.ecommerce.digitaltricks.order.enums.TipoItemPedidoOpcional;
 
 import java.math.BigDecimal;
 

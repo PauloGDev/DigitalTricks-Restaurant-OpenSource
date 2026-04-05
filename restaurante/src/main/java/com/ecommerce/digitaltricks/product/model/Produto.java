@@ -1,4 +1,4 @@
-package com.ecommerce.digitaltricks.model;
+package com.ecommerce.digitaltricks.product.model;
 
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.admin.enums.TipoDescontoPromocao;

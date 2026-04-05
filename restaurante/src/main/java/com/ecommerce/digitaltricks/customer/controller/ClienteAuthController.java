@@ -1,11 +1,11 @@
-package com.ecommerce.digitaltricks.costumer.controller;
+package com.ecommerce.digitaltricks.customer.controller;
 
-import com.ecommerce.digitaltricks.costumer.dto.ClienteAuthResponse;
-import com.ecommerce.digitaltricks.costumer.dto.ClienteLoginRequest;
-import com.ecommerce.digitaltricks.costumer.dto.ClienteRegisterRequest;
-import com.ecommerce.digitaltricks.costumer.model.Cliente;
-import com.ecommerce.digitaltricks.costumer.model.ClientePerfil;
-import com.ecommerce.digitaltricks.costumer.repository.ClienteRepository;
+import com.ecommerce.digitaltricks.customer.dto.ClienteAuthResponse;
+import com.ecommerce.digitaltricks.customer.dto.ClienteLoginRequest;
+import com.ecommerce.digitaltricks.customer.dto.ClienteRegisterRequest;
+import com.ecommerce.digitaltricks.customer.model.Cliente;
+import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
+import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import com.ecommerce.digitaltricks.shared.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
