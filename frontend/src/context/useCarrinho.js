@@ -1,7 +1,7 @@
 // src/hooks/useCarrinho.js
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:8080/api/carrinho";
+const API = `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/carrinho`;
 
 // monta headers sempre que precisar
 const defaultOptions = (method = "GET") => ({
@@ -85,7 +85,7 @@ const finalizarCompra = async (usuarioId) => {
   if (!carrinhoId) return;
   try {
     const res = await fetch(
-      `http://localhost:8080/api/checkout/${usuarioId}`,
+      `${import.meta.env.VITE_API_URL || "http://localhost:8080/api"}/checkout/${usuarioId}`,
       defaultOptions("POST")
     );
     if (!res.ok) throw new Error("Erro ao finalizar compra");

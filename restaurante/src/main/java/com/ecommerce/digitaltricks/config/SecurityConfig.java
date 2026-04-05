@@ -41,7 +41,8 @@ public class SecurityConfig {
                                 "/api/mercadopago/webhook",
                                 "/api/webhooks/mercadopago/**",
                                 "/api/melhorenvio/**",
-                                "/api/mercadopago/**"
+                                "/api/mercadopago/**",
+                                "/api/empresas/mp/callback"
                         ).permitAll()
 
                         .requestMatchers("/ws", "/ws/**").permitAll()

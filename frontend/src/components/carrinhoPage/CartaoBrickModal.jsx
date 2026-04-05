@@ -4,6 +4,9 @@ import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { X, CreditCard } from "lucide-react";
 import { useNotification } from "../../context/NotificationContext";
 
+// Forca recriacao do Brick quando props mudam
+let brickKey = 0;
+
 export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaId, tipoEntrega = "DELIVERY", enderecoEntrega = null, total: totalProp }) {
   const { showNotification } = useNotification();
   const navigate = useNavigate();
@@ -35,6 +38,8 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
       if (!key) return;
 
       mpKeyRef.current = key;
+      // initMercadoPago nao retorna Promise — marcar async com timeout
+      await new Promise(r => setTimeout(r, 500));
       initMercadoPago(key, { locale: "pt-BR" });
       if (active) setSdkReady(true);
     };

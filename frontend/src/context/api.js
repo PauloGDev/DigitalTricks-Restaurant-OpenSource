@@ -7,12 +7,13 @@ const api = axios.create({
   },
 });
 
-// Interceptor para enviar o token JWT se existir
+// Interceptor para enviar o token JWT e bypass ngrok-free
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers["ngrok-skip-browser-warning"] = "true";
   return config;
 });
 

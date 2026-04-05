@@ -61,6 +61,15 @@ public class MercadoPagoWebhookController {
 
             if (optPedido.isPresent()) {
                 Pedido ped = optPedido.get();
+
+                // Evita processamento duplicado de notificacoes MP
+                if (ped.getMpPaymentId() != null && ped.getMpPaymentId().equals(paymentId)
+                        && ped.getStatus() != StatusPedido.AGUARDANDO_PAGAMENTO
+                        && ped.getStatus() != StatusPedido.RECEBIDO) {
+                    log.info("Pedido {} ja processado MP paymentId={}, status={}", ped.getId(), paymentId, ped.getStatus());
+                    return ResponseEntity.ok("ok");
+                }
+
                 String token = ped.getEmpresa() != null
                         ? empresaRepository.findById(ped.getEmpresa().getId())
                                 .map(e -> e.getMercadoPagoAccessToken()).orElse(null)
@@ -97,15 +106,22 @@ public class MercadoPagoWebhookController {
     }
 
     private Optional<Pedido> encontrarPedidoPorPaymentId(String paymentId) {
+        // 1. Ja temos o pedido mapeado por nosso lado
         var byPayment = pedidoRepository.findByMpPaymentId(paymentId);
         if (byPayment.isPresent()) return byPayment;
 
-        Map<String, Object> payment = mercadoPagoService.consultarPagamento(paymentId);
-        String externalRef = asString(payment.get("external_reference"));
-        if (externalRef != null && !externalRef.isBlank()) {
-            try {
-                return pedidoRepository.findById(Long.valueOf(externalRef));
-            } catch (NumberFormatException ignored) {}
+        // 2. Tenta consultar o MP para pegar o external_reference
+        try {
+            Map<String, Object> payment = mercadoPagoService.consultarPagamento(paymentId);
+            String externalRef = asString(payment.get("external_reference"));
+            if (externalRef != null && !externalRef.isBlank()) {
+                try {
+                    return pedidoRepository.findById(Long.valueOf(externalRef));
+                } catch (NumberFormatException ignored) {}
+            }
+        } catch (Exception e) {
+            // Notificacao de teste do MP ou pagamento inexistente - ignorar
+            log.info("Webhook MP: pagamento {} nao encontrado. Ignorando.", paymentId);
         }
         return Optional.empty();
     }

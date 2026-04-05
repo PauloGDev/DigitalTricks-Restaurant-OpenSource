@@ -121,14 +121,18 @@ public class MercadoPagoOAuthController {
     ) {
         Empresa empresa = validarAcesso(empresaId, authentication);
 
-        return ResponseEntity.ok(Map.of(
-                "conectada", empresa.getMpContaConectada() != null && empresa.getMpContaConectada(),
-                "userId", empresa.getMercadoPagoUserId() != null ? empresa.getMercadoPagoUserId() : null,
-                "temAccessToken", empresa.getMercadoPagoAccessToken() != null,
-                "publicKey", empresa.getMercadoPagoAccessToken() != null
-                        ? mercadoPagoService.getMpPublicKey(empresa.getMercadoPagoAccessToken())
-                        : null
-        ));
+        String publicKey = null;
+        if (empresa.getMercadoPagoAccessToken() != null) {
+            publicKey = mercadoPagoService.getMpPublicKey(empresa.getMercadoPagoAccessToken());
+        }
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("conectada", empresa.getMpContaConectada() != null && empresa.getMpContaConectada());
+        result.put("userId", empresa.getMercadoPagoUserId());
+        result.put("temAccessToken", empresa.getMercadoPagoAccessToken() != null && !empresa.getMercadoPagoAccessToken().isBlank());
+        result.put("publicKey", publicKey);
+
+        return ResponseEntity.ok(result);
     }
 
     /**

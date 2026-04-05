@@ -49,9 +49,9 @@ import java.util.concurrent.ThreadLocalRandom;
 /**
  * Inicializa dados de demonstracão para testes.
  *
- * Cria: 1 empresa, 3 usuários internos, 4 clientes,
- * 5 categorias, 12 produtos (com variações e opcionais),
- * 3 cupons e 20 pedidos distribuídos.
+ * Cria: 2 empresas, 6 usuários internos, 4 clientes por empresa,
+ * 9 categorias, 20 produtos (com variações e opcionais),
+ * 7 cupons e 40 pedidos distribuídos.
  */
 @Component
 @Profile("!test")
@@ -97,17 +97,23 @@ public class ProdutoInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        Empresa empresa = getOrCreateEmpresaSeed();
+        Empresa saborDaPraca = getOrCreateEmpresaSeed();
+        inicializarUsuariosInternos(saborDaPraca, PapelEmpresa.DONO);
+        inicializarClientes(saborDaPraca);
+        List<Categoria> categorias1 = criarCategorias(saborDaPraca);
+        inicializarProdutos(saborDaPraca, categorias1);
+        criarCupons(saborDaPraca);
+        gerarPedidosFake(saborDaPraca);
 
-        inicializarUsuariosInternos(empresa);
-        inicializarClientes(empresa);
-        List<Categoria> categorias = criarCategorias(empresa);
-        inicializarProdutos(empresa, categorias);
-        criarCupons(empresa);
-        gerarPedidosFake(empresa);
+        Empresa burgerKingDom = getOrCreateEmpresaBurgerKingDom();
+        inicializarUsuariosInternos(burgerKingDom, PapelEmpresa.DONO);
+        List<Categoria> categorias2 = criarCategoriasBurger(burgerKingDom);
+        inicializarProdutosBurger(burgerKingDom, categorias2);
+        criarCuponsBurger(burgerKingDom);
+        gerarPedidosFake(burgerKingDom);
     }
 
-    // ──────────────────── EMPRESA ────────────────────
+    // ──────────────────── EMPRESA 1: Sabor da Praça ────────────────────
 
     private Empresa getOrCreateEmpresaSeed() {
         return empresaRepository.findBySlugIgnoreCase("sabor-da-praca")
@@ -146,31 +152,73 @@ public class ProdutoInitializer implements CommandLineRunner {
                 });
     }
 
+    // ──────────────────── EMPRESA 2: Burger King Dom ────────────────────
+
+    private Empresa getOrCreateEmpresaBurgerKingDom() {
+        return empresaRepository.findBySlugIgnoreCase("burger-king-dom")
+                .orElseGet(() -> {
+                    Empresa empresa = new Empresa();
+                    empresa.setNomeFantasia("Burger King Dom");
+                    empresa.setRazaoSocial("Burger King Dom Lanchonetes Ltda");
+                    empresa.setCnpj("22333444000199");
+                    empresa.setSlug("burger-king-dom");
+                    empresa.setEmail("contato@burgerkingdom.com");
+                    empresa.setTelefone("85988888888");
+                    empresa.setStatus(StatusEmpresa.ATIVA);
+                    empresa.setMpContaConectada(false);
+
+                    empresa.setCep("60160-230");
+                    empresa.setLogradouro("Av. Monsenhor Tabosa");
+                    empresa.setNumero("750");
+                    empresa.setBairro("Aldeota");
+                    empresa.setCidade("Fortaleza");
+                    empresa.setUf("CE");
+
+                    empresa.setAceitaRetirada(true);
+                    empresa.setAceitaDelivery(true);
+                    empresa.setRaioEntregaKm(10.0);
+                    empresa.setTaxaEntregaFixa(7.99);
+                    empresa.setValorPorKm(2.00);
+                    empresa.setPedidoMinimoDelivery(25.0);
+                    empresa.setValorFreteGratis(100.0);
+
+                    try {
+                        enderecoGeocodingService.enriquecerEmpresa(empresa);
+                    } catch (Exception ignored) {
+                    }
+
+                    return empresaRepository.save(empresa);
+                });
+    }
+
     // ──────────────────── USUÁRIOS ────────────────────
 
-    private void inicializarUsuariosInternos(Empresa empresa) {
-        Usuario admin = getOrCreateUsuario(
-                "admin.demo",
-                "Administrador Demo",
-                "admin.demo@restaurante.com",
+    private void inicializarUsuariosInternos(Empresa empresa, PapelEmpresa papelDono) {
+        String suffix = empresa.getSlug().replace("-", ".");
+        String emailBase = empresa.getSlug().replace("-", "");
+
+        Usuario dono = getOrCreateUsuario(
+                "admin." + suffix,
+                "Administrador " + empresa.getNomeFantasia(),
+                "admin@" + emailBase + ".com",
                 "123456",
                 Set.of("ROLE_ADMIN")
         );
-        getOrCreateUsuarioEmpresa(admin, empresa, PapelEmpresa.DONO);
+        getOrCreateUsuarioEmpresa(dono, empresa, papelDono);
 
         Usuario gerente = getOrCreateUsuario(
-                "gerente.demo",
-                "Gerente Demo",
-                "gerente.demo@restaurante.com",
+                "gerente." + suffix,
+                "Gerente " + empresa.getNomeFantasia(),
+                "gerente@" + emailBase + ".com",
                 "123456",
                 Set.of("ROLE_ADMIN")
         );
         getOrCreateUsuarioEmpresa(gerente, empresa, PapelEmpresa.GERENTE);
 
         Usuario atendente = getOrCreateUsuario(
-                "atendente.demo",
-                "Atendente Demo",
-                "atendente.demo@restaurante.com",
+                "atendente." + suffix,
+                "Atendente " + empresa.getNomeFantasia(),
+                "atendente@" + emailBase + ".com",
                 "123456",
                 Set.of("ROLE_ADMIN")
         );
@@ -707,6 +755,253 @@ public class ProdutoInitializer implements CommandLineRunner {
         p.getGruposOpcionais().add(coberturas);
 
         produtoRepository.save(p);
+    }
+
+    // ─── Categorias Burger King Dom ───
+
+    private List<Categoria> criarCategoriasBurger(Empresa empresa) {
+        List<Categoria> existentes = categoriaRepository.findByEmpresaId(empresa.getId());
+        if (!existentes.isEmpty()) return existentes;
+
+        List<Categoria> categorias = List.of(
+                new Categoria("Burgers", empresa),
+                new Categoria("Batatas Fritas", empresa),
+                new Categoria("Milkshakes", empresa),
+                new Categoria("Combos", empresa)
+        );
+
+        return categoriaRepository.saveAll(categorias);
+    }
+
+    // ─── Produtos Burger King Dom ───
+
+    private void inicializarProdutosBurger(Empresa empresa, List<Categoria> categorias) {
+        Categoria burgers = categorias.get(0);
+        Categoria batatas = categorias.get(1);
+        Categoria shakes = categorias.get(2);
+        Categoria combos = categorias.get(3);
+
+        long existentes = produtoRepository.findByEmpresaId(empresa.getId(), org.springframework.data.domain.PageRequest.of(0, 100)).getTotalElements();
+        if (existentes >= 8) return;
+
+        criarSmashBurgerDuplo(empresa, burgers);
+        criarBurgerChickenCrispy(empresa, burgers);
+        criarBaconMasterBurger(empresa, burgers);
+        criarVeggieBurger(empresa, burgers);
+        criarBatataCheddarBacon(empresa, batatas);
+        criarBatataParmegiana(empresa, batatas);
+        criarMilkshakeNutella(empresa, shakes);
+        criarComboSmash(empresa, combos);
+    }
+
+    private void criarSmashBurgerDuplo(Empresa empresa, Categoria burgers) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Smash Burger Duplo");
+        p.setDescricao("Dois smash de 90g, queijo cheddar derretido, picles, cebola caramelizada e molho especial da casa no pão brioche.");
+        p.setPrecoBase(new BigDecimal("29.90"));
+        p.setEstoque(100);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(180);
+        p.setCategorias(List.of(burgers));
+
+        Variacao simples = new Variacao("Simples", new BigDecimal("24.90"), 100, p);
+        Variacao duplo = new Variacao("Duplo", new BigDecimal("29.90"), 100, p);
+        Variacao triplo = new Variacao("Triplo", new BigDecimal("36.90"), 80, p);
+        p.getVariacoes().addAll(List.of(simples, duplo, triplo));
+        p.atualizarPrecoMinimo();
+
+        ProdutoOpcionalGrupo adicionais = new ProdutoOpcionalGrupo();
+        adicionais.setNome("Adicionais");
+        adicionais.setObrigatorio(false);
+        adicionais.setMinSelecionaveis(0);
+        adicionais.setMaxSelecionaveis(4);
+        adicionais.setTipoSelecao(TipoSelecaoOpcional.MULTIPLE);
+        adicionais.setOrdem(1);
+
+        adicionais.getItens().add(makeOpcionalItem("Bacon extra", new BigDecimal("4.00"), 1));
+        adicionais.getItens().add(makeOpcionalItem("Cheddar extra", new BigDecimal("3.50"), 2));
+        adicionais.getItens().add(makeOpcionalItem("Ovo", new BigDecimal("2.50"), 3));
+        adicionais.getItens().add(makeOpcionalItem("Cebola crispy", new BigDecimal("3.00"), 4));
+        p.getGruposOpcionais().add(adicionais);
+
+        produtoRepository.save(p);
+    }
+
+    private void criarBurgerChickenCrispy(Empresa empresa, Categoria burgers) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Chicken Crispy Burger");
+        p.setDescricao("Frango empanado crocante, maionese de ervas finas, alface crespa e tomate no pão de gergelim.");
+        p.setPrecoBase(new BigDecimal("26.90"));
+        p.setEstoque(90);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(150);
+        p.setCategorias(List.of(burgers));
+        produtoRepository.save(p);
+    }
+
+    private void criarBaconMasterBurger(Empresa empresa, Categoria burgers) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Bacon Master Burger");
+        p.setDescricao("Blend 200g, muito bacon crocante, onion rings, cheddar fundido e molho barbecue defumado.");
+        p.setPrecoBase(new BigDecimal("34.90"));
+        p.setEstoque(70);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(180);
+        p.setCategorias(List.of(burgers));
+        produtoRepository.save(p);
+    }
+
+    private void criarVeggieBurger(Empresa empresa, Categoria burgers) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Veggie Burger");
+        p.setDescricao("Hambúrguer de grão-de-bico e cogumelos, rúcula, tomate seco, cream cheese vegano no pão integral.");
+        p.setPrecoBase(new BigDecimal("27.90"));
+        p.setEstoque(60);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(180);
+        p.setCategorias(List.of(burgers));
+        produtoRepository.save(p);
+    }
+
+    private void criarBatataCheddarBacon(Empresa empresa, Categoria batatas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Batata Cheddar & Bacon");
+        p.setDescricao("Batatas fritas crocantes cobertas com cheddar cremoso e bacon crocante.");
+        p.setPrecoBase(new BigDecimal("18.90"));
+        p.setEstoque(150);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(batatas));
+
+        Variacao p1 = new Variacao("Pessoa", new BigDecimal("18.90"), 150, p);
+        Variacao p2 = new Variacao("Pessoas", new BigDecimal("28.90"), 100, p);
+        Variacao p4 = new Variacao("4+ Pessoas", new BigDecimal("39.90"), 60, p);
+        p.getVariacoes().addAll(List.of(p1, p2, p4));
+        p.atualizarPrecoMinimo();
+        produtoRepository.save(p);
+    }
+
+    private void criarBatataParmegiana(Empresa empresa, Categoria batatas) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Batata Parmegiana");
+        p.setDescricao("Batatas fritas com molho de tomate caseiro, mussarela gratinada e manjericão fresco.");
+        p.setPrecoBase(new BigDecimal("22.90"));
+        p.setEstoque(120);
+        p.setAtivo(true);
+        p.setPermiteObservacao(false);
+        p.setCategorias(List.of(batatas));
+        produtoRepository.save(p);
+    }
+
+    private void criarMilkshakeNutella(Empresa empresa, Categoria shakes) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Milkshake Nutella");
+        p.setDescricao("Milkshake cremoso de Nutella com chantilly e calda de chocolate belga.");
+        p.setPrecoBase(new BigDecimal("19.90"));
+        p.setEstoque(100);
+        p.setAtivo(true);
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(150);
+        p.setCategorias(List.of(shakes));
+
+        Variacao v300 = new Variacao("300ml", new BigDecimal("19.90"), 100, p);
+        Variacao v400 = new Variacao("400ml", new BigDecimal("24.90"), 80, p);
+        Variacao v500 = new Variacao("500ml", new BigDecimal("29.90"), 50, p);
+        p.getVariacoes().addAll(List.of(v300, v400, v500));
+        p.atualizarPrecoMinimo();
+        produtoRepository.save(p);
+    }
+
+    private void criarComboSmash(Empresa empresa, Categoria combos) {
+        Produto p = new Produto();
+        p.setEmpresa(empresa);
+        p.setNome("Combo Smash Duplo");
+        p.setDescricao("Smash Burger Duplo + Batata Cheddar & Bacon + Milkshake 300ml. Economia de 15%.");
+        p.setPrecoBase(new BigDecimal("55.90"));
+        p.setEstoque(50);
+        p.setAtivo(true);
+        p.setEmOferta(true);
+        p.setTipoDesconto(TipoDescontoPromocao.PERCENTUAL);
+        p.setValorDesconto(new BigDecimal("15"));
+        p.setTituloOferta("15% OFF Combo Smash!");
+        p.setInicioOferta(LocalDateTime.now().minusDays(3));
+        p.setFimOferta(LocalDateTime.now().plusDays(30));
+        p.setPermiteObservacao(true);
+        p.setMaxObservacaoChars(150);
+        p.setCategorias(List.of(combos));
+        produtoRepository.save(p);
+    }
+
+    // ─── Cupons Burger King Dom ───
+
+    private void criarCuponsBurger(Empresa empresa) {
+        if (cupomRepository.findByEmpresaId(empresa.getId()).size() >= 3) return;
+
+        Cupom cupomPct = new Cupom();
+        cupomPct.setEmpresa(empresa);
+        cupomPct.setCodigo("BURGER15");
+        cupomPct.setNome("Desconto Burger");
+        cupomPct.setDescricao("15% OFF em qualquer pedido");
+        cupomPct.setAtivo(true);
+        cupomPct.setTipoDesconto(TipoCupomDesconto.PERCENTUAL);
+        cupomPct.setValorDesconto(new BigDecimal("15"));
+        cupomPct.setValorMaximoDesconto(new BigDecimal("20"));
+        cupomPct.setValorMinimoPedido(new BigDecimal("40"));
+        cupomPct.setApenasPrimeiraCompra(false);
+        cupomPct.setLimiteUsoTotal(200);
+        cupomPct.setLimiteUsoPorUsuario(3);
+        cupomPct.setTotalUsado(0);
+        cupomPct.setDataInicio(LocalDateTime.now());
+        cupomPct.setDataFim(LocalDateTime.now().plusMonths(6));
+        cupomRequestValidateFields(cupomPct);
+        cupomRepository.save(cupomPct);
+
+        Cupom cupomFrete = new Cupom();
+        cupomFrete.setEmpresa(empresa);
+        cupomFrete.setCodigo("FRETEFREE");
+        cupomFrete.setNome("Frete Grátis");
+        cupomFrete.setDescricao("Frete grátis para pedidos acima de R$ 60");
+        cupomFrete.setAtivo(true);
+        cupomFrete.setTipoDesconto(TipoCupomDesconto.PERCENTUAL);
+        cupomFrete.setValorDesconto(new BigDecimal("100"));
+        cupomFrete.setValorMaximoDesconto(new BigDecimal("10"));
+        cupomFrete.setValorMinimoPedido(new BigDecimal("60"));
+        cupomFrete.setFreteGratis(true);
+        cupomFrete.setLimiteUsoTotal(null);
+        cupomFrete.setLimiteUsoPorUsuario(null);
+        cupomFrete.setTotalUsado(0);
+        cupomFrete.setDataInicio(LocalDateTime.now());
+        cupomFrete.setDataFim(LocalDateTime.now().plusMonths(4));
+        cupomRequestValidateFields(cupomFrete);
+        cupomRepository.save(cupomFrete);
+
+        Cupom cupomFixo = new Cupom();
+        cupomFixo.setEmpresa(empresa);
+        cupomFixo.setCodigo("KING20");
+        cupomFixo.setNome("R$ 20 OFF");
+        cupomFixo.setDescricao("R$ 20 de desconto em pedidos acima de R$ 80");
+        cupomFixo.setAtivo(true);
+        cupomFixo.setTipoDesconto(TipoCupomDesconto.VALOR_FIXO);
+        cupomFixo.setValorDesconto(new BigDecimal("20"));
+        cupomFixo.setValorMinimoPedido(new BigDecimal("80"));
+        cupomFixo.setLimiteUsoTotal(100);
+        cupomFixo.setLimiteUsoPorUsuario(2);
+        cupomFixo.setTotalUsado(0);
+        cupomFixo.setDataInicio(LocalDateTime.now());
+        cupomFixo.setDataFim(LocalDateTime.now().plusMonths(3));
+        cupomRequestValidateFields(cupomFixo);
+        cupomRepository.save(cupomFixo);
     }
 
     // ─── Helper: Criar item opcional ───
