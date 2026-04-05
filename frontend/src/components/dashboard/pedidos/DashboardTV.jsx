@@ -613,10 +613,21 @@ export default function DashboardTV() {
         setErro("");
 
         const token = localStorage.getItem("token");
-        const empresaId =
+
+        let empresaId =
           localStorage.getItem("empresaId") ||
           localStorage.getItem("empresa_id") ||
           localStorage.getItem("restauranteId");
+
+        if (!empresaId) {
+          try {
+            const userRaw = localStorage.getItem("user");
+            if (userRaw) {
+              const user = JSON.parse(userRaw);
+              empresaId = user?.empresaId;
+            }
+          } catch {}
+        }
 
         if (!token) {
           throw new Error("Token não encontrado no localStorage.");
@@ -630,13 +641,11 @@ export default function DashboardTV() {
         let res;
 
         if (empresaId) {
-          res = await fetch(`${API_URL}/pedidos/empresa/${empresaId}`, {
+          res = await fetch(`${API_URL}/pedidos/admin?page=0&size=200`, {
             headers,
           });
         } else {
-          res = await fetch(`${API_URL}/pedidos?page=0&size=100`, {
-            headers,
-          });
+          throw new Error("Empresa ID não encontrado. Faça login no painel primeiro.");
         }
 
         if (!res.ok) {
