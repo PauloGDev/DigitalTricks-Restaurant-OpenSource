@@ -179,7 +179,8 @@ public class PagamentoController {
                 cartao.installments() != null ? cartao.installments() : 1,
                 cartao.paymentMethodId(),
                 perfil.getEmail(),
-                cpf
+                cpf,
+                isDebito ? "debit_card" : "credit_card"
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));

@@ -136,13 +136,13 @@ public class MercadoPagoService {
     public Map<String, Object> criarCartao(String externalReference, String description, double value,
                                            String token, int installments, String paymentMethodId,
                                            String email, String cpf) {
-        return criarCartao(null, externalReference, description, value, token, installments, paymentMethodId, email, cpf);
+        return criarCartao(null, externalReference, description, value, token, installments, paymentMethodId, email, cpf, null);
     }
 
     public Map<String, Object> criarCartao(String restauranteAccessToken,
                                            String externalReference, String description, double value,
                                            String token, int installments, String paymentMethodId,
-                                           String email, String cpf) {
+                                           String email, String cpf, String paymentTypeId) {
         if (externalReference == null || externalReference.isBlank()) throw new IllegalArgumentException("externalReference obrigatório");
         if (description == null || description.isBlank()) throw new IllegalArgumentException("description obrigatória");
         if (value <= 0) throw new IllegalArgumentException("value deve ser > 0");
@@ -170,11 +170,15 @@ public class MercadoPagoService {
         body.put("token", token);
         body.put("installments", installments);
         body.put("payment_method_id", paymentMethodId);
+        if (paymentTypeId != null && !paymentTypeId.isBlank()) {
+            body.put("payment_type_id", paymentTypeId);
+        }
         body.put("payer", payer);
         body.put("external_reference", externalReference);
 
         String idemKey = "card-" + externalReference + "-" + System.currentTimeMillis();
-        log.info("Criando CARTÃO MercadoPago externalReference={} value={} installments={}", externalReference, value, installments);
+        log.info("Criando CARTÃO MercadoPago externalReference={} value={} installments={} paymentType={}",
+                externalReference, value, installments, paymentTypeId != null ? paymentTypeId : "auto");
 
         return exchangeForMap(
                 BASE + "/v1/payments", HttpMethod.POST, body, accessToken, idemKey, "criarCartao");
