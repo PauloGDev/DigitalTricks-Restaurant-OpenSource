@@ -34,24 +34,27 @@ Plataforma completa de gestão para restaurantes, com cardápio digital, carrinh
 
 ```
 Digital Tricks - Restaurantes/
-├── restaurante/            # Spring Boot (backend)
+├── restaurante/                    # Spring Boot (backend)
 │   └── src/main/java/com/ecommerce/digitaltricks
-│       ├── config/         # CORS, Security, WebSocket
-│       ├── controller/     # REST endpoints
-│       ├── dto/            # Request/Response DTOs
-│       ├── enums/          # Enums (status pedido, etc)
-│       ├── model/          # Entidades JPA
-│       ├── repository/     # Spring Data JPA
-│       ├── security/       # JWT util
-│       └── service/        # Camada de serviço
-├── frontend/               # React (Vite + Tailwind)
+│       ├── config/                 # CORS, Security, WebSocket
+│       ├── admin/                  # Gestão empresa/usuarios (back-office)
+│       ├── customer/               # Cliente (auth, perfil, endereços)
+│       ├── product/                # Catálogo (produtos, categorias, opcionais)
+│       ├── order/                  # Pedidos, pagamentos, cupons, analytics
+│       ├── cart/                   # Carrinho (guest + logado)
+│       ├── bot/                    # WhatsApp bot
+│       ├── integration/            # APIs externas (ViaCEP, Nominatim)
+│       ├── shared/                 # Exception, security, validation, util
+│       └── bootstrap/              # Seed de dados iniciais
+├── frontend/                       # React (Vite + Tailwind)
 │   └── src/
-│       ├── components/     # Componentes reutilizáveis
-│       │   ├── dashboard/  # Painel admin (Kanban, etc.)
-│       │   └── carrinho/   # Carrinho e checkout
-│       ├── context/        # Providers (Auth, Carrinho, etc.)
-│       └── pages/          # Páginas (Cardápio, Login, etc.)
-└── docs/                   # Imagens e documentação
+│       ├── components/             # Componentes reutilizáveis
+│       ├── context/                # Providers (Auth, Carrinho, etc.)
+│       ├── hooks/                  # Custom hooks
+│       ├── utils/                  # Utilitários (ACL, helpers, services)
+│       ├── pages/                  # Páginas (Cardápio, Login, etc.)
+│       └── assets/                 # Imagens, sons, estilos
+└── docs/                           # Imagens e documentação
 ```
 
 ---
