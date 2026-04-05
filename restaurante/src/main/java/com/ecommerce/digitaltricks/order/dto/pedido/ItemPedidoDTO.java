@@ -6,6 +6,7 @@ import java.util.List;
 public record ItemPedidoDTO(
         Long id,
         Long variacaoId,
+        String variacaoNome,
         String nomeProduto,
         Integer quantidade,
         BigDecimal precoUnitario,

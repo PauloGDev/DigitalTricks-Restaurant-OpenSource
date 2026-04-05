@@ -273,6 +273,7 @@ public class ProdutoService {
                 Variacao variacao = new Variacao();
                 variacao.setNome(vDto.nome());
                 variacao.setPreco(vDto.preco());
+                variacao.setPrecoPromocional(vDto.precoPromocional());
                 variacao.setEstoque(vDto.estoque());
                 variacao.setProduto(produto);
                 produto.getVariacoes().add(variacao);
@@ -333,7 +334,7 @@ public class ProdutoService {
                         v.getNome(),
                         v.getPreco(),
                         v.getEstoque(),
-                        p.calcularPrecoComPromocao(v.getPreco())
+                        v.getPrecoPromocional()
                 ))
                 .toList();
 

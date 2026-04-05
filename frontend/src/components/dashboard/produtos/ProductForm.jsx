@@ -277,6 +277,10 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
             nome: v.nome || "",
             preco:
               v.preco !== null && v.preco !== undefined ? String(v.preco) : "",
+            precoPromocional:
+              v.precoPromocional !== null && v.precoPromocional !== undefined
+                ? String(v.precoPromocional)
+                : "",
             estoque:
               v.estoque !== null && v.estoque !== undefined
                 ? String(v.estoque)
@@ -366,7 +370,7 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
   const addVariacao = () => {
     handleChange("variacoes", [
       ...formData.variacoes,
-      { id: null, nome: "", preco: "", estoque: "" },
+      { id: null, nome: "", preco: "", precoPromocional: "", estoque: "" },
     ]);
   };
 
@@ -473,6 +477,13 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
 
         if (v.preco === "" || Number.isNaN(preco) || preco < 0) {
           newErrors.push(`Informe um preço válido para a variação ${i + 1}.`);
+        }
+
+        if (v.precoPromocional !== "" && v.precoPromocional !== null && v.precoPromocional !== undefined) {
+          const precoProm = Number(v.precoPromocional);
+          if (Number.isNaN(precoProm) || precoProm < 0) {
+            newErrors.push(`Preço promocional inválido na variação ${i + 1}.`);
+          }
         }
 
         if (v.estoque === "" || Number.isNaN(estoque) || estoque < 0) {
@@ -616,8 +627,11 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
             id: v.id || null,
             nome: String(v.nome || "").trim(),
             preco: Number(v.preco || 0),
+            precoPromocional:
+              v.precoPromocional !== null && v.precoPromocional !== undefined && v.precoPromocional !== ""
+                ? Number(v.precoPromocional)
+                : null,
             estoque: Number(v.estoque || 0),
-            precoPromocional: null,
           }))
         : [],
       pedidos: produtoInicial?.pedidos ?? 0,
@@ -974,7 +988,7 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
                   </button>
                 </div>
 
-                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
                   <Field label="Nome" isDark={isDark}>
                     <input
                       type="text"
@@ -996,6 +1010,23 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
                         value={v.preco}
                         className="w-full bg-transparent px-2 text-sm outline-none"
                         onChange={(e) => updateVariacao(i, { preco: e.target.value })}
+                      />
+                    </div>
+                  </Field>
+
+                  <Field label="Preço promocional" isDark={isDark} hint="Opcional">
+                    <div className={shellInputClass}>
+                      <span className={["text-sm font-extrabold", isDark ? "text-white/70" : "text-zinc-700"].join(" ")}>
+                        R$
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={v.precoPromocional ?? ""}
+                        placeholder="—"
+                        className="w-full bg-transparent px-2 text-sm outline-none"
+                        onChange={(e) => updateVariacao(i, { precoPromocional: e.target.value })}
                       />
                     </div>
                   </Field>

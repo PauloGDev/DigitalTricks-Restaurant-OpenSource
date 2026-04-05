@@ -488,6 +488,7 @@ public class PedidoFacadeService {
         return new ItemPedidoDTO(
                 item.getId(),
                 item.getVariacao() != null ? item.getVariacao().getId() : null,
+                item.getVariacao() != null ? item.getVariacao().getNome() : null,
                 item.getNomeProduto(),
                 item.getQuantidade(),
                 item.getPrecoUnitario(),

@@ -246,7 +246,24 @@ function getHeaderTone(theme, tone) {
   return tone === "green" ? "text-emerald-700" : "text-orange-700";
 }
 
+function renderVariacao(item, theme, compactMode) {
+  // Pode vir como objeto aninhado (variacao.nome) ou como campo plano (variacaoNome)
+  const nomeVariacao = item?.variacao?.nome || item?.variacaoNome || "";
+  if (!nomeVariacao) return null;
+
+  return (
+    <div
+      className={`mt-1 text-sm font-bold break-words whitespace-normal [overflow-wrap:anywhere] ${
+        theme === "dark" ? "text-orange-300/90" : "text-orange-700"
+      } ${compactMode ? clamp2 : ""}`}
+    >
+      {nomeVariacao}
+    </div>
+  );
+}
+
 function renderOpcionais(item, theme, compactMode) {
+  // O DTO já envia opcionais agrupados: Array<{ grupoId, grupoNome, tipoGrupo, itens[] }>
   const grupos = item?.opcionais || [];
   if (!grupos.length) return null;
 
@@ -386,6 +403,8 @@ function PedidoTVCard({ pedido, theme, classes, compactMode = false }) {
                     {item.quantidade ?? 1}x {item.nomeProduto ?? item.nome ?? "Item"}
                   </div>
 
+                  {renderVariacao(item, theme, compactMode)}
+
                   {!compactMode ? (
                     <div className={`mt-1 text-sm font-semibold opacity-85 ${textSafe}`}>
                       Unitário: {formatMoney.format(Number(item.precoUnitario || 0))}
@@ -394,14 +413,14 @@ function PedidoTVCard({ pedido, theme, classes, compactMode = false }) {
 
                   {renderOpcionais(item, theme, compactMode)}
 
-                  {!compactMode && item?.observacao ? (
+                  {item?.observacao && (
                     <div
                       className="mt-2 text-sm font-bold opacity-90 break-words whitespace-pre-wrap [overflow-wrap:anywhere]"
                       title={item.observacao}
                     >
-                      Obs. item: {item.observacao}
+                      Obs.: {item.observacao}
                     </div>
-                  ) : null}
+                  )}
                 </div>
               ))
             )}
