@@ -7,6 +7,8 @@ import com.ecommerce.digitaltricks.order.model.Pedido;
 import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.order.service.MercadoPagoService;
+import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
+import com.ecommerce.digitaltricks.admin.model.Empresa;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,15 +23,18 @@ import java.util.Map;
 public class PagamentoController {
 
     private final PedidoRepository pedidoRepository;
+    private final EmpresaRepository empresaRepository;
     private final ClienteRepository clienteRepository;
     private final MercadoPagoService mercadoPagoService;
 
     public PagamentoController(
             PedidoRepository pedidoRepository,
+            EmpresaRepository empresaRepository,
             ClienteRepository clienteRepository,
             MercadoPagoService mercadoPagoService
     ) {
         this.pedidoRepository = pedidoRepository;
+        this.empresaRepository = empresaRepository;
         this.clienteRepository = clienteRepository;
         this.mercadoPagoService = mercadoPagoService;
     }
@@ -39,6 +44,17 @@ public class PagamentoController {
 
         return clienteRepository.findByTelefone(telefone)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+    }
+
+    /**
+     * Resolve o token MP do restaurante atraves da empresa do pedido.
+     */
+    private String getEmpresaToken(Pedido pedido) {
+        if (pedido == null || pedido.getEmpresa() == null) return null;
+        Empresa empresa = empresaRepository.findById(pedido.getEmpresa().getId())
+                .orElse(null);
+        if (empresa == null) return null;
+        return empresa.getMercadoPagoAccessToken();
     }
 
     @PostMapping("/{pedidoId}/pix")
@@ -70,11 +86,12 @@ public class PagamentoController {
         BigDecimal value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP);
 
         Map<String, Object> payment = mercadoPagoService.criarPix(
+                getEmpresaToken(pedido),
                 String.valueOf(pedido.getId()),
                 "Pedido #" + pedido.getId(),
                 value,
-                perfil.getEmail(), // 🔥 agora vem do perfil
-                null // 🔥 CPF removido
+                perfil.getEmail(),
+                perfil.getTelefone()
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));
@@ -143,6 +160,7 @@ public class PagamentoController {
         double value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP).doubleValue();
 
         Map<String, Object> payment = mercadoPagoService.criarCartao(
+                getEmpresaToken(pedido),
                 String.valueOf(pedido.getId()),
                 "Pedido #" + pedido.getId(),
                 value,
@@ -150,7 +168,7 @@ public class PagamentoController {
                 cartao.installments() != null ? cartao.installments() : 1,
                 cartao.paymentMethodId(),
                 perfil.getEmail(),
-                null // 🔥 CPF removido
+                perfil.getTelefone()
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));

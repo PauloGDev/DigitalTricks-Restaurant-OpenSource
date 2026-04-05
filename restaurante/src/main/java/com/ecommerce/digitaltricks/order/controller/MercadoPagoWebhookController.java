@@ -25,15 +25,29 @@ public class MercadoPagoWebhookController {
     private final MercadoPagoService mercadoPagoService;
     private final PedidoRepository pedidoRepository;
     private final PedidoStatusService pedidoStatusService;
+    private final com.ecommerce.digitaltricks.admin.repository.EmpresaRepository empresaRepository;
 
     public MercadoPagoWebhookController(
             MercadoPagoService mercadoPagoService,
             PedidoRepository pedidoRepository,
-            PedidoStatusService pedidoStatusService
+            PedidoStatusService pedidoStatusService,
+            com.ecommerce.digitaltricks.admin.repository.EmpresaRepository empresaRepository
     ) {
         this.mercadoPagoService = mercadoPagoService;
         this.pedidoRepository = pedidoRepository;
         this.pedidoStatusService = pedidoStatusService;
+        this.empresaRepository = empresaRepository;
+    }
+
+    private String resolveEmpresaToken(String paymentId) {
+        Optional<Pedido> opt = pedidoRepository.findByMpPaymentId(paymentId);
+        if (opt.isPresent() && opt.get().getEmpresaId() != null) {
+            var empOpt = empresaRepository.findById(opt.get().getEmpresaId());
+            if (empOpt.isPresent()) {
+                return empOpt.get().getMercadoPagoAccessToken();
+            }
+        }
+        return null;
     }
 
     @PostMapping
@@ -53,7 +67,21 @@ public class MercadoPagoWebhookController {
 
             log.info("Webhook MP recebido. paymentId={}", paymentId);
 
-            Map<String, Object> payment = mercadoPagoService.consultarPagamento(paymentId);
+            String token = null;
+            if (externalRef != null && !externalRef.isBlank()) {
+                try {
+                    Long pedidoId = Long.valueOf(externalRef);
+                    var p = pedidoRepository.findById(pedidoId);
+                    if (p.isPresent() && p.get().getEmpresaId() != null) {
+                        var emp = empresaRepository.findById(p.get().getEmpresaId());
+                        if (emp.isPresent()) {
+                            token = emp.get().getMercadoPagoAccessToken();
+                        }
+                    }
+                } catch (NumberFormatException ignored) {}
+            }
+
+            Map<String, Object> payment = mercadoPagoService.consultarPagamento(token, paymentId);
 
             String mpStatus = asString(payment.get("status"));
             String externalRef = asString(payment.get("external_reference"));
