@@ -94,8 +94,12 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
   }), [amount]);
 
   const customization = useMemo(() => ({
-    paymentMethods: { maxInstallments: 12 },
+    paymentMethods: {
+      maxInstallments: 12,
+      minInstallments: 1,
+    },
     visual: { style: { theme: "default" } },
+    maxInstallmentsByMerchant: 12,
   }), []);
 
   const onSubmit = async (formData) => {
@@ -104,6 +108,7 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
         token: formData.token,
         installments: formData.installments || 1,
         paymentMethodId: formData.payment_method_id,
+        paymentTypeId: formData.payment_type_id || null, // "credit_card" ou "debit_card"
       };
 
       const res = await fetch(

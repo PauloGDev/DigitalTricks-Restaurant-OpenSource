@@ -127,7 +127,7 @@ public class PagamentoController {
         ));
     }
 
-    public record CartaoDTO(String token, Integer installments, String paymentMethodId) {}
+    public record CartaoDTO(String token, Integer installments, String paymentMethodId, String paymentTypeId) {}
 
     @PostMapping("/{pedidoId}/cartao")
     public ResponseEntity<?> pagarCartao(
@@ -151,7 +151,9 @@ public class PagamentoController {
             return ResponseEntity.status(403).body(Map.of("erro", "Acesso negado"));
         }
 
-        if (pedido.getTipoPagamento() != TipoPagamento.CREDIT_CARD) {
+        boolean isDebito = "debit_card".equalsIgnoreCase(cartao.paymentTypeId());
+
+        if (!isDebito && pedido.getTipoPagamento() != TipoPagamento.CREDIT_CARD) {
             return ResponseEntity.badRequest().body(Map.of(
                     "erro", "Este pedido não está configurado para Cartão."
             ));
@@ -183,7 +185,8 @@ public class PagamentoController {
         String mpPaymentId = String.valueOf(payment.get("id"));
         String status = String.valueOf(payment.get("status"));
 
-        pedido.setTipoPagamento(TipoPagamento.CREDIT_CARD);
+        // Salva o tipo real (credito ou debito)
+        pedido.setTipoPagamento(isDebito ? TipoPagamento.DEBIT_CARD : TipoPagamento.CREDIT_CARD);
         pedido.setMpPaymentId(mpPaymentId);
         pedido.setMpStatus(status);
         pedido.setPaymentProvider("MERCADO_PAGO");
