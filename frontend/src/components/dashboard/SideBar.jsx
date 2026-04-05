@@ -191,8 +191,6 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("empresaId");
-    localStorage.removeItem("usuarioId");
-    localStorage.removeItem("username");
     setRole(null);
     window.location.href = "/dashboard/login";
   };
@@ -258,6 +256,15 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
         tone: isDark
           ? "border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-300"
           : "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700",
+      };
+    }
+
+    if (section === "perfil") {
+      return {
+        label: "Perfil do restaurante",
+        tone: isDark
+          ? "border-gray-500/20 bg-gray-500/10 text-gray-300"
+          : "border-gray-200 bg-gray-50 text-gray-700",
       };
     }
 
@@ -384,7 +391,7 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                   isDark ? "text-white/40" : "text-zinc-400"
                 }`}
               >
-              
+
               </span>
             </button>
           </div>
@@ -464,6 +471,18 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                     icon={BarChart3}
                     label="Analytics"
                     hint="Métricas e desempenho"
+                    isDark={isDark}
+                  />
+
+                  <NavItemButton
+                    active={section === "perfil"}
+                    onClick={() => {
+                      changeSection("perfil");
+                      closeMobile();
+                    }}
+                    icon={Store}
+                    label="Perfil do restaurante"
+                    hint="Dados, endereço e Mercado Pago"
                     isDark={isDark}
                   />
                 </div>

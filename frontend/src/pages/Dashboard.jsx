@@ -8,6 +8,7 @@ import {
   Users,
   TicketPercent,
   BarChart3,
+  Store,
 } from "lucide-react";
 import PageTitle from "../context/PageTitle";
 import GerenciarProdutos from "../components/dashboard/GerenciarProdutos";
@@ -16,9 +17,11 @@ import GerenciarClientes from "../components/dashboard/GerenciarClientes";
 import GerenciarPedidos from "../components/dashboard/GerenciarPedidos";
 import Sidebar from "../components/dashboard/SideBar";
 import GerenciarCupons from "../components/dashboard/cupons/GerenciarCupons";
-import { useRestaurantNotifications } from "../context/RestaurantNotificationContext";
 import DashboardAnalytics from "../components/dashboard/analytics/DashboardAnalytics";
+import GerenciarPerfil from "../components/dashboard/GerenciarPerfil";
+import { useRestaurantNotifications } from "../context/RestaurantNotificationContext";
 import { useAuth } from "../context/AuthContext";
+
 const formatCurrency = (value) =>
   new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -37,7 +40,6 @@ const Dashboard = () => {
 
   const { user, loadingAuth } = useAuth();
 
-  // Redirect to admin login if not authenticated
   useEffect(() => {
     if (!loadingAuth && !user) {
       navigate("/dashboard/login", { replace: true });
@@ -73,7 +75,7 @@ const Dashboard = () => {
       const hash = window.location.hash.replace("#", "");
 
       if (
-        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics"].includes(hash)
+        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics", "perfil"].includes(hash)
       ) {
         setSection(hash);
       }
@@ -118,6 +120,7 @@ const Dashboard = () => {
     pedidos: <GerenciarPedidos isDark={isDark} refreshKey={pedidoRefreshKey} />,
     cupons: <GerenciarCupons isDark={isDark} user={user} />,
     analytics: <DashboardAnalytics isDark={isDark} empresaId={empresaId} />,
+    perfil: <GerenciarPerfil isDark={isDark} empresaId={empresaId} />,
   }[section];
 
   const sectionLabel =
@@ -133,6 +136,8 @@ const Dashboard = () => {
       ? "Clientes"
       : section === "analytics"
       ? "Analytics"
+      : section === "perfil"
+      ? "Perfil do restaurante"
       : "Dashboard";
 
   const sectionDescription =
@@ -146,6 +151,8 @@ const Dashboard = () => {
       ? "os cupons e regras promocionais"
       : section === "analytics"
       ? "as métricas e indicadores"
+      : section === "perfil"
+      ? "os dados, endereço e pagamentos do restaurante"
       : "os pedidos em tempo real";
 
   const sectionMeta = useMemo(() => {
@@ -199,6 +206,16 @@ const Dashboard = () => {
       };
     }
 
+    if (section === "perfil") {
+      return {
+        icon: Store,
+        badge: "Configurações",
+        badgeClass: isDark
+          ? "border-gray-500/20 bg-gray-500/10 text-gray-300"
+          : "border-gray-200 bg-gray-50 text-gray-700",
+      };
+    }
+
     return {
       icon: BarChart3,
       badge: "Inteligência de negócio",
@@ -210,30 +227,6 @@ const Dashboard = () => {
 
   const CurrentSectionIcon = sectionMeta.icon;
 
-  const metricCards = [
-    {
-      title: "Pedidos recebidos",
-      value: ultimoPedido ? `#${ultimoPedido.pedidoId}` : "Aguardando",
-      helper: ultimoPedido ? "Último pedido em tempo real" : "Nenhum pedido recente",
-    },
-    {
-      title: "Notificações",
-      value: quantidadeNaoLidas > 99 ? "99+" : `${quantidadeNaoLidas}`,
-      helper: quantidadeNaoLidas > 0 ? "Pendentes de atenção" : "Tudo visualizado",
-    },
-    {
-      title: "Conexão",
-      value: conectado ? "Online" : "Reconectando",
-      helper: conectado ? "Atualizações em tempo real ativas" : "Tentando restabelecer conexão",
-    },
-    {
-      title: "Seção atual",
-      value: sectionLabel,
-      helper: `Você está gerenciando ${sectionDescription}`,
-    },
-  ];
-
-  // Show loading while checking auth
   if (loadingAuth || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
@@ -490,40 +483,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {metricCards.map((item, index) => (
-              <div
-                key={index}
-                className={[
-                  "rounded-[26px] border p-5 transition-all duration-300 hover:translate-y-[-2px]",
-                  isDark
-                    ? "border-white/10 bg-white/[0.04] shadow-[0_10px_30px_rgba(0,0,0,0.18)] hover:bg-white/[0.06]"
-                    : "border-zinc-200 bg-white shadow-[0_10px_25px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_rgba(15,23,42,0.08)]",
-                ].join(" ")}
-              >
-                <p
-                  className={[
-                    "text-xs font-bold uppercase tracking-[0.12em]",
-                    isDark ? "text-white/35" : "text-zinc-400",
-                  ].join(" ")}
-                >
-                  {item.title}
-                </p>
-
-                <p className="mt-3 text-xl font-extrabold sm:text-2xl">{item.value}</p>
-
-                <p
-                  className={[
-                    "mt-2 text-sm leading-relaxed",
-                    isDark ? "text-white/50" : "text-zinc-500",
-                  ].join(" ")}
-                >
-                  {item.helper}
-                </p>
-              </div>
-            ))}
           </div>
 
           <div
