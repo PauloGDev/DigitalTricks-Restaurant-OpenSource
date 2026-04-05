@@ -135,6 +135,13 @@ export default function LoginAdmin() {
 
           <MsgBox mensagem={msg} tipo={tipoMsg} refEl={msgRef} />
 
+          <p className="text-xs text-center text-zinc-500 mt-2">
+            Nao tem conta?{" "}
+            <Link to="/dashboard/register" className="text-red-600 hover:text-red-500 font-semibold">
+              Criar conta admin
+            </Link>
+          </p>
+
           <form onSubmit={handleLogin} className="space-y-4 mt-4">
             {/* LOGIN */}
             <div className="relative">

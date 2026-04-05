@@ -32,6 +32,7 @@ import { RestaurantNotificationProvider } from "./context/RestaurantNotification
 import DashboardTV from "./components/dashboard/pedidos/DashboardTV";
 import { useAuth } from "./context/AuthContext";
 import LoginAdmin from "./pages/login-admin/LoginAdmin";
+import RegisterAdmin from "./pages/register-admin/RegisterAdmin";
 import { normalizeRoles, getPrimaryRole, buildPermissions } from "./utils/acl";
 
 const App = () => {
@@ -147,13 +148,22 @@ const App = () => {
         />
 
         <Route
-        path="/dashboard/login"
-        element={
-          <PublicRoute>
-            <LoginAdmin />
-          </PublicRoute>
-        }
-      />
+          path="/dashboard/login"
+          element={
+            <PublicRoute>
+              <LoginAdmin />
+            </PublicRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/register"
+          element={
+            <PublicRoute>
+              <RegisterAdmin />
+            </PublicRoute>
+          }
+        />
 
         <Route
           path="/direitos"

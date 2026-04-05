@@ -259,7 +259,7 @@ const NavBar = () => {
             {perfil === PERFIL.GUEST && (
               <>
                 <Link
-                  to="/register"
+                  to="/dashboard/register"
                   className={[
                     "hidden sm:inline-flex items-center justify-center px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all duration-300",
                     isDark
@@ -529,7 +529,7 @@ const NavBar = () => {
                     Entrar
                   </Link>
                   <Link
-                    to="/register"
+                    to="/dashboard/register"
                     onClick={() => setMenuOpen(false)}
                     className={[
                       "w-full px-4 py-3 rounded-2xl text-center font-semibold border transition-all",
