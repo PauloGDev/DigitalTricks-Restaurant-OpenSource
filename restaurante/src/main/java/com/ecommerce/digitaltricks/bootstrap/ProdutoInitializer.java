@@ -781,6 +781,25 @@ public class ProdutoInitializer implements CommandLineRunner {
         cupomFixo.setDataFim(LocalDateTime.now().plusMonths(3));
         cupomRequestValidateFields(cupomFixo);
         cupomRepository.save(cupomFixo);
+
+        // 4. Cupom percentual
+        Cupom cupom99 = new Cupom();
+        cupom99.setEmpresa(empresa);
+        cupom99.setCodigo("100");
+        cupom99.setNome("Boas-vindas");
+        cupom99.setDescricao("100% de desconto no primeiro pedido");
+        cupom99.setAtivo(true);
+        cupom99.setTipoDesconto(TipoCupomDesconto.PERCENTUAL);
+        cupom99.setValorDesconto(new BigDecimal("100"));
+        cupom99.setValorMaximoDesconto(new BigDecimal("18.9"));
+        cupom99.setApenasPrimeiraCompra(false);
+        cupom99.setLimiteUsoTotal(100);
+        cupom99.setLimiteUsoPorUsuario(1);
+        cupom99.setTotalUsado(0);
+        cupom99.setDataInicio(LocalDateTime.now());
+        cupom99.setDataFim(LocalDateTime.now().plusMonths(6));
+        cupomRequestValidateFields(cupom99);
+        cupomRepository.save(cupom99);
     }
 
     /**

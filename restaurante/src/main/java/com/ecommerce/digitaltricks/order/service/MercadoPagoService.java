@@ -143,6 +143,27 @@ public class MercadoPagoService {
                                            String externalReference, String description, double value,
                                            String token, int installments, String paymentMethodId,
                                            String email, String cpf, String paymentTypeId) {
+        return criarCartao(restauranteAccessToken, externalReference, description, value,
+                token, installments, paymentMethodId, email, cpf, paymentTypeId, email, null, null, null);
+    }
+
+    public Map<String, Object> criarCartaoComItens(String restauranteAccessToken,
+                                           String externalReference, String description, double value,
+                                           String token, int installments, String paymentMethodId,
+                                           String email, String cpf, String paymentTypeId,
+                                           String payerEmail, String payerFirstName, String payerLastName,
+                                           String payerPhone) {
+        return criarCartao(restauranteAccessToken, externalReference, description, value,
+                token, installments, paymentMethodId, email, cpf, paymentTypeId,
+                payerEmail, payerFirstName, payerLastName, payerPhone);
+    }
+
+    public Map<String, Object> criarCartao(String restauranteAccessToken,
+                                           String externalReference, String description, double value,
+                                           String token, int installments, String paymentMethodId,
+                                           String email, String cpf, String paymentTypeId,
+                                           String payerEmail, String payerFirstName, String payerLastName,
+                                           String payerPhone) {
         if (externalReference == null || externalReference.isBlank()) throw new IllegalArgumentException("externalReference obrigatório");
         if (description == null || description.isBlank()) throw new IllegalArgumentException("description obrigatória");
         if (value <= 0) throw new IllegalArgumentException("value deve ser > 0");
@@ -153,20 +174,43 @@ public class MercadoPagoService {
 
         String accessToken = resolveToken(restauranteAccessToken);
 
-        Map<String, Object> payer;
-        if (cpf != null && !cpf.isBlank()) {
-            String cpfDigits = cpf.replaceAll("\\D", "");
-            payer = Map.of(
-                    "email", email,
-                    "identification", Map.of("type", "CPF", "number", cpfDigits)
-            );
-        } else {
-            payer = Map.of("email", email);
+        // Payer completo com nome completo (obrigatorio pelo MP para aprovar)
+        Map<String, Object> identification = new HashMap<>();
+        identification.put("type", "CPF");
+        identification.put("number", cpf != null && !cpf.isBlank() ? cpf.replaceAll("\\D", "") : "");
+
+        Map<String, Object> payer = new HashMap<>();
+        payer.put("email", email);
+        payer.put("identification", identification);
+        if (payerFirstName != null && !payerFirstName.isBlank()) {
+            payer.put("first_name", payerFirstName);
         }
+        if (payerLastName != null && !payerLastName.isBlank()) {
+            payer.put("last_name", payerLastName);
+        }
+        if (payerPhone != null && !payerPhone.isBlank()) {
+            payer.put("phone", Map.of("number", payerPhone));
+        }
+
+        // additional_info com items (obrigatorio pelo MP para aprovar)
+        List<Map<String, Object>> additionalItems = List.of(
+                Map.of(
+                        "id", externalReference,
+                        "title", description,
+                        "description", "Pedido #" + externalReference,
+                        "quantity", 1,
+                        "unit_price", value,
+                        "category_id", "marketplace"
+                )
+        );
+        Map<String, Object> additionalInfo = Map.of(
+                "items", additionalItems
+        );
 
         Map<String, Object> body = new HashMap<>();
         body.put("transaction_amount", value);
         body.put("description", description);
+        body.put("statement_descriptor", "Digital Tricks");
         body.put("token", token);
         body.put("installments", installments);
         body.put("payment_method_id", paymentMethodId);
@@ -175,6 +219,12 @@ public class MercadoPagoService {
         }
         body.put("payer", payer);
         body.put("external_reference", externalReference);
+        // notification_url será definida via env ou fallback
+        String notificationUrl = System.getenv("MP_NOTIFICATION_URL");
+        if (notificationUrl != null && !notificationUrl.isBlank()) {
+            body.put("notification_url", notificationUrl);
+        }
+        body.put("additional_info", additionalInfo);
 
         String idemKey = "card-" + externalReference + "-" + System.currentTimeMillis();
         log.info("Criando CARTÃO MercadoPago externalReference={} value={} installments={} paymentType={}",

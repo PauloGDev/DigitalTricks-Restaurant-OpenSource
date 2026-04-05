@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -127,7 +128,7 @@ public class PagamentoController {
         ));
     }
 
-    public record CartaoDTO(String token, Integer installments, String paymentMethodId, String paymentTypeId) {}
+    public record CartaoDTO(String token, Integer installments, String paymentMethodId, String paymentTypeId, String issuerId) {}
 
     @PostMapping("/{pedidoId}/cartao")
     public ResponseEntity<?> pagarCartao(
@@ -153,6 +154,11 @@ public class PagamentoController {
 
         boolean isDebito = "debit_card".equalsIgnoreCase(cartao.paymentTypeId());
 
+        System.out.println("[CARTAO] pedidoId=" + pedidoId + ", paymentMethodId=" + cartao.paymentMethodId()
+                + ", installments=" + cartao.installments()
+                + ", paymentTypeId=" + cartao.paymentTypeId()
+                + ", isDebito=" + isDebito);
+
         if (!isDebito && pedido.getTipoPagamento() != TipoPagamento.CREDIT_CARD) {
             return ResponseEntity.badRequest().body(Map.of(
                     "erro", "Este pedido não está configurado para Cartão."
@@ -170,7 +176,17 @@ public class PagamentoController {
 
         double value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP).doubleValue();
 
-        Map<String, Object> payment = mercadoPagoService.criarCartao(
+        // Envia nome completo e telefone do comprador para o MP
+        String nomeCompleto = perfil.getNomeCompleto();
+        String primeiroNome = "";
+        String sobrenome = "";
+        if (nomeCompleto != null && !nomeCompleto.isBlank()) {
+            String[] partes = nomeCompleto.trim().split("\\s+", 2);
+            primeiroNome = partes[0];
+            if (partes.length > 1) sobrenome = partes[1];
+        }
+
+        Map<String, Object> payment = mercadoPagoService.criarCartaoComItens(
                 getEmpresaToken(pedido),
                 String.valueOf(pedido.getId()),
                 "Pedido #" + pedido.getId(),
@@ -180,11 +196,28 @@ public class PagamentoController {
                 cartao.paymentMethodId(),
                 perfil.getEmail(),
                 cpf,
-                isDebito ? "debit_card" : "credit_card"
+                isDebito ? "debit_card" : "credit_card",
+                perfil.getEmail(),           // payer.email
+                primeiroNome,                // payer.first_name
+                sobrenome,                   // payer.last_name
+                perfil.getTelefone()         // payer.phone
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));
         String status = String.valueOf(payment.get("status"));
+        String statusDetail = String.valueOf(payment.get("status_detail"));
+        String statusCode = String.valueOf(payment.get("status_code"));
+        @SuppressWarnings("unchecked")
+        List<Object> causes = payment.get("cause") != null ? (List<Object>) payment.get("cause") : List.of();
+
+        // Log completo da resposta para debug de rejeicoes
+        System.out.println("[CARTAO RESPONSE] paymentId=" + mpPaymentId
+                + ", status=" + status
+                + ", status_detail=" + statusDetail
+                + ", status_code=" + statusCode);
+        if (!causes.isEmpty()) {
+            System.out.println("[CARTAO RESPONSE] cause=" + causes);
+        }
 
         // Salva o tipo real (credito ou debito)
         pedido.setTipoPagamento(isDebito ? TipoPagamento.DEBIT_CARD : TipoPagamento.CREDIT_CARD);
@@ -197,7 +230,8 @@ public class PagamentoController {
         return ResponseEntity.ok(Map.of(
                 "pedidoId", pedido.getId(),
                 "mpPaymentId", mpPaymentId,
-                "status", status
+                "status", status,
+                "statusDetail", statusDetail
         ));
     }
 }
