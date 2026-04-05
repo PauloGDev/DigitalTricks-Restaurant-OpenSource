@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Clock3,
 } from "lucide-react";
-import { formatCurrency, formatNumber } from "./AnalyticsUtils";
+import { formatCurrency, formatNumber, formatPercent } from "./AnalyticsUtils";
 
 function SummaryCard({ title, value, hint, icon: Icon, loading, isDark = true }) {
   return (
@@ -177,16 +177,19 @@ export default function AnalyticsSummaryGrid({ dados, loading, isDark = true }) 
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <GrowthIndicator
-        valor={comparacao?.crescimentoValor || 0}
-        percentual={comparacao?.crescimentoPercentual || 0}
-        loading={loading}
-        isDark={isDark}
-      />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
       {cards.map((card) => (
         <SummaryCard key={card.title} loading={loading} isDark={isDark} {...card} />
       ))}
+
+      <div className="col-span-full">
+        <GrowthIndicator
+          valor={comparacao?.crescimentoValor || 0}
+          percentual={comparacao?.crescimentoPercentual || 0}
+          loading={loading}
+          isDark={isDark}
+        />
+      </div>
     </div>
   );
 }
