@@ -49,6 +49,20 @@ const STATUS_CONFIG = {
     bgLight: "bg-zinc-100",
     bgDark: "bg-white/10",
   },
+  AGUARDANDO_RETIRADA: {
+    label: "Aguardando Retirada",
+    icon: Package,
+    color: "text-teal-600",
+    bgLight: "bg-teal-50",
+    bgDark: "bg-teal-500/10",
+  },
+  RETIRADO: {
+    label: "Retirado",
+    icon: CheckCircle,
+    color: "text-gray-700",
+    bgLight: "bg-gray-100",
+    bgDark: "bg-white/10",
+  },
 };
 
 const STATUS_LABELS = {
