@@ -35,16 +35,13 @@ export default function AnalyticsInsightsCard({ insights = [], isDark = true }) 
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {insights.map((item, index) => {
         const Icon = ICONS[item.tipo] || TrendingUp;
-        const badgeStyle = BADGE_STYLES[item.tipo] ?? BADGE_STYLES.default;
         const iconStyle = ICON_STYLES[item.tipo] || ICON_STYLES.pico;
 
         return (
           <div
             key={index}
             className={`rounded-3xl border p-4 transition-all duration-300 hover:-translate-y-0.5 ${
-              item.tipo === "alerta" || item.tipo === "positivo" || item.tipo === "cupom"
-                ? badgeStyle(isDark)
-                : isDark
+              isDark
                 ? "border-white/10 bg-[#121212]"
                 : "border-zinc-200 bg-white"
             }`}
