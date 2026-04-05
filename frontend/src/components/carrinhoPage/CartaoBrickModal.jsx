@@ -3,14 +3,32 @@ import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { X, CreditCard } from "lucide-react";
 import { useNotification } from "../../context/NotificationContext";
 
-export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt }) {
+export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaId }) {
   const { showNotification } = useNotification();
 
   const [amount, setAmount] = useState(null); // null = carregando
   const [loading, setLoading] = useState(true);
+  const [mpKey, setMpKey] = useState(() => import.meta.env.VITE_MP_PUBLIC_KEY);
 
   useEffect(() => {
-    initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "pt-BR" });
+    // Busca public key do restaurante
+    let active = true;
+    if (empresaId) {
+      fetch(`${import.meta.env.VITE_API_URL}/empresas/${empresaId}/mp/public-key`, {
+        headers: { Authorization: `Bearer ${tokenJwt}` },
+      })
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => {
+          if (active && data?.publicKey) setMpKey(data.publicKey);
+        })
+        .catch(() => {})
+        .finally(() => {
+          if (active) initMercadoPago(mpKey || import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "pt-BR" });
+        });
+    } else {
+      initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "pt-BR" });
+    }
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {

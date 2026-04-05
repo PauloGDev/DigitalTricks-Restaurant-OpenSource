@@ -436,6 +436,7 @@ export default function FinalizarCompra({
 
           {tipoPagamento === "CREDIT_CARD" && showCartaoModal && (
             <CartaoBrickModal
+              empresaId={empresaId}
               onClose={() => setShowCartaoModal(false)}
               pedidoId={pedidoId}
               tokenJwt={getToken()}
