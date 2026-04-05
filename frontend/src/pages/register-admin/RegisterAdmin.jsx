@@ -249,7 +249,7 @@ export default function RegisterAdmin() {
   ].join(" ");
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-transparent text-white" : "bg-zinc-900 text-zinc-900"}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-[#1A1A1A] text-white" : "bg-zinc-50 text-zinc-900"}`}>
       <PageTitle title="Cadastro Admin | Painel" />
 
       {/* Theme toggle */}
@@ -291,8 +291,8 @@ export default function RegisterAdmin() {
         </div>
       </section>
 
-      {/* Área interna com fundo escuro */}
-      <div className={`transition-colors duration-300 ${isDark ? "bg-[#0D0D0D]/60" : "bg-zinc-900"}`}>
+      {/* Área interna */}
+      <div className={`transition-colors duration-300 ${isDark ? "bg-transparent" : "bg-zinc-50"}`}>
         <div className="py-6 sm:py-8 w-full max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div
             variants={containerVariants}
