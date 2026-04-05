@@ -50,24 +50,14 @@ function MsgBox({ mensagem, msgType, msgRef }) {
 function InputShell({ icon: Icon, label, hint, children }) {
   return (
     <div className="space-y-1">
-      <label className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
-        {label}
-      </label>
+      <label className="text-sm font-extrabold text-zinc-900">{label}</label>
       <div className="relative">
-        <div
-          className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${
-            isDark ? "text-zinc-500" : "text-zinc-400"
-          }`}
-        >
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
           <Icon className="w-4 h-4" />
         </div>
         {children}
       </div>
-      {hint && (
-        <p className={`text-xs leading-relaxed ${isDark ? "text-white/45" : "text-zinc-500"}`}>
-          {hint}
-        </p>
-      )}
+      {hint && <p className="text-xs text-zinc-500 leading-relaxed">{hint}</p>}
     </div>
   );
 }
