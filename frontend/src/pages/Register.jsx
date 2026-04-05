@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   UserPlus,
   Loader2,
@@ -13,6 +13,8 @@ import {
   ArrowRight,
   XCircle,
   Calendar,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { IMaskInput } from "react-imask";
 import PageTitle from "../context/PageTitle";
@@ -100,6 +102,7 @@ export default function Register() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
+  const [mostrarOpcionais, setMostrarOpcionais] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [mensagem, setMensagem] = useState("");
@@ -235,6 +238,7 @@ export default function Register() {
                 <MsgBox mensagem={mensagem} msgType={msgType} msgRef={msgRef} />
 
                 <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Obrigatórios */}
                   <InputShell icon={User} label="Nome completo" hint="Ex: João da Silva">
                     <input
                       type="text"
@@ -244,18 +248,6 @@ export default function Register() {
                       onChange={(e) => setNomeCompleto(e.target.value)}
                       required
                       autoComplete="name"
-                    />
-                  </InputShell>
-
-                  <InputShell icon={Mail} label="E-mail" hint="Opcional — para avisos e promoções">
-                    <input
-                      type="email"
-                      placeholder="seuemail@exemplo.com"
-                      className={baseInput}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      autoComplete="email"
-                      inputMode="email"
                     />
                   </InputShell>
 
@@ -271,29 +263,66 @@ export default function Register() {
                     />
                   </InputShell>
 
-                  <InputShell icon={Calendar} label="Data de nascimento" hint="Opcional">
-                    <input
-                      type="date"
-                      className={baseInput}
-                      value={dataNascimento}
-                      onChange={(e) => setDataNascimento(e.target.value)}
-                      inputMode="none"
-                    />
-                  </InputShell>
-
-                  <div className="sm:col-span-2">
-                    <label className="text-sm font-extrabold text-zinc-900 block mb-1">Gênero</label>
-                    <select
-                      value={genero}
-                      onChange={(e) => setGenero(e.target.value)}
-                      className={baseInput.replace("pl-11", "")}
+                  {/* Toggle opcionais */}
+                  <div className="sm:col-span-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setMostrarOpcionais((p) => !p)}
+                      className="flex items-center gap-2 text-sm font-semibold text-zinc-600 hover:text-zinc-900 transition"
                     >
-                      <option value="">Prefiro não informar</option>
-                      <option value="MASCULINO">Masculino</option>
-                      <option value="FEMININO">Feminino</option>
-                      <option value="OUTRO">Outro</option>
-                    </select>
+                      {mostrarOpcionais ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      Informações opcionais
+                    </button>
                   </div>
+
+                  {/* Opcionais (colapsáveis) */}
+                  <AnimatePresence>
+                    {mostrarOpcionais && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <InputShell icon={Mail} label="E-mail" hint="Opcional — para avisos e promoções">
+                          <input
+                            type="email"
+                            placeholder="seuemail@exemplo.com"
+                            className={baseInput}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
+                            inputMode="email"
+                          />
+                        </InputShell>
+
+                        <InputShell icon={Calendar} label="Data de nascimento" hint="Opcional">
+                          <input
+                            type="date"
+                            className={baseInput}
+                            value={dataNascimento}
+                            onChange={(e) => setDataNascimento(e.target.value)}
+                            inputMode="none"
+                          />
+                        </InputShell>
+
+                        <div className="sm:col-span-2">
+                          <label className="text-sm font-extrabold text-zinc-900 block mb-1">Gênero</label>
+                          <select
+                            value={genero}
+                            onChange={(e) => setGenero(e.target.value)}
+                            className={baseInput.replace("pl-11", "")}
+                          >
+                            <option value="">Prefiro não informar</option>
+                            <option value="MASCULINO">Masculino</option>
+                            <option value="FEMININO">Feminino</option>
+                            <option value="OUTRO">Outro</option>
+                          </select>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
 
                   <div className="sm:col-span-2 pt-2">
                     <div className="h-px bg-zinc-100" />
