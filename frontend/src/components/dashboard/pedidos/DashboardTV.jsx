@@ -90,6 +90,7 @@ function getObservacaoGeral(pedido) {
 }
 
 function getTipoEntrega(pedido) {
+  if (pedido?.tipoEntrega) return String(pedido.tipoEntrega).toUpperCase();
   return pedido?.enderecoEntrega ? "DELIVERY" : "RETIRADA";
 }
 
@@ -120,12 +121,18 @@ function getLocalEntrega(pedido) {
 }
 
 function getStatusLabel(status) {
-  const normalized = String(status || "").toUpperCase();
-
-  if (normalized === "PRONTO") return "Pronto";
-  if (normalized === "RECEBIDO") return "Recebido";
-  if (normalized === "EM_PREPARO") return "Em preparo";
-  return normalized || "—";
+  const map = {
+    AGUARDANDO_PAGAMENTO: "Aguardando pagamento",
+    RECEBIDO: "Recebido",
+    EM_PREPARO: "Em preparo",
+    PRONTO: "Pronto",
+    SAIU_PARA_ENTREGA: "Saiu para entrega",
+    AGUARDANDO_RETIRADA: "Aguardando retirada",
+    ENTREGUE: "Entregue",
+    RETIRADO: "Retirado",
+    CANCELADO: "Cancelado",
+  };
+  return map[String(status || "").toUpperCase()] || String(status || "—");
 }
 
 function getCardTone(pedido) {
@@ -705,6 +712,22 @@ export default function DashboardTV() {
     );
   }, [pedidos]);
 
+  const pedidosLogistica = useMemo(() => {
+    return sortPedidosByTempo(
+      pedidos.filter((pedido) =>
+        ["SAIU_PARA_ENTREGA", "AGUARDANDO_RETIRADA"].includes(
+          String(pedido.status || "").toUpperCase()
+        )
+      )
+    );
+  }, [pedidos]);
+
+  // Auto-refresh a cada 30 segundos
+  useEffect(() => {
+    const interval = setInterval(() => carregarPedidos({ silent: true }), 30000);
+    return () => clearInterval(interval);
+  }, [carregarPedidos]);
+
   if (loading) {
     return (
       <div className={`grid min-h-screen place-items-center ${classes.page}`}>
@@ -824,6 +847,20 @@ export default function DashboardTV() {
             compactMode={compactMode}
           />
         </div>
+
+        {pedidosLogistica.length > 0 && (
+          <div className="mt-6 xl:mt-8">
+            <ColunaTV
+              title="Em logística"
+              icon={pedidosLogistica[0]?.tipoEntrega === "RETIRADA" ? Package : Truck}
+              pedidos={pedidosLogistica}
+              tone="orange"
+              theme={theme}
+              classes={classes}
+              compactMode={compactMode}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
