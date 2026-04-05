@@ -1,16 +1,18 @@
+# Enviroment variables
+.env
+restaurante/.env
+
 # Node.js
 frontend/node_modules/
 frontend/build/
-frontend/.env
+frontend/dist/
 
 # Java / Spring Boot
-backend/target/
+restaurante/target/
 *.class
-backend/src/main/java/com/ecommerce/digitaltricks/utils/AdminInitializer.java
 
-# Arquivos de configuração locais
-digitaltricks/src/main/resources/application.properties
-.env
+# Arquivos de configurao locais
+restaurante/src/main/resources/application.yml
 
 # IDEs
 .vscode/
