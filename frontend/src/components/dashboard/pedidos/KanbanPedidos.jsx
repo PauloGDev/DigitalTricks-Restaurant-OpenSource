@@ -101,10 +101,9 @@ function getNextStatusForColumn(columnId, pedido) {
 
   if (columnId === "LOGISTICA") {
     if (retirada) {
-      // 🔥 REGRA CORRETA:
-      // PRONTO já é estado final antes de retirada
-      // NÃO muda nada ao arrastar
-      return currentStatus;
+      // PRONTO → RETIRADO é válido no backend (logística → finalizados)
+      // Outros → AGUARDANDO_RETIRADA
+      return currentStatus === "PRONTO" ? "RETIRADO" : "AGUARDANDO_RETIRADA";
     }
 
     return "SAIU_PARA_ENTREGA";
