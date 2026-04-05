@@ -13,7 +13,8 @@ import {
   EyeOff,
   ArrowRight,
   XCircle,
-  Building2,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { IMaskInput } from "react-imask";
 import PageTitle from "../../context/PageTitle";
@@ -32,7 +33,9 @@ function MsgBox({ mensagem, msgType, msgRef }) {
   const styles =
     msgType === "success"
       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-      : "border-red-200 bg-red-50 text-red-800";
+      : msgType === "error"
+      ? "border-red-200 bg-red-50 text-red-800"
+      : "border-zinc-200 bg-zinc-50 text-zinc-800";
   const Icon = msgType === "error" ? XCircle : UserPlus;
   return (
     <div ref={msgRef} className={`rounded-3xl border px-4 py-3 text-sm ${styles}`} role="alert">
@@ -47,14 +50,24 @@ function MsgBox({ mensagem, msgType, msgRef }) {
 function InputShell({ icon: Icon, label, hint, children }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-extrabold text-zinc-900">{label}</label>
+      <label className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
+        {label}
+      </label>
       <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+        <div
+          className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${
+            isDark ? "text-zinc-500" : "text-zinc-400"
+          }`}
+        >
           <Icon className="w-4 h-4" />
         </div>
         {children}
       </div>
-      {hint && <p className="text-xs text-zinc-500 leading-relaxed">{hint}</p>}
+      {hint && (
+        <p className={`text-xs leading-relaxed ${isDark ? "text-white/45" : "text-zinc-500"}`}>
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -106,6 +119,15 @@ export default function RegisterAdmin() {
   const [showPass, setShowPass] = useState(false);
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
+  /* ── Theme ── */
+  const [isDark, setIsDark] = useState(() => {
+    const saved = localStorage.getItem("navbar-theme-override");
+    return saved ? saved === "dark" : true;
+  });
+  useEffect(() => {
+    localStorage.setItem("navbar-theme-override", isDark ? "dark" : "light");
+  }, [isDark]);
+
   const navigate = useNavigate();
   const msgRef = useRef(null);
   const API_URL = import.meta.env.VITE_API_URL;
@@ -144,26 +166,25 @@ export default function RegisterAdmin() {
     const n = nomeCompleto.trim();
     const em = email.trim();
 
-    if (u.length < 6) return setMsg("O nome de usurio precisa ter pelo menos 6 caracteres.", "error");
+    if (u.length < 6) return setMsg("O nome de usuário precisa ter pelo menos 6 caracteres.", "error");
     if (!em) return setMsg("Informe seu e-mail.", "error");
     if (!n) return setMsg("Informe seu nome completo.", "error");
 
     const telDigits = telefone.replace(/\D/g, "");
-    if (telDigits.length < 10) return setMsg("Informe um telefone vlido (com DDD).", "error");
+    if (telDigits.length < 10) return setMsg("Informe um telefone válido (com DDD).", "error");
 
     const cpfDigits = cpf.replace(/\D/g, "");
-    if (cpfDigits.length !== 11) return setMsg("Informe um CPF vlido.", "error");
+    if (cpfDigits.length !== 11) return setMsg("Informe um CPF válido.", "error");
 
-    // Backend exige: 8+, 1 maiuscula, 1 numero, 1 especial
     const senhaRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!senhaRegex.test(senha)) {
       return setMsg(
-        "A senha deve ter 8 ou mais caracteres, 1 letra maiscula, 1 minscula, 1 nmero e 1 caractere especial.",
+        "A senha deve ter 8 ou mais caracteres, 1 letra maiúscula, 1 minúscula, 1 número e 1 caractere especial.",
         "error"
       );
     }
 
-    if (senha !== confirmarSenha) return setMsg("As senhas no coincidem.", "error");
+    if (senha !== confirmarSenha) return setMsg("As senhas não coincidem.", "error");
 
     try {
       setLoading(true);
@@ -187,7 +208,7 @@ export default function RegisterAdmin() {
         throw new Error(text || "Erro ao registrar");
       }
 
-      setMsg("Cadastro realizado! Agora voc pode entrar no painel. ", "success");
+      setMsg("Cadastro realizado! Agora você pode entrar no painel.", "success");
       setTimeout(() => navigate("/dashboard/login", { replace: true }), 1200);
     } catch (err) {
       setMsg(err.message, "error");
@@ -196,39 +217,62 @@ export default function RegisterAdmin() {
     }
   };
 
-  const baseInput =
-    "w-full rounded-2xl border border-zinc-200 bg-zinc-950/50 pl-11 pr-4 py-3.5 text-[15px] leading-5 text-white placeholder:text-zinc-500 outline-none transition focus:ring-2 focus:ring-red-500/25 focus:border-red-500";
+  const baseInput = `w-full rounded-2xl border pl-11 pr-4 py-3.5 text-[15px] leading-5 outline-none transition focus:ring-2 focus:ring-red-500/25 focus:border-red-300 ${
+    isDark
+      ? "border-white/10 bg-white/5 text-white placeholder:text-white/35 focus:border-red-500 focus:ring-red-500/20"
+      : "border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-red-300"
+  }`;
 
   return (
-    <div className="bg-zinc-950 min-h-screen">
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-gray-50" : "bg-gray-50"}`}>
       <PageTitle title="Cadastro Admin | Painel" />
 
+      {/* Theme toggle — fixed */}
+      <button
+        onClick={() => setIsDark((p) => !p)}
+        className={`fixed top-4 right-4 z-50 flex items-center justify-center w-11 h-11 rounded-2xl border transition-all duration-300 shadow-sm ${
+          isDark
+            ? "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+            : "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+        }`}
+        aria-label="Trocar tema"
+      >
+        {isDark ? <Moon size={18} /> : <Sun size={18} />}
+      </button>
+
       {/* Header */}
-      <section className="sticky top-0 pt-20 bg-zinc-950/90 backdrop-blur border-b border-white/10 z-20">
+      <section
+        className={`sticky top-0 pt-20 z-20 border-b transition-colors ${
+          isDark
+            ? "bg-white/90 backdrop-blur border-zinc-200"
+            : "bg-white/90 backdrop-blur border-zinc-200"
+        }`}
+      >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-start sm:items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-red-500" />
-                <h1 className="text-xl sm:text-2xl font-extrabold text-white truncate">
-                  Criar conta admin
-                </h1>
-              </div>
-              <p className="text-sm text-white/50 mt-1">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 truncate">
+                Criar conta admin
+              </h1>
+              <p className="text-sm text-zinc-500 mt-1">
                 Cadastre-se para gerenciar restaurantes e acessar o painel.
               </p>
             </div>
             <Link
               to="/dashboard/login"
-              className="shrink-0 inline-flex items-center gap-2 px-4 py-3 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm font-semibold text-white"
+              className={`shrink-0 inline-flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-semibold transition ${
+                isDark
+                  ? "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
+                  : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
+              }`}
             >
-              J tenho conta <ArrowRight className="w-4 h-4" />
+              Já tenho conta <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Conteudo */}
+      {/* Conteúdo */}
       <div className="py-6 sm:py-8 w-full max-w-5xl mx-auto px-4 sm:px-6">
         <motion.div
           variants={containerVariants}
@@ -237,11 +281,13 @@ export default function RegisterAdmin() {
           className="grid grid-cols-1 gap-6"
         >
           <motion.div variants={itemVariants}>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] overflow-hidden">
-              <div className="px-5 sm:px-8 py-5 border-b border-white/10 bg-white/[0.02]">
-                <h3 className="text-sm font-extrabold text-white">Dados pessoais</h3>
-                <p className="text-xs text-white/50 mt-1">
-                  Essas informaes sero usadas para seu acesso ao painel.
+            <div
+              className={`rounded-3xl border border-zinc-200 bg-white overflow-hidden shadow-sm`}
+            >
+              <div className="px-5 sm:px-8 py-5 border-b border-zinc-100 bg-zinc-50/50">
+                <h3 className="text-sm font-extrabold text-zinc-900">Dados pessoais</h3>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Essas informações serão usadas para seu acesso ao painel.
                 </p>
               </div>
 
@@ -249,7 +295,7 @@ export default function RegisterAdmin() {
                 <MsgBox mensagem={mensagem} msgType={msgType} msgRef={msgRef} />
 
                 <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InputShell icon={User} label="Nome completo" hint="Ex: Joo da Silva">
+                  <InputShell icon={User} label="Nome completo" hint="Ex: João da Silva">
                     <input
                       type="text"
                       placeholder="Seu nome"
@@ -261,7 +307,7 @@ export default function RegisterAdmin() {
                     />
                   </InputShell>
 
-                  <InputShell icon={Mail} label="E-mail" hint="Sera seu nome de login alternativo">
+                  <InputShell icon={Mail} label="E-mail" hint="Será seu nome de login alternativo">
                     <input
                       type="email"
                       placeholder="seuemail@exemplo.com"
@@ -274,7 +320,7 @@ export default function RegisterAdmin() {
                     />
                   </InputShell>
 
-                  <InputShell icon={User} label="Nome de usurio" hint="Mnimo 6 caracteres">
+                  <InputShell icon={User} label="Nome de usuário" hint="Mínimo 6 caracteres">
                     <input
                       type="text"
                       placeholder="Ex: joaosilva"
@@ -299,7 +345,7 @@ export default function RegisterAdmin() {
                     />
                   </InputShell>
 
-                  <InputShell icon={IdCard} label="CPF" hint="Necessrio para cadastro administrativo">
+                  <InputShell icon={IdCard} label="CPF" hint="Necessário para cadastro administrativo">
                     <IMaskInput
                       mask="000.000.000-00"
                       placeholder="000.000.000-00"
@@ -313,9 +359,9 @@ export default function RegisterAdmin() {
 
                   {/* Divider */}
                   <div className="sm:col-span-2 pt-2">
-                    <div className="h-px bg-white/10" />
+                    <div className="h-px bg-zinc-100" />
                     <div className="mt-4">
-                      <h3 className="text-sm font-extrabold text-white">Dados de acesso</h3>
+                      <h3 className="text-sm font-extrabold text-zinc-900">Dados de acesso</h3>
                     </div>
                   </div>
 
@@ -332,7 +378,7 @@ export default function RegisterAdmin() {
                     />
                   </div>
 
-                  <div className="sm:col-span-2 -mt-1">
+                  <div className="sm:col-span-2">
                     <PasswordField
                       label="Confirmar senha"
                       hint="Repita a senha"
@@ -345,18 +391,18 @@ export default function RegisterAdmin() {
                     />
                   </div>
 
-                  {/* Barra de fora */}
+                  {/* Barra de força */}
                   <div className="sm:col-span-2 -mt-1">
                     <div className="grid grid-cols-4 gap-1 px-1">
                       {Array.from({ length: 4 }).map((_, idx) => (
                         <div
                           key={idx}
-                          className={`h-1.5 rounded-full ${
+                          className={`h-1.5 rounded-full transition-colors ${
                             senha
                               ? idx < senhaScore
                                 ? "bg-emerald-500"
-                                : "bg-white/10"
-                              : "bg-white/10"
+                                : "bg-zinc-200"
+                              : "bg-zinc-200"
                           }`}
                         />
                       ))}
@@ -368,9 +414,9 @@ export default function RegisterAdmin() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className={`w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 font-extrabold transition shadow-[0_14px_30px_rgba(229,37,42,0.2)] ${
+                      className={`w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 font-extrabold transition shadow-[0_14px_30px_rgba(229,37,42,0.20)] ${
                         loading
-                          ? "bg-white/5 text-white/30 cursor-not-allowed"
+                          ? "bg-zinc-200 text-zinc-500 cursor-not-allowed"
                           : "bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] hover:opacity-90 text-white"
                       }`}
                     >
@@ -386,15 +432,15 @@ export default function RegisterAdmin() {
                       )}
                     </button>
 
-                    <p className="mt-4 text-xs text-white/40 text-center leading-relaxed">
-                      Esta conta dar acesso ao painel administrativo de restaurantes.
+                    <p className="mt-4 text-xs text-zinc-500 text-center leading-relaxed">
+                      Esta conta dará acesso ao painel administrativo de restaurantes.
                     </p>
 
-                    <p className="mt-3 text-sm text-center text-white/50">
-                      J tem uma conta?{" "}
+                    <p className="mt-3 text-sm text-center text-zinc-600">
+                      Já tem uma conta?{" "}
                       <Link
                         to="/dashboard/login"
-                        className="font-semibold text-red-400 hover:text-red-300"
+                        className="font-semibold text-red-600 hover:text-red-500"
                       >
                         Fazer login
                       </Link>
