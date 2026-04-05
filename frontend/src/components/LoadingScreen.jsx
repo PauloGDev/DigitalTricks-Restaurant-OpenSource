@@ -1,143 +1,222 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { assets } from "../assets/assets";
-import { UtensilsCrossed, Receipt, Soup } from "lucide-react";
+import {
+  UtensilsCrossed,
+  ChefHat,
+  Flame,
+  Clock4,
+  MapPin,
+  CreditCard,
+  Package,
+} from "lucide-react";
 
-const tips = [
-  { icon: UtensilsCrossed, text: "Preparando seu pedido com carinho..." },
-  { icon: Soup, text: "Aquece aí… já já tá saindo!" },
-  { icon: Receipt, text: "Conferindo os itens e o pagamento..." },
+const loadingSteps = [
+  { icon: ChefHat, label: "Chefe conferindo..." },
+  { icon: UtensilsCrossed, label: "Montando os pratos..." },
+  { icon: Flame, label: "Aquece aí, tá quase!" },
+  { icon: MapPin, label: "Verificando endereço..." },
+  { icon: CreditCard, label: "Conferindo pagamento..." },
+  { icon: Package, label: "Embalando seu pedido..." },
 ];
 
+// ── Plate ring progress ──
+function PlateProgress({ progress }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 blur-3xl rounded-full bg-red-600/20" />
+      <svg className="w-36 h-36 sm:w-40 sm:h-40 -rotate-90" viewBox="0 0 120 120">
+        {/* track */}
+        <circle
+          cx="60"
+          cy="60"
+          r="52"
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth="3"
+        />
+        {/* animated ring */}
+        <motion.circle
+          cx="60"
+          cy="60"
+          r="52"
+          fill="none"
+          stroke="url(#grad)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={`${2 * Math.PI * 52}`}
+          strokeDashoffset={2 * Math.PI * 52 * (1 - progress)}
+          style={{ filter: "drop-shadow(0 0 8px rgba(239,68,68,0.4))" }}
+        />
+        <defs>
+          <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#facc15" stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.span
+          key={Math.round(progress * 100)}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="text-white/80 text-xl font-bold tracking-tight"
+        >
+          {Math.round(progress * 100)}%
+        </motion.span>
+      </div>
+    </div>
+  );
+}
+
+// ── Floating plate icons on background ──
+function FloatingParticles() {
+  const items = useMemo(
+    () =>
+      Array.from({ length: 10 }).map((_, i) => ({
+        id: i,
+        size: 3 + (i % 4),
+        left: (i * 10.3) % 100,
+        top: (i * 13.7) % 100,
+        color:
+          ["text-red-500/10", "text-amber-500/10", "text-yellow-500/10"][
+            i % 3
+          ],
+      })),
+    []
+  );
+
+  return (
+    <div className="absolute inset-0 pointer-events-none select-none">
+      {items.map((p) => (
+        <motion.div
+          key={p.id}
+          className={`absolute ${p.color}`}
+          style={{ left: `${p.left}%`, top: `${p.top}%`, fontSize: p.size * 4 }}
+          initial={{ opacity: 0, y: 0 }}
+          animate={{
+            opacity: [0.15, 0.3, 0.15],
+            y: [0, -16, 0],
+            rotate: [0, 15, -10, 0],
+          }}
+          transition={{
+            duration: 3 + (p.id % 5) * 0.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <Flame className="w-3 h-3 text-white/10" />
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 const LoadingScreen = () => {
-  const [idx, setIdx] = useState(0);
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const t = setInterval(() => setIdx((p) => (p + 1) % tips.length), 1700);
+    const t = setInterval(() => {
+      setStep((prev) => (prev + 1) % loadingSteps.length);
+    }, 2200);
     return () => clearInterval(t);
   }, []);
 
-  const TipIcon = useMemo(() => tips[idx].icon, [idx]);
+  useEffect(() => {
+    setProgress(0);
+    const t = setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + 0.015;
+        return next >= 0.95 ? 0.95 : next;
+      });
+    }, 80);
+    return () => clearInterval(t);
+  }, []);
+
+  const StepIcon = useMemo(() => loadingSteps[step].icon, [step]);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-[#1a0b0b] to-zinc-950" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(220,38,38,0.22),transparent_55%),radial-gradient(circle_at_70%_75%,rgba(245,158,11,0.18),transparent_60%)]" />
-      <div className="absolute inset-0 bg-black/35" />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 overflow-hidden min-h-screen"
+    >
+      {/* ── Background ── */}
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-[#170c0c] to-zinc-950" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(229,37,42,0.18),transparent_60%),radial-gradient(circle_at_60%_80%,rgba(245,158,11,0.1),transparent_50%)]" />
+      <FloatingParticles />
 
-      {/* subtle floating particles */}
-      <div className="absolute inset-0 opacity-40">
-        {Array.from({ length: 14 }).map((_, i) => (
-          <motion.span
-            key={i}
-            className="absolute h-1.5 w-1.5 rounded-full bg-amber-300/30"
-            style={{
-              left: `${(i * 7 + 12) % 100}%`,
-              top: `${(i * 11 + 18) % 100}%`,
-            }}
-            initial={{ y: 0, opacity: 0.2 }}
-            animate={{ y: [0, -18, 0], opacity: [0.15, 0.35, 0.15] }}
-            transition={{
-              duration: 3.4 + (i % 5) * 0.35,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
+      {/* ── Content ── */}
+      <div className="relative flex flex-col items-center justify-center min-h-screen px-6 gap-6">
+        {/* Logo */}
+        <motion.img
+          src={assets.logo}
+          alt="Loading"
+          className="w-32 h-32 sm:w-36 sm:h-36 object-contain drop-shadow-[0_18px_50px_rgba(0,0,0,0.5)]"
+          initial={{ y: 0, scale: 1 }}
+          animate={{ y: [0, -8, 0], scale: [1, 1.01, 1] }}
+          transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
+        />
 
-      {/* Content */}
-      <div className="relative min-h-screen flex flex-col items-center justify-center px-6">
-        {/* Logo + glow */}
-        <div className="relative">
-          <div className="absolute inset-0 blur-3xl rounded-full bg-red-600/25" />
-          <motion.img
-            src={assets.logo}
-            alt="Logo"
-            className="relative w-44 h-44 sm:w-52 sm:h-52 object-contain drop-shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1, y: [0, -6, 0] }}
-            transition={{
-              opacity: { duration: 0.7, ease: "easeOut" },
-              scale: { duration: 0.7, ease: "easeOut" },
-              y: { repeat: Infinity, duration: 2.2, ease: "easeInOut" },
-            }}
-          />
-        </div>
+        {/* Plate progress ring */}
+        <PlateProgress progress={progress} />
 
-        {/* Title */}
-        <motion.h2
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.55, ease: "easeOut" }}
-          className="mt-6 text-white text-xl sm:text-2xl font-extrabold tracking-tight text-center"
-        >
-          Só um instante
-        </motion.h2>
-
-        {/* Rotating tip */}
-        <div className="mt-2 h-7 sm:h-8 flex items-center justify-center">
+        {/* Animated step label */}
+        <div className="h-6 flex items-center justify-center gap-2 overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 8, filter: "blur(6px)" }}
+              key={step}
+              initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -8, filter: "blur(6px)" }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              className="flex items-center gap-2 text-sm sm:text-base text-zinc-200"
+              exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+              transition={{ duration: 0.35 }}
+              className="flex items-center gap-2 text-sm text-zinc-300"
             >
-              <TipIcon className="w-4 h-4 text-amber-300" />
-              <span>{tips[idx].text}</span>
+              <StepIcon className="w-4 h-4 text-amber-400" />
+              <span className="font-medium">{loadingSteps[step].label}</span>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Progress bar */}
-        <div className="mt-8 w-full max-w-xs">
-          <div className="h-2 rounded-full bg-white/10 border border-white/10 overflow-hidden shadow-inner">
+        {/* Skeleton loader preview (fake dashboard/cards) */}
+        <div className="mt-2 w-full max-w-xs space-y-2.5">
+          {[0, 1, 2].map((i) => (
             <motion.div
-              className="h-full w-1/3 rounded-full"
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(220,38,38,1) 0%, rgba(245,158,11,1) 50%, rgba(250,204,21,1) 100%)",
-                boxShadow: "0 0 18px rgba(245,158,11,0.35)",
+              key={i}
+              initial={{ opacity: 0.3, scaleX: 0.7 }}
+              animate={{
+                opacity: [0.2, 0.45, 0.2],
+                scaleX: [0.6, 1, 0.6],
               }}
-              initial={{ x: "-120%" }}
-              animate={{ x: "320%" }}
-              transition={{ repeat: Infinity, duration: 1.25, ease: "easeInOut" }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: i * 0.35,
+              }}
+              style={{ originX: 0 }}
+              className="h-2.5 bg-white/10 rounded-full"
             />
-          </div>
-
-          {/* tiny dots */}
-          <div className="mt-4 flex items-center justify-center gap-2">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <motion.span
-                key={i}
-                className="h-2 w-2 rounded-full bg-white/25"
-                animate={{ opacity: [0.25, 0.9, 0.25], y: [0, -2, 0] }}
-                transition={{
-                  duration: 0.9,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: i * 0.12,
-                }}
-              />
-            ))}
-          </div>
+          ))}
         </div>
 
-        {/* Footer note */}
+        {/* Footer */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.25, duration: 0.6 }}
-          className="mt-8 text-xs text-zinc-300/80 text-center max-w-md leading-relaxed"
+          transition={{ delay: 0.4 }}
+          className="flex items-center gap-1.5 text-[11px] text-zinc-500 max-w-xs text-center leading-relaxed"
         >
-          Se estiver demorando, verifique sua conexão. Estamos carregando as informações do seu pedido.
+          <Clock4 className="w-3 h-3 shrink-0" />
+          Carregando tudo para você... Se demorar, tente recarregar a página.
         </motion.p>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

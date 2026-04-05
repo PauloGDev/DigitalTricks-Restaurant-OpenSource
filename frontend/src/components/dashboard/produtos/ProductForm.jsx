@@ -16,6 +16,8 @@ import {
   Sparkles,
   Shapes,
   Package2,
+  EyeOff,
+  ChevronRight,
 } from "lucide-react";
 import { useNotification } from "../../../context/NotificationContext";
 import CategoriaManager from "./CategoriaManager";
@@ -223,6 +225,27 @@ function Toggle({ checked, onChange, isDark }) {
   );
 }
 
+const cx = (...c) => c.filter(Boolean).join(" ");
+const formatBRL = (v) => `R$ ${Number(v || 0).toFixed(2).replace(".", ",")}`;
+
+const DRAFT_KEY = "product_form_draft";
+
+const loadDraft = () => {
+  try {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch { /* ignore */ }
+  return null;
+};
+
+const saveDraft = (data) => {
+  try { localStorage.setItem(DRAFT_KEY, JSON.stringify(data)); } catch { /* ignore */ }
+};
+
+const clearDraft = () => {
+  try { localStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ }
+};
+
 const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) => {
   const { showNotification } = useNotification();
   const API_URL = import.meta.env.VITE_API_URL;
@@ -230,11 +253,22 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
   const [theme, setTheme] = useState(getThemeState());
   const [errors, setErrors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState(emptyForm);
+  const [formData, setFormData] = useState(() => {
+    if (produtoInicial) return emptyForm;
+    const draft = loadDraft();
+    return draft || emptyForm;
+  });
   const [temVariacoes, setTemVariacoes] = useState(false);
 
   const isDark = theme === "dark";
   const isEdit = !!formData.id;
+
+  // Persist new product drafts to localStorage
+  useEffect(() => {
+    if (!produtoInicial && !isEdit) {
+      saveDraft(formData);
+    }
+  }, [formData, produtoInicial, isEdit]);
 
   useEffect(() => {
     const syncTheme = () => {
@@ -249,8 +283,14 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
 
   useEffect(() => {
     if (!produtoInicial) {
-      setFormData(emptyForm);
-      setTemVariacoes(false);
+      const draft = loadDraft();
+      if (draft) {
+        setFormData(draft);
+        setTemVariacoes((draft.variacoes?.length ?? 0) > 0);
+      } else {
+        setFormData(emptyForm);
+        setTemVariacoes(false);
+      }
       setErrors([]);
       return;
     }
@@ -387,6 +427,7 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
   };
 
   const resetForm = () => {
+    clearDraft();
     setFormData(emptyForm);
     setTemVariacoes(false);
     setErrors([]);
@@ -445,6 +486,58 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
     formData.tipoDesconto,
     formData.valorDesconto,
   ]);
+
+  // Preview: computa preço como o cardápio faria
+  const precoCardapio = useMemo(() => {
+    const vars = (formData.variacoes || []).filter((v) => v.nome.trim() && v.preco !== "");
+    const hasVars = vars.length > 0;
+
+    if (hasVars) {
+      const precosBase = vars.map((v) => Number(v.preco)).filter((n) => !Number.isNaN(n) && n >= 0);
+      const promValid = formData.emOferta && Number(formData.valorDesconto) > 0;
+      const precosFinais = promValid
+        ? vars
+            .map((v) => {
+              const p = Number(v.preco);
+              const pm = Number(v.precoPromocional || 0);
+              return pm > 0 ? pm : p;
+            })
+            .filter((n) => !Number.isNaN(n) && n >= 0)
+        : [];
+
+      const menorBase = precosBase.length ? Math.min(...precosBase) : 0;
+      const menorFinal = precosFinais.length ? Math.min(...precosFinais) : menorBase;
+
+      return {
+        temDesconto: menorFinal > 0 && menorFinal < menorBase,
+        base: menorBase,
+        final: menorFinal,
+      };
+    }
+
+    const base = Number(formData.precoBase) || 0;
+    if (base > 0 && formData.emOferta && Number(formData.valorDesconto) > 0) {
+      const desconto = Number(formData.valorDesconto);
+      let promocional =
+        formData.tipoDesconto === "PERCENTUAL"
+          ? base - base * (desconto / 100)
+          : base - desconto;
+      promocional = Math.max(promocional, 0);
+      return { temDesconto: promocional < base, base, final: promocional };
+    }
+
+    return { temDesconto: false, base, final: base };
+  }, [formData.variacoes, formData.precoBase, formData.emOferta, formData.tipoDesconto, formData.valorDesconto]);
+
+  const estoqueTotalPreview = useMemo(() => {
+    if (formData.variacoes.length > 0) {
+      return formData.variacoes.reduce((sum, v) => sum + (Number(v.estoque) || 0), 0);
+    }
+    return Number(formData.estoque) || 0;
+  }, [formData.variacoes, formData.estoque]);
+
+  const indisponivelPreview = !isEdit && (!formData.nome.trim() || estoqueTotalPreview <= 0);
+  const hasValidPreco = precoCardapio.base > 0 || precoCardapio.final > 0;
 
   const validateForm = () => {
     const newErrors = [];
@@ -719,6 +812,7 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
         "success"
       );
 
+      clearDraft();
       resetForm();
       onSaved?.(produtoSalvo);
     } catch (err) {
@@ -1317,7 +1411,103 @@ const ProductForm = ({ empresaId, produtoInicial = null, onSaved, onCancel }) =>
               </button>
             </div>
 
-            <div className={["mt-4 rounded-2xl border p-3", isDark ? "border-white/10 bg-white/[0.03]" : "border-zinc-200 bg-zinc-50"].join(" ")}>
+            <div className={["mb-3 rounded-2xl border p-0 overflow-hidden", isDark ? "border-white/10 bg-white/[0.03]" : "border-zinc-200 bg-zinc-50"].join(" ")}>
+              <div className={["px-3 pt-3 pb-2"]}>
+                <p className={["text-xs font-extrabold", isDark ? "text-white/70" : "text-zinc-700"].join(" ")}>
+                  Prévia no cardápio
+                </p>
+              </div>
+              <div className="px-2 pb-2">
+                <div className={cx(
+                  "rounded-2xl border bg-white overflow-hidden",
+                  indisponivelPreview ? "opacity-70" : ""
+                )}>
+                  {indisponivelPreview && (
+                    <div className="bg-zinc-500/10 px-3 py-1">
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-zinc-500">
+                        <EyeOff className="w-2.5 h-2.5" />
+                        Indisponível — preencha as variações para ativar
+                      </span>
+                    </div>
+                  )}
+                  <div className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-extrabold text-zinc-900 leading-tight line-clamp-1">
+                          {formData.nome || "Nome do produto"}
+                        </h4>
+                        {formData.descricao && (
+                          <p className="mt-1 text-xs text-zinc-600 line-clamp-2">
+                            {formData.descricao}
+                          </p>
+                        )}
+                        {formData.emOferta && formData.tituloOferta.trim() && (
+                          <span className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                            <Percent className="w-2.5 h-2.5" />
+                            {formData.tituloOferta}
+                          </span>
+                        )}
+                        <div className="mt-2">
+                          {temVariacoes && formData.variacoes.length > 0 ? (
+                            <div>
+                              <span className="text-[10px] text-zinc-500 font-semibold">a partir de</span>
+                              <p className="text-sm font-extrabold text-zinc-900">
+                                {precoCardapio.temDesconto ? (
+                                  <>
+                                    <span className="text-[10px] text-zinc-400 line-through">
+                                      {formatBRL(precoCardapio.base)} por
+                                    </span>
+                                    {" "}
+                                    <span className="text-red-600">
+                                      {formatBRL(precoCardapio.final)}
+                                    </span>
+                                  </>
+                                ) : (
+                                  formatBRL(precoCardapio.final || precoCardapio.base)
+                                )}
+                              </p>
+                            </div>
+                          ) : precoCardapio.final > 0 || precoCardapio.base > 0 ? (
+                            <div>
+                              {precoCardapio.temDesconto ? (
+                                <p className="text-xs font-semibold text-zinc-400 line-through">
+                                  de {formatBRL(precoCardapio.base)} por
+                                </p>
+                              ) : null}
+                              <p className={cx(
+                                "text-sm font-extrabold",
+                                precoCardapio.temDesconto ? "text-red-600" : "text-zinc-900"
+                              )}>
+                                {formatBRL(precoCardapio.final || precoCardapio.base)}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-[10px] font-semibold text-zinc-400">
+                              Preço não definido
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="w-20 h-20 rounded-xl overflow-hidden bg-zinc-100 border border-zinc-200 shrink-0">
+                        {formData.imagemUrl ? (
+                          <img
+                            src={formData.imagemUrl}
+                            alt="preview"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full grid place-items-center text-zinc-300">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={["rounded-2xl border p-3", isDark ? "border-white/10 bg-white/[0.03]" : "border-zinc-200 bg-zinc-50"].join(" ")}>
               <p className={["text-xs font-extrabold", isDark ? "text-white/70" : "text-zinc-700"].join(" ")}>
                 Resumo
               </p>
