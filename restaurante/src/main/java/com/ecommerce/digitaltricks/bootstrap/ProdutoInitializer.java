@@ -989,9 +989,10 @@ public class ProdutoInitializer implements CommandLineRunner {
         }
 
         if (pedido.getTipoEntrega() == TipoEntrega.RETIRADA) {
-            if (chance <= 20) pedido.setStatus(StatusPedido.RECEBIDO);
-            else if (chance <= 45) pedido.setStatus(StatusPedido.EM_PREPARO);
-            else if (chance <= 65) pedido.setStatus(StatusPedido.PRONTO);
+            if (chance <= 15) pedido.setStatus(StatusPedido.RECEBIDO);
+            else if (chance <= 35) pedido.setStatus(StatusPedido.EM_PREPARO);
+            else if (chance <= 55) pedido.setStatus(StatusPedido.PRONTO);
+            else if (chance <= 75) pedido.setStatus(StatusPedido.AGUARDANDO_RETIRADA);
             else if (chance <= 90) pedido.setStatus(StatusPedido.RETIRADO);
             else {
                 pedido.setStatus(StatusPedido.CANCELADO);
@@ -1024,15 +1025,9 @@ public class ProdutoInitializer implements CommandLineRunner {
     }
 
     private LocalDateTime gerarDataPedidoFake() {
-        int diasAtras = randomInt(0, 14);
-        int hora = randomInt(11, 22);
-        int minuto = randomInt(0, 59);
+        int minutosAtras = randomInt(5, 120);
         return LocalDateTime.now()
-                .minusDays(diasAtras)
-                .withHour(hora)
-                .withMinute(minuto)
-                .withSecond(0)
-                .withNano(0);
+                .minusMinutes(minutosAtras);
     }
 
     private int randomInt(int min, int max) {
