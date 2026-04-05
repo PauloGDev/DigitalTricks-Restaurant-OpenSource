@@ -470,7 +470,7 @@ export default function RegisterAdmin() {
                         Já tem uma conta?{" "}
                         <Link
                           to="/dashboard/login"
-                          className="font-semibold text-red-400 hover:text-red-300"
+                          className={`font-semibold transition ${isDark ? "text-red-400 hover:text-red-300" : "text-red-600 hover:text-red-500"}`}
                         >
                           Fazer login
                         </Link>
