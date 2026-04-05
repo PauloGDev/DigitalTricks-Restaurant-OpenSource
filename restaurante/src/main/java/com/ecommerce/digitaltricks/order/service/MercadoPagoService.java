@@ -218,7 +218,7 @@ public class MercadoPagoService {
 
             ResponseEntity<Map> response = rest.exchange(
                     "https://api.mercadopago.com/oauth/token", HttpMethod.POST,
-                    new HttpEntity<>(body, MediaType.APPLICATION_JSON), Map.class);
+                    new HttpEntity<>(body, new HttpHeaders() {{ setContentType(MediaType.APPLICATION_JSON); }}), Map.class);
 
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new RuntimeException("Falha no OAuth MP: HTTP " + response.getStatusCode());
@@ -248,7 +248,7 @@ public class MercadoPagoService {
 
             ResponseEntity<Map> response = rest.exchange(
                     "https://api.mercadopago.com/oauth/token", HttpMethod.POST,
-                    new HttpEntity<>(body, MediaType.APPLICATION_JSON), Map.class);
+                    new HttpEntity<>(body, new HttpHeaders() {{ setContentType(MediaType.APPLICATION_JSON); }}), Map.class);
 
             if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                 throw new RuntimeException("Falha ao renovar token MP: HTTP " + response.getStatusCode());
