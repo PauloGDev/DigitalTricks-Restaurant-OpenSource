@@ -124,7 +124,7 @@ export default function GerenciarPerfil({ isDark = true, empresaId }) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${getToken()}`,
         },
-        body: JSON.stringify(form),,
+        body: JSON.stringify(form)
       });
       if (!res.ok) {
         const text = await res.text().catch(() => "");

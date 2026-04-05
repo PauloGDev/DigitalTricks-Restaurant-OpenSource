@@ -198,8 +198,17 @@ public class MercadoPagoOAuthController {
 
         if (empresa.getMercadoPagoAccessToken() == null || empresa.getMercadoPagoAccessToken().isBlank()) {
             // Se nao tem token proprio, retorna a global do .env
+            String globalKey = System.getenv("MP_PUBLIC_KEY");
+            if (globalKey == null || globalKey.isBlank()) {
+                globalKey = System.getProperty("MP_PUBLIC_KEY");
+            }
+            if (globalKey == null) {
+                return ResponseEntity.status(503).body(Map.of(
+                        "error", "Chave pública MP não configurada"
+                ));
+            }
             return ResponseEntity.ok(Map.of(
-                    "publicKey", System.getenv("MP_PUBLIC_KEY"),
+                    "publicKey", globalKey,
                     "usandoContaGlobal", true
             ));
         }

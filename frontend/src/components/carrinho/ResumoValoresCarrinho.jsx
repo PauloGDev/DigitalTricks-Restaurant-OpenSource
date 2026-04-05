@@ -24,6 +24,7 @@ export default function ResumoValoresCarrinho({
   taxaEntrega = 0,
   prazoEntrega = null,
   subtotalProdutos,
+  tipoEntrega = "DELIVERY",
   descontoCupom = 0,
   cupom = null,
   total,
@@ -127,20 +128,33 @@ export default function ResumoValoresCarrinho({
           </span>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-zinc-700">
-            <Truck className="h-4 w-4" />
-            <div>
-              <span className="text-sm font-semibold block">Entrega</span>
-              {prazoEntrega ? (
-                <span className="text-xs text-zinc-500 block">{prazoEntrega}</span>
-              ) : null}
+        {tipoEntrega === "DELIVERY" ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-zinc-700">
+              <Truck className="h-4 w-4" />
+              <div>
+                <span className="text-sm font-semibold block">Entrega</span>
+                {prazoEntrega ? (
+                  <span className="text-xs text-zinc-500 block">{prazoEntrega}</span>
+                ) : null}
+              </div>
             </div>
+            <span className="text-sm font-bold text-zinc-900">
+              {frete > 0 ? brl.format(frete) : "Grátis"}
+            </span>
           </div>
-          <span className="text-sm font-bold text-zinc-900">
-            {frete > 0 ? brl.format(frete) : "Grátis"}
-          </span>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-zinc-700">
+              <Truck className="h-4 w-4 text-emerald-600" />
+              <div>
+                <span className="text-sm font-semibold block">Retirada no local</span>
+                <span className="text-xs text-zinc-500 block">Sem custo de frete</span>
+              </div>
+            </div>
+            <span className="text-sm font-bold text-emerald-600">Grátis</span>
+          </div>
+        )}
 
         {descontoFinal > 0 && (
           <div className="flex items-center justify-between">

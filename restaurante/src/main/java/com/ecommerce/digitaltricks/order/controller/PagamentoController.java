@@ -83,6 +83,9 @@ public class PagamentoController {
         ClientePerfil perfil = cliente.getPerfil();
         if (perfil == null) throw new RuntimeException("Perfil não encontrado");
 
+        String cpf = pedido.getCpf();
+        if (cpf == null || cpf.isBlank()) throw new RuntimeException("CPF obrigatório para pagamento via PIX.");
+
         BigDecimal value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP);
 
         Map<String, Object> payment = mercadoPagoService.criarPix(
@@ -91,7 +94,7 @@ public class PagamentoController {
                 "Pedido #" + pedido.getId(),
                 value,
                 perfil.getEmail(),
-                perfil.getTelefone()
+                cpf
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));
@@ -157,6 +160,12 @@ public class PagamentoController {
         ClientePerfil perfil = cliente.getPerfil();
         if (perfil == null) throw new RuntimeException("Perfil não encontrado");
 
+        // CPF: tenta do pedido; se nao vier, usa placeholder (o brick do MP ja valida)
+        String cpf = pedido.getCpf();
+        if (cpf == null || cpf.isBlank()) {
+            cpf = "00000000000"; // placeholder; validaçao real feita pelo Brick MP
+        }
+
         double value = pedido.getTotal().setScale(2, RoundingMode.HALF_UP).doubleValue();
 
         Map<String, Object> payment = mercadoPagoService.criarCartao(
@@ -168,7 +177,7 @@ public class PagamentoController {
                 cartao.installments() != null ? cartao.installments() : 1,
                 cartao.paymentMethodId(),
                 perfil.getEmail(),
-                perfil.getTelefone()
+                cpf
         );
 
         String mpPaymentId = String.valueOf(payment.get("id"));

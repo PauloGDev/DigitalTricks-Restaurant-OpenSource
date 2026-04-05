@@ -9,5 +9,7 @@ public interface CarrinhoRepository extends JpaRepository<Carrinho, Long> {
 
     Optional<Carrinho> findByClienteIdAndEmpresaId(Long clienteId, Long empresaId);
 
+    Optional<Carrinho> findByClienteTelefoneAndEmpresaId(String telefone, Long empresaId);
+
     Optional<Carrinho> findBySessionId(String sessionId);
 }

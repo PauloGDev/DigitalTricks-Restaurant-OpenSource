@@ -93,15 +93,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiErrorDTO> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Erro interno";
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+
+        if (msg.contains("MercadoPago API error")) {
+            status = HttpStatus.BAD_REQUEST;
+        }
+
+        Map<String, Object> rootCauseMap = ex.getCause() != null && ex.getCause().getMessage() != null
+                ? Map.of("rootCause", ex.getCause().getMessage())
+                : Map.of();
+
+        return ResponseEntity.status(status).body(
                 new ApiErrorDTO(
-                        400,
-                        "Bad Request",
+                        status.value(),
+                        status.getReasonPhrase(),
                         "RUNTIME_ERROR",
-                        ex.getMessage() != null ? ex.getMessage() : "Erro interno",
+                        msg,
                         LocalDateTime.now(),
                         List.of(),
-                        Map.of()
+                        rootCauseMap
                 )
         );
     }

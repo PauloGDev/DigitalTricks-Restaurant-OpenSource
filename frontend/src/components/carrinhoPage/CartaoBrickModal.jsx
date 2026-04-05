@@ -1,51 +1,64 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { X, CreditCard } from "lucide-react";
 import { useNotification } from "../../context/NotificationContext";
 
-export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaId }) {
+export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaId, tipoEntrega = "DELIVERY", enderecoEntrega = null, total: totalProp }) {
   const { showNotification } = useNotification();
+  const navigate = useNavigate();
 
-  const [amount, setAmount] = useState(null); // null = carregando
+  const mpKeyRef = useRef(null);
+  const [amount, setAmount] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mpKey, setMpKey] = useState(() => import.meta.env.VITE_MP_PUBLIC_KEY);
+  const brickReady = useRef(false);
 
+  // 1. Fetch MP public key and init SDK
   useEffect(() => {
-    // Busca public key do restaurante
     let active = true;
-    if (empresaId) {
-      fetch(`${import.meta.env.VITE_API_URL}/empresas/${empresaId}/mp/public-key`, {
-        headers: { Authorization: `Bearer ${tokenJwt}` },
-      })
-        .then((r) => r.ok ? r.json() : null)
-        .then((data) => {
-          if (active && data?.publicKey) setMpKey(data.publicKey);
-        })
-        .catch(() => {})
-        .finally(() => {
-          if (active) initMercadoPago(mpKey || import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "pt-BR" });
-        });
-    } else {
-      initMercadoPago(import.meta.env.VITE_MP_PUBLIC_KEY, { locale: "pt-BR" });
-    }
-    return () => { active = false; };
-  }, []);
 
+    const loadKey = async () => {
+      try {
+        if (empresaId) {
+          const res = await fetch(
+            `${import.meta.env.VITE_API_URL}/empresas/${empresaId}/mp/public-key`,
+            { headers: { Authorization: `Bearer ${tokenJwt}` } }
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.publicKey) {
+              initMercadoPago(data.publicKey, { locale: "pt-BR" });
+              mpKeyRef.current = data.publicKey;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Erro ao buscar MP public key:", e.message);
+      }
+      // Fallback to env var
+      const envKey = import.meta.env.VITE_MP_PUBLIC_KEY;
+      if (envKey) initMercadoPago(envKey, { locale: "pt-BR" });
+      mpKeyRef.current = envKey;
+    };
+
+    loadKey().then(() => {
+      if (active) brickReady.current = true;
+    });
+
+    return () => { active = false; };
+  }, [empresaId, tokenJwt]);
+
+  // 2. Fetch order total
   useEffect(() => {
     let active = true;
 
     const loadPedido = async () => {
       try {
         setLoading(true);
-        setAmount(null);
-
         const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/pedidos/public/${pedidoId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${tokenJwt}`,
-            },
-          }
+          `${import.meta.env.VITE_API_URL}/pedidos/${pedidoId}`,
+          { headers: { Authorization: `Bearer ${tokenJwt}` } }
         );
 
         if (!res.ok) {
@@ -54,19 +67,15 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
         }
 
         const data = await res.json();
-
-        // BigDecimal pode vir string -> Number()
         const parsed = Number(String(data?.total ?? "").replace(",", "."));
 
         if (!active) return;
-
         if (!parsed || parsed <= 0) {
-          setAmount(0);
           showNotification("Total do pedido inválido para pagamento.", "error");
-          return;
+          setAmount(0);
+        } else {
+          setAmount(parsed);
         }
-
-        setAmount(parsed);
       } catch (e) {
         if (!active) return;
         setAmount(0);
@@ -77,28 +86,20 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
     };
 
     if (pedidoId && tokenJwt) loadPedido();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [pedidoId, tokenJwt, showNotification]);
 
-  const initialization = useMemo(() => {
-    return { amount: Number(amount || 0) };
-  }, [amount]);
+  const initialization = useMemo(() => ({
+    amount: Number.isFinite(amount) && amount > 0 ? amount : undefined,
+  }), [amount]);
 
-  const customization = {
-    paymentMethods: {
-      maxInstallments: 12,
-    },
-    visual: {
-      style: { theme: "default" },
-    },
-  };
+  const customization = useMemo(() => ({
+    paymentMethods: { maxInstallments: 12 },
+    visual: { style: { theme: "default" } },
+  }), []);
 
   const onSubmit = async (formData) => {
     try {
-      // formData já vem com token, payment_method_id, installments...
       const payload = {
         token: formData.token,
         installments: formData.installments || 1,
@@ -125,6 +126,17 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
       const data = await res.json();
       showNotification(`Pagamento enviado! Status: ${data.status}`, "success");
       onClose();
+
+      navigate("/aguardando-pagamento", {
+        state: {
+          pedidoId,
+          total: totalProp || Number(amount),
+          tipoPagamento: "CREDIT_CARD",
+          tipoEntrega,
+          enderecoEntrega,
+          status: "AGUARDANDO_PAGAMENTO",
+        },
+      });
     } catch (e) {
       showNotification(e.message || "Erro no cartão", "error");
     }
@@ -134,6 +146,8 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
     console.error(error);
     showNotification("Erro ao carregar pagamento no cartão.", "error");
   };
+
+  const showBrick = !loading && amount && amount > 0 && brickReady.current;
 
   return (
     <div className="fixed inset-0 z-[999]">
@@ -154,15 +168,16 @@ export default function CartaoBrickModal({ onClose, pedidoId, tokenJwt, empresaI
               className="h-10 w-10 rounded-2xl border border-zinc-200 bg-white hover:bg-zinc-50 transition grid place-items-center"
               aria-label="Fechar"
             >
-              <X className="h-5 h-5 text-zinc-700" />
+              <X className="w-5 h-5 text-zinc-700" />
             </button>
           </div>
 
           <div className="px-5 py-4">
             {loading ? (
               <div className="text-sm text-zinc-600">Carregando valor do pedido...</div>
-            ) : amount && amount > 0 ? (
+            ) : showBrick ? (
               <CardPayment
+                key={`card-${pedidoId}-${amount}`}
                 initialization={initialization}
                 customization={customization}
                 onSubmit={onSubmit}

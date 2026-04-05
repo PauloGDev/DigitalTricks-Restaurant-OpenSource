@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../context/NotificationContext";
-import { Check, Copy, QrCode } from "lucide-react";
+import { IdCard, Check, Copy, QrCode } from "lucide-react";
 import CartaoBrickModal from "./CartaoBrickModal";
 import PaymentAndDeliverySelector from "./PaymentAndDeliverySelector";
 
@@ -11,13 +11,27 @@ export default function FinalizarCompra({
   carrinho,
   enderecoEntrega,
   freteInfo,
-  slug
+  slug,
+  cpf = "",
+  setCpf,
+  telefone,
+  tipoEntrega: tipoEntregaProp = "DELIVERY",
+  setTipoEntrega: setTipoEntregaProp,
 }) {
   const { showNotification } = useNotification();
   const navigate = useNavigate();
 
-  const [tipoEntrega, setTipoEntrega] = useState("DELIVERY");
+  const [tipoEntrega, setTipoEntrega] = useState(tipoEntregaProp);
   const [tipoPagamento, setTipoPagamento] = useState(null);
+
+  useEffect(() => {
+    setTipoEntrega(tipoEntregaProp);
+  }, [tipoEntregaProp]);
+
+  const handleTipoEntrega = (val) => {
+    setTipoEntrega(val);
+    setTipoEntregaProp?.(val);
+  };
 
   const [payOnMethod, setPayOnMethod] = useState(null);
   const [precisaTroco, setPrecisaTroco] = useState(false);
@@ -103,6 +117,14 @@ export default function FinalizarCompra({
       return false;
     }
 
+    // CPF: obrigatório para PIX (nao para cartao — o Brick do MP ja coleta)
+    if (tipoPagamento === "PIX") {
+      if (!cpf || cpf.trim().replace(/[^\d]/g, "").length !== 11) {
+        showNotification("CPF é obrigatório para pagamento via PIX.", "error");
+        return false;
+      }
+    }
+
     if (!tipoPagamento) {
       showNotification("Selecione uma forma de pagamento.", "error");
       return false;
@@ -163,6 +185,7 @@ export default function FinalizarCompra({
         observacao: item.observacao ?? null,
         opcionais: normalizarOpcionaisItem(item),
       })),
+      cpf: cpf || null,
       tipoPagamento,
       pagamentoNaEntrega:
         tipoPagamento === "PAY_ON_DELIVERY"
@@ -175,13 +198,29 @@ export default function FinalizarCompra({
     };
   };
 
-  const irParaPedidoFeito = ({ id, totalPedido, statusPedido, pix = null }) => {
+  const irParaAguardandoPagamento = ({ id, totalPedido, pix = null }) => {
+    navigate("/aguardando-pagamento", {
+      replace: true,
+      state: {
+        pedidoId: id,
+        total: totalPedido,
+        tipoPagamento,
+        tipoEntrega,
+        pixInfo: pix,
+        enderecoEntrega: tipoEntrega === "DELIVERY" ? enderecoEntrega : null,
+        status: "AGUARDANDO_PAGAMENTO",
+        slug: slug,
+      },
+    });
+  };
+
+  const irParaPedidoFeito = ({ id, totalPedido, statusPedido }) => {
     navigate("/pedido-feito", {
+      replace: true,
       state: {
         pedidoId: id,
         total: totalPedido,
         status: statusPedido || "AGUARDANDO_PAGAMENTO",
-        pixInfo: pix,
         tipoPagamento,
         tipoEntrega,
         enderecoEntrega: tipoEntrega === "DELIVERY" ? enderecoEntrega : null,
@@ -234,10 +273,10 @@ export default function FinalizarCompra({
       setPixInfo(data);
       showNotification("PIX gerado com sucesso!", "success");
 
-      irParaPedidoFeito({
+      // Navega para pagina de espera, nao para PedidoFeito
+      irParaAguardandoPagamento({
         id,
         totalPedido,
-        statusPedido,
         pix: data,
       });
     } catch (error) {
@@ -354,7 +393,7 @@ export default function FinalizarCompra({
         <>
           <PaymentAndDeliverySelector
             tipoEntrega={tipoEntrega}
-            setTipoEntrega={setTipoEntrega}
+            setTipoEntrega={handleTipoEntrega}
             tipoPagamento={tipoPagamento}
             setTipoPagamento={setTipoPagamento}
             payOnMethod={payOnMethod}
@@ -365,6 +404,29 @@ export default function FinalizarCompra({
             setTrocoPara={setTrocoPara}
             enderecoId={enderecoId}
           />
+
+          {/* CPF: obrigatório para PIX e Cartão */}
+          {(tipoPagamento === "PIX") && (
+            <div className="rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <IdCard className="h-5 w-5 text-zinc-600 mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-extrabold text-zinc-900">CPF</p>
+                  <p className="text-xs text-zinc-500 mb-2">
+                    Necessário para processar o pagamento.
+                  </p>
+                  <input
+                    type="text"
+                    value={cpf}
+                    onChange={(e) => setCpf?.(e.target.value.replace(/[^\d.-]/g, "").slice(0, 14))}
+                    placeholder="000.000.000-00"
+                    inputMode="numeric"
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:ring-2 focus:ring-red-500/30 focus:border-red-300"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           <button
             onClick={criarPedido}
@@ -440,6 +502,9 @@ export default function FinalizarCompra({
               onClose={() => setShowCartaoModal(false)}
               pedidoId={pedidoId}
               tokenJwt={getToken()}
+              tipoEntrega={tipoEntrega}
+              enderecoEntrega={tipoEntrega === "DELIVERY" ? enderecoEntrega : null}
+              total={carrinho?.total ?? totalComFrete}
             />
           )}
 

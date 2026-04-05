@@ -88,6 +88,7 @@ public class MercadoPagoService {
             return (Map<String, Object>) resp.getBody();
 
         } catch (HttpStatusCodeException e) {
+            log.error("MercadoPago API error ({}): HTTP {} - {}", action, e.getStatusCode(), e.getResponseBodyAsString());
             throw mpError(action, e.getStatusCode(), e.getResponseBodyAsString());
         } catch (ResourceAccessException e) {
             throw new RuntimeException("Falha de rede ao chamar MercadoPago (" + action + "): " + e.getMessage(), e);
@@ -149,14 +150,19 @@ public class MercadoPagoService {
         if (installments < 1) throw new IllegalArgumentException("installments deve ser >= 1");
         if (paymentMethodId == null || paymentMethodId.isBlank()) throw new IllegalArgumentException("paymentMethodId obrigatório");
         if (email == null || email.isBlank()) throw new IllegalArgumentException("email obrigatório");
-        if (cpf == null || cpf.isBlank()) throw new IllegalArgumentException("cpf obrigatório");
 
         String accessToken = resolveToken(restauranteAccessToken);
 
-        Map<String, Object> payer = Map.of(
-                "email", email,
-                "identification", Map.of("type", "CPF", "number", cpf)
-        );
+        Map<String, Object> payer;
+        if (cpf != null && !cpf.isBlank()) {
+            String cpfDigits = cpf.replaceAll("\\D", "");
+            payer = Map.of(
+                    "email", email,
+                    "identification", Map.of("type", "CPF", "number", cpfDigits)
+            );
+        } else {
+            payer = Map.of("email", email);
+        }
 
         Map<String, Object> body = new HashMap<>();
         body.put("transaction_amount", value);

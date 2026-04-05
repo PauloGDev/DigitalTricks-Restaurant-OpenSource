@@ -12,5 +12,6 @@ public record PedidoRequestDTO(
         List<ItemPedidoRequestDTO> itens,
         TipoPagamento tipoPagamento,      // PIX | CREDIT_CARD | PAY_ON_DELIVERY
         PagamentoNaEntregaDTO pagamentoNaEntrega, // obrigatório se PAY_ON_DELIVERY
-        Long empresaId
+        Long empresaId,
+        String cpf                        // obrigatório para PIX/CREDIT_CARD, opcional para PAY_ON_DELIVERY
 ) {}

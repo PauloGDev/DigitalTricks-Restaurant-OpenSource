@@ -10,7 +10,7 @@ import { useCarrinho } from "../context/CarrinhoContext";
 import PageTitle from "../context/PageTitle";
 import FinalizarCompra from "./carrinhoPage/FinalizarCompra";
 import ResumoValoresCarrinho from "./carrinho/ResumoValoresCarrinho";
-import { ShoppingBag, MapPin } from "lucide-react";
+import { ShoppingBag, MapPin, Store, Truck } from "lucide-react";
 import CupomSection from "./carrinhoPage/CupomSection";
 
 const fadeUp = {
@@ -56,10 +56,7 @@ export default function CarrinhoPage() {
   const [pagando, setPagando] = useState(false);
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [email, setEmail] = useState("");
-  const [nomeCompleto, setNomeCompleto] = useState("");
-  const [editarTelefone, setEditarTelefone] = useState(false);
-  const [editarEmail, setEditarEmail] = useState(false);
+  const [tipoEntrega, setTipoEntrega] = useState("DELIVERY");
 
   useEffect(() => {
   const carregarEmpresaDoRestaurante = async () => {
@@ -129,15 +126,12 @@ export default function CarrinhoPage() {
 
   useEffect(() => {
     if (!usuario) return;
-    setCpf((prev) => prev || usuario?.cpf || "");
     setTelefone((prev) => prev || usuario?.telefone || "");
-    setEmail((prev) => prev || usuario?.email || "");
-    setNomeCompleto((prev) => prev || usuario?.nomeCompleto || "");
   }, [usuario]);
 
   const itens = Array.isArray(carrinho?.itens) ? carrinho.itens : [];
 
-  const taxaEntrega = toNumber(freteInfo?.valor);
+  const taxaEntrega = tipoEntrega === "DELIVERY" ? toNumber(freteInfo?.valor) : 0;
 
   const subtotalProdutos = useMemo(() => {
     if (carrinho?.subtotal != null) return toNumber(carrinho.subtotal);
@@ -156,6 +150,10 @@ export default function CarrinhoPage() {
 
   const podeFinalizar = useMemo(() => {
     const temItens = itens.length > 0;
+    const isRetirada = tipoEntrega === "RETIRADA";
+    if (isRetirada) {
+      return temItens && !loading && !loadingFrete && Boolean(empresaId);
+    }
     const temEndereco = Boolean(enderecoEntrega?.id);
     const freteOk = Boolean(freteInfo) || !temEndereco;
     return (
@@ -166,20 +164,18 @@ export default function CarrinhoPage() {
       !loadingFrete &&
       Boolean(empresaId)
     );
-  }, [itens.length, enderecoEntrega?.id, freteInfo, loading, loadingFrete, empresaId]);
+  }, [itens.length, tipoEntrega, enderecoEntrega?.id, freteInfo, loading, loadingFrete, empresaId]);
 
   usePagamentoHandler({
     API_URL,
     carrinho,
     total: totalComFrete,
-    enderecoEntrega,
+    freteInfo: tipoEntrega === "DELIVERY" ? freteInfo : null,
+    enderecoEntrega: tipoEntrega === "RETIRADA" ? null : enderecoEntrega,
+    tipoEntrega,
     usuarioData: usuario || {},
     cpf,
     telefone,
-    email,
-    nomeCompleto,
-    editarTelefone,
-    editarEmail,
     showNotification,
     limparCarrinho: () => limparCarrinho(slug),
     setPagando,
@@ -235,24 +231,65 @@ export default function CarrinhoPage() {
               <div className="rounded-3xl border border-white/10 bg-white/5 p-4 sm:p-6">
                 <div className="mb-3 flex items-center gap-2">
                   <div className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5">
-                    <MapPin className="h-5 w-5 text-gray/80" />
+                    {tipoEntrega === "DELIVERY"
+                      ? <Truck className="h-5 w-5 text-gray/80" />
+                      : <Store className="h-5 w-5 text-gray/80" />}
                   </div>
 
                   <div>
-                    <p className="font-extrabold text-gray">Endereço de entrega</p>
+                    <p className="font-extrabold text-gray">
+                      {tipoEntrega === "DELIVERY" ? "Endereço de entrega" : "Retirada no local"}
+                    </p>
                     <p className="text-xs text-gray/55">
-                      Selecione onde deseja receber o pedido
+                      {tipoEntrega === "DELIVERY"
+                        ? "Selecione onde deseja receber o pedido"
+                        : "Você irá buscar o pedido no estabelecimento"}
                     </p>
                   </div>
                 </div>
 
-                <EnderecoSection
-                  onSelect={(endereco) => {
-                    setEnderecoEntrega(endereco);
-                    calcularFrete(endereco);
-                  }}
-                  clienteId={usuario?.id}
-                />
+                <div className="mb-4 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTipoEntrega("DELIVERY")}
+                    className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-extrabold transition ${
+                      tipoEntrega === "DELIVERY"
+                        ? "border-red-600 bg-red-600 text-white"
+                        : "border-white/10 bg-white/5 text-gray/70 hover:bg-white/10"
+                    }`}
+                  >
+                    Entrega
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTipoEntrega("RETIRADA")}
+                    className={`flex-1 rounded-xl border px-4 py-2.5 text-sm font-extrabold transition ${
+                      tipoEntrega === "RETIRADA"
+                        ? "border-red-600 bg-red-600 text-white"
+                        : "border-white/10 bg-white/5 text-gray/70 hover:bg-white/10"
+                    }`}
+                  >
+                    Retirada
+                  </button>
+                </div>
+
+                {tipoEntrega === "DELIVERY" && (
+                  <EnderecoSection
+                    onSelect={(endereco) => {
+                      setEnderecoEntrega(endereco);
+                      calcularFrete(endereco);
+                    }}
+                    clienteId={usuario?.id}
+                  />
+                )}
+
+                {tipoEntrega === "RETIRADA" && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-3 text-center">
+                    <Store className="mx-auto h-6 w-6 text-green-600" />
+                    <p className="mt-2 text-sm font-extrabold text-gray/80">Retirada no estabelecimento</p>
+                    <p className="text-xs text-gray/55">Sem custo de frete</p>
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -326,6 +363,7 @@ export default function CarrinhoPage() {
                   itens={itens}
                   taxaEntrega={taxaEntrega}
                   prazoEntrega={freteInfo?.prazo ?? null}
+                  tipoEntrega={tipoEntrega}
                   subtotalProdutos={subtotalProdutos}
                   descontoCupom={descontoCupom}
                   cupom={carrinho?.cupom}
@@ -351,7 +389,7 @@ export default function CarrinhoPage() {
 
                       <ul className="mt-2 space-y-1 text-xs text-gray/60">
                         {itens.length === 0 && <li>• Adicione itens ao carrinho</li>}
-                        {!enderecoEntrega?.id && <li>• Selecione um endereço</li>}
+                        {tipoEntrega === "DELIVERY" && !enderecoEntrega?.id && <li>• Selecione um endereço</li>}
                         {!empresaId && <li>• Aguarde carregar os dados do restaurante</li>}
                       </ul>
                     </div>
@@ -359,15 +397,16 @@ export default function CarrinhoPage() {
 
                   <FinalizarCompra
                     restauranteSlug={slug}
+                    tipoEntrega={tipoEntrega}
+                    setTipoEntrega={setTipoEntrega}
                     empresaId={empresaId}
                     enderecoId={enderecoEntrega?.id}
                     carrinho={carrinho}
                     enderecoEntrega={enderecoEntrega}
-                    freteInfo={freteInfo}
-                    nomeCompleto={nomeCompleto}
+                    freteInfo={tipoEntrega === "DELIVERY" ? freteInfo : null}
                     cpf={cpf}
+                    setCpf={setCpf}
                     telefone={telefone}
-                    email={email}
                     total={totalComFrete}
                     limparCarrinho={() => limparCarrinho(slug)}
                     slug={slug}

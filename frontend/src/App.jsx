@@ -28,6 +28,7 @@ import PedidosPage from "./pages/painel-usuario/PedidosPage";
 import Login from "./pages/Login";
 import CarrinhoPage from "./components/CarrinhoPage";
 import PedidoFeitoPage from "./pages/PedidoFeitoPage";
+import AguardandoPagamentoPage from "./pages/AguardandoPagamentoPage";
 import { RestaurantNotificationProvider } from "./context/RestaurantNotificationContext";
 import DashboardTV from "./components/dashboard/pedidos/DashboardTV";
 import { useAuth } from "./context/AuthContext";
@@ -137,6 +138,7 @@ const App = () => {
           element={<PedidoConfirmadoPage />}
         />
         <Route path="/pedido-feito" element={<PedidoFeitoPage />} />
+        <Route path="/aguardando-pagamento" element={<AguardandoPagamentoPage />} />
 
         <Route
           path="/login"

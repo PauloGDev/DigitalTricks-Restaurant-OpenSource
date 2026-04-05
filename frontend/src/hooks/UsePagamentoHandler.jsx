@@ -26,15 +26,12 @@ export default function usePagamentoHandler({
   carrinho,
   total,
   freteInfo,
+  tipoEntrega = "DELIVERY",
   empresaId,
   enderecoEntrega,
   usuarioData = {},
   cpf,
   telefone,
-  email,
-  nomeCompleto,
-  editarTelefone,
-  editarEmail,
   showNotification,
   limparCarrinho,
   setPagando,
@@ -44,20 +41,20 @@ export default function usePagamentoHandler({
 
   const montarPayloadPedido = useCallback(
   ({
-    tipoEntrega,
+    tipoEntrega: tipo,
     tipoPagamento,
     metodoPagamentoEntrega = null,
     trocoPara = null,
     precisaTroco = false,
   }) => {
     return {
-      tipoEntrega,
+      tipoEntrega: tipo,
 
       enderecoId:
-        tipoEntrega === "DELIVERY" ? enderecoEntrega?.id : null,
+        tipo === "DELIVERY" ? enderecoEntrega?.id : null,
 
       frete:
-        tipoEntrega === "DELIVERY"
+        tipo === "DELIVERY"
           ? {
               valor: Number(freteInfo?.valor || 0),
               prazo: freteInfo?.prazo || null,
@@ -78,7 +75,7 @@ export default function usePagamentoHandler({
   observacao: item.observacao || null,
 })),
 
-      tipoPagamento,
+      cpf: cpf || null,
 
       pagamentoNaEntrega:
         tipoPagamento === "PAY_ON_DELIVERY"
@@ -92,7 +89,7 @@ export default function usePagamentoHandler({
       empresaId,
     };
   },
-  [carrinho, enderecoEntrega, freteInfo, empresaId]
+  [carrinho, enderecoEntrega, freteInfo, empresaId, tipoEntrega]
 );
 
   const limparCarrinhoComSeguranca = useCallback(async () => {
@@ -120,7 +117,7 @@ export default function usePagamentoHandler({
           return { ok: false };
         }
 
-        if (!enderecoEntrega?.id) {
+        if (tipoEntrega !== "RETIRADA" && !enderecoEntrega?.id) {
           showNotification?.("Selecione um endereço de entrega.", "error");
           return { ok: false };
         }
@@ -132,6 +129,7 @@ export default function usePagamentoHandler({
         }
 
         const payload = montarPayloadPedido({
+          tipoEntrega,
           formaPagamento,
           tipoPagamento,
           metodoPagamentoEntrega,
@@ -217,6 +215,7 @@ export default function usePagamentoHandler({
     [
       API_URL,
       carrinho?.itens,
+      tipoEntrega,
       enderecoEntrega?.id,
       montarPayloadPedido,
       restauranteSlug,

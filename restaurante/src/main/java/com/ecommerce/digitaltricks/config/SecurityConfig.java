@@ -73,6 +73,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/restaurantes/{slug}/carrinho/**").authenticated()
 
                         // =========================
+                        // PAGAMENTOS DO CLIENTE
+                        // =========================
+                        .requestMatchers("/api/pagamentos/**").hasAnyRole("CLIENTE", "ADMIN")
+
+                        // Chave pública MP (deve vir ANTES de /api/empresas/** com ADMIN sozinha)
+                        .requestMatchers(HttpMethod.GET, "/api/empresas/*/mp/public-key").hasAnyRole("CLIENTE", "ADMIN")
+
+                        // =========================
                         // PEDIDO DO CLIENTE POR SLUG
                         // =========================
                         .requestMatchers(HttpMethod.POST, "/api/restaurantes/*/pedidos").hasAnyRole("CLIENTE", "ADMIN")

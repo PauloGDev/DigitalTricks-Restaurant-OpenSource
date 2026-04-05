@@ -18,6 +18,7 @@ import com.ecommerce.digitaltricks.product.model.ProdutoOpcionalItem;
 import com.ecommerce.digitaltricks.product.model.Variacao;
 import com.ecommerce.digitaltricks.product.service.ProdutoService;
 import com.ecommerce.digitaltricks.cart.repository.CarrinhoRepository;
+import com.ecommerce.digitaltricks.cart.model.Carrinho;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import com.ecommerce.digitaltricks.product.repository.ProdutoRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
@@ -261,6 +262,13 @@ public class PedidoFacadeService {
             throw new RuntimeException("tipoPagamento é obrigatório.");
         }
 
+        // CPF: obrigatório para PIX, opcional para cartão (Brick MP ja coleta) e dinheiro
+        if (tipoPagamento == TipoPagamento.PIX) {
+            if (pedidoRequest.cpf() == null || pedidoRequest.cpf().isBlank()) {
+                throw new RuntimeException("CPF é obrigatório para pagamento via PIX.");
+            }
+        }
+
         Endereco endereco = null;
         if (tipoEntrega == TipoEntrega.DELIVERY) {
             endereco = perfil.getEnderecos().stream()
@@ -302,6 +310,14 @@ public class PedidoFacadeService {
             }
         }
 
+        // Buscar carrinho para obter desconto de cupom aplicado
+        Carrinho carrinho = carrinhoRepository.findByClienteTelefoneAndEmpresaId(
+                perfil.getTelefone(), empresa.getId()).orElse(null);
+
+        BigDecimal descontoCupom = carrinho != null && carrinho.getDescontoCupom() != null
+                ? carrinho.getDescontoCupom()
+                : BigDecimal.ZERO;
+
         List<ItemPedido> itens = pedidoRequest.itens().stream()
                 .map(i -> criarItemPedido(empresa, i))
                 .toList();
@@ -310,18 +326,26 @@ public class PedidoFacadeService {
                 .map(ItemPedido::getTotalItem)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal descontoCupom = BigDecimal.ZERO;
         BigDecimal total = subtotal.subtract(descontoCupom);
 
         if (total.compareTo(BigDecimal.ZERO) < 0) {
             total = BigDecimal.ZERO;
         }
 
+        // Somar frete ao total se DELIVERY
+        BigDecimal valorFrete = BigDecimal.ZERO;
+        if (tipoEntrega == TipoEntrega.DELIVERY && pedidoRequest.frete() != null) {
+            valorFrete = pedidoRequest.frete().valor() != null
+                    ? BigDecimal.valueOf(pedidoRequest.frete().valor())
+                    : BigDecimal.ZERO;
+        }
+        BigDecimal totalFinal = total.add(valorFrete);
+
         Pedido pedido = new Pedido();
         pedido.setEmpresa(empresa);
         pedido.setCliente(cliente);
         pedido.setItens(itens);
-        pedido.setTotal(total);
+        pedido.setTotal(totalFinal);
 
         if (tipoPagamento == TipoPagamento.PAY_ON_DELIVERY || tipoEntrega == TipoEntrega.RETIRADA) {
             pedido.setStatus(StatusPedido.RECEBIDO);
@@ -342,16 +366,17 @@ public class PedidoFacadeService {
         } else {
             pedido.setEnderecoEntrega(null);
             pedido.setServicoFrete(null);
-            pedido.setValorFrete(0.0);
+            pedido.setValorFrete(null);
             pedido.setPrazoFrete(null);
         }
 
         pedido.setNomeCompleto(nomeCompleto);
         pedido.setTelefone(telefone);
         pedido.setEmail(email);
+        pedido.setCpf(pedidoRequest.cpf());
         pedido.setSubtotal(subtotal);
         pedido.setDescontoCupom(descontoCupom);
-        pedido.setCupomCodigo(null);
+        pedido.setCupomCodigo(carrinho != null && carrinho.getCupom() != null ? carrinho.getCupom().getCodigo() : null);
 
         Pedido salvo = pedidoRepository.save(pedido);
         pedidoStatusService.registrarStatusInicial(salvo);
