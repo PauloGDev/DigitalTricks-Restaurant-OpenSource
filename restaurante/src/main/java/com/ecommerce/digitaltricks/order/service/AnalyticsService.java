@@ -14,14 +14,13 @@ import com.ecommerce.digitaltricks.order.repository.PedidoStatusLogRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AnalyticsService {
@@ -73,6 +72,11 @@ public class AnalyticsService {
 
         Map<Long, Integer> pedidosPorCliente = new HashMap<>();
 
+        Map<String, Integer> motivosCount = new LinkedHashMap<>();
+        Map<String, BigDecimal> motivosValorPerdido = new LinkedHashMap<>();
+        Map<String, Long> entregasCount = new LinkedHashMap<>();
+        Map<String, BigDecimal> entregasReceita = new LinkedHashMap<>();
+
         BigDecimal faturamentoComCupom = BigDecimal.ZERO;
         BigDecimal descontoTotalCupons = BigDecimal.ZERO;
         int pedidosComCupom = 0;
@@ -96,6 +100,9 @@ public class AnalyticsService {
         long somaTempoEntrega = 0;
         int totalComTempoEntrega = 0;
 
+        long somaTempoTotal = 0;
+        int totalComTempoTotal = 0;
+
         for (Pedido p : pedidos) {
             BigDecimal total = p.getTotal() != null ? p.getTotal() : BigDecimal.ZERO;
             BigDecimal descontoCupom = p.getDescontoCupom() != null ? p.getDescontoCupom() : BigDecimal.ZERO;
@@ -108,8 +115,20 @@ public class AnalyticsService {
             if (pedidoCancelado) {
                 cancelados++;
                 faturamentoPerdido = faturamentoPerdido.add(total);
+
+                if (p.getMotivoCancelamento() != null) {
+                    String motivo = p.getMotivoCancelamento().name();
+                    motivosCount.merge(motivo, 1, Integer::sum);
+                    motivosValorPerdido.merge(motivo, total, BigDecimal::add);
+                }
             } else if (pedidoValido) {
                 faturamentoTotal = faturamentoTotal.add(total);
+
+                if (p.getTipoEntrega() != null) {
+                    String tipo = p.getTipoEntrega().name();
+                    entregasCount.merge(tipo, 1L, Long::sum);
+                    entregasReceita.merge(tipo, total, BigDecimal::add);
+                }
             }
 
             if (p.getData() != null) {
@@ -190,7 +209,19 @@ public class AnalyticsService {
                 somaTempoEntrega += Duration.between(saiuEntrega, entregue).toMinutes();
                 totalComTempoEntrega++;
             }
+
+            // Tempo total: do RECEBIDO até status final (ENTREGUE/RETIRADO/CANCELADO)
+            LocalDateTime recebido = firstLogTime(logs, StatusPedido.RECEBIDO);
+            LocalDateTime statusFinal = firstLogTime(logs, p.getStatus());
+            if (recebido != null && statusFinal != null && !statusFinal.isBefore(recebido)) {
+                long mins = Duration.between(recebido, statusFinal).toMinutes();
+                if (mins > 0 && mins < 300) {
+                    somaTempoTotal += mins;
+                    totalComTempoTotal++;
+                }
+            }
         }
+
 
         int clientesRecorrentes = (int) pedidosPorCliente.values()
                 .stream()
@@ -260,6 +291,36 @@ public class AnalyticsService {
                 ? (int) Math.round((double) somaTempoEntrega / totalComTempoEntrega)
                 : null;
 
+        Integer tempoMedioEntregaFinal = totalComTempoTotal > 0
+                ? (int) Math.round((double) somaTempoTotal / totalComTempoTotal)
+                : null;
+
+        List<TopFaturamentoDTO> topFaturamento = produtosFaturamento.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(5)
+                .map(e -> new TopFaturamentoDTO(
+                        e.getKey(),
+                        produtosNome.getOrDefault(e.getKey(), "Produto"),
+                        e.getValue(),
+                        produtosCount.getOrDefault(e.getKey(), 0),
+                        produtosImagem.get(e.getKey())
+                ))
+                .toList();
+
+        List<MotivoCancelamentoDTO> motivosCancelamento = motivosCount.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .map(e -> new MotivoCancelamentoDTO(
+                        e.getKey(), e.getValue(),
+                        motivosValorPerdido.getOrDefault(e.getKey(), BigDecimal.ZERO)))
+                .toList();
+
+        List<ReceitaEntregaDTO> receitaPorEntrega = entregasCount.entrySet().stream()
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                .map(e -> new ReceitaEntregaDTO(
+                        e.getKey(), e.getValue(),
+                        entregasReceita.getOrDefault(e.getKey(), BigDecimal.ZERO)))
+                .toList();
+
         return new AnalyticsDTO(
                 faturamento,
                 pedidosDia,
@@ -274,6 +335,7 @@ public class AnalyticsService {
                         tempoMedioEntrega
                 ),
                 topProdutos,
+                topFaturamento,
                 pedidosHora,
                 pagamentos,
                 entregas,
@@ -284,7 +346,10 @@ public class AnalyticsService {
                         faturamentoPeriodoAnterior,
                         crescimentoValor,
                         crescimentoPercentual
-                )
+                ),
+                motivosCancelamento,
+                receitaPorEntrega,
+                tempoMedioEntregaFinal
         );
     }
 

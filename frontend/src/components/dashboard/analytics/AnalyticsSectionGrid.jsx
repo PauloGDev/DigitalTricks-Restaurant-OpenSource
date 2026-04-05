@@ -19,10 +19,10 @@ import {
   formatDateLabel,
   formatNumber,
   formatPercent,
+  getMotivoCancelamentoLabel,
   mapPagamentosAnalytics,
   mapEntregasAnalytics,
   mapPedidosHora,
-  mapTopProdutos,
 } from "./AnalyticsUtils";
 
 const PIE_COLORS = ["#dc2626", "#f97316", "#2563eb", "#16a34a", "#7c3aed", "#0891b2"];
@@ -53,7 +53,31 @@ export default function AnalyticsSectionGrid({ dados, loading, isDark = true }) 
   const pagamentosChart = mapPagamentosAnalytics(dados?.pagamentos);
   const entregasChart = mapEntregasAnalytics(dados?.entregas);
   const horariosChart = mapPedidosHora(dados?.pedidosPorHora);
-  const topProdutosChart = mapTopProdutos(dados?.topProdutos);
+  const topProdutosChart = dados?.topProdutos?.map((item) => ({
+    nome: item.nome || "Produto",
+    quantidade: Number(item.quantidade || 0),
+    faturamento: Number(item.faturamento || 0),
+    imagemUrl: item.imagemUrl || null,
+  })) || [];
+
+  const topFaturamentoChart = dados?.topFaturamento?.map((item) => ({
+    nome: item.nome || "Produto",
+    faturamento: Number(item.faturamento || 0),
+    quantidade: Number(item.quantidade || 0),
+    imagemUrl: item.imagemUrl || null,
+  })) || [];
+
+  const motivosCancelamento = (dados?.motivosCancelamento || []).map((item) => ({
+    motivo: getMotivoCancelamentoLabel(item.motivo),
+    quantidade: Number(item.quantidade || 0),
+    valorPerdido: Number(item.valorPerdido || 0),
+  }));
+
+  const receitaPorEntrega = (dados?.receitaPorEntrega || []).map((item) => ({
+    nome: { DELIVERY: "Delivery", RETIRADA: "Retirada", LOCAL: "No local" }[item.tipoEntrega] || item.tipoEntrega,
+    quantidade: Number(item.quantidade || 0),
+    receita: Number(item.receita || 0),
+  }));
 
   const totalClientes = Number(
     dados?.retencao?.totalClientes ??
@@ -271,6 +295,71 @@ export default function AnalyticsSectionGrid({ dados, loading, isDark = true }) 
           <StatBox label="% Crescimento" value={formatPercent(dados?.comparacao?.crescimentoPercentual || 0)} isDark={isDark} />
         </div>
       </AnalyticsChartCard>
+
+      {topFaturamentoChart.length > 0 && (
+        <AnalyticsChartCard
+          title="Top faturamento"
+          subtitle="Produtos que mais geram receita."
+          loading={loading}
+          isDark={isDark}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={topFaturamentoChart} layout="vertical" margin={{ top: 8, right: 16, left: 16, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={axisStroke} />
+              <XAxis type="number" tick={{ fontSize: 12, fill: tickColor }} />
+              <YAxis type="category" dataKey="nome" tick={{ fontSize: 12, fill: tickColor }} width={220} />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(value, key) => key === "Faturamento" ? [formatCurrency(value), "Receita"] : [formatNumber(value), "Qtd"]}
+                labelFormatter={(_, payload) => payload?.[0]?.payload?.nome || "Produto"}
+              />
+              <Legend />
+              <Bar dataKey="faturamento" name="Faturamento" fill="#2563eb" radius={[0, 10, 10, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </AnalyticsChartCard>
+      )}
+
+      {motivosCancelamento.length > 0 && (
+        <AnalyticsChartCard
+          title="Motivos de cancelamento"
+          subtitle="Distribuição de cancelamentos por motivo."
+          loading={loading}
+          isDark={isDark}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={motivosCancelamento}>
+              <CartesianGrid strokeDasharray="3 3" stroke={axisStroke} />
+              <XAxis dataKey="motivo" tick={{ fontSize: 11, fill: tickColor }} />
+              <YAxis tick={{ fontSize: 12, fill: tickColor }} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value, key) => key === "quantidade" ? [formatNumber(value), "Qtd"] : [formatCurrency(value), "Perda"]} />
+              <Legend />
+              <Bar dataKey="quantidade" name="Quantidade" fill="#ef4444" radius={[10, 10, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </AnalyticsChartCard>
+      )}
+
+      {receitaPorEntrega.length > 0 && (
+        <AnalyticsChartCard
+          title="Receita por tipo de entrega"
+          subtitle="Volume e receita de delivery vs retirada."
+          loading={loading}
+          isDark={isDark}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={receitaPorEntrega}>
+              <CartesianGrid strokeDasharray="3 3" stroke={axisStroke} />
+              <XAxis dataKey="nome" tick={{ fontSize: 12, fill: tickColor }} />
+              <YAxis tick={{ fontSize: 12, fill: tickColor }} />
+              <Tooltip contentStyle={tooltipStyle} formatter={(value, key) => key === "receita" ? [formatCurrency(value), "Receita"] : [formatNumber(value), "Qtd"]} />
+              <Legend />
+              <Bar dataKey="quantidade" name="Quantidade" fill="#f97316" radius={[10, 10, 0, 0]} />
+              <Bar dataKey="receita" name="Receita" fill="#16a34a" radius={[10, 10, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </AnalyticsChartCard>
+      )}
     </div>
   );
 }
