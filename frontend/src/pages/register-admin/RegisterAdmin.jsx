@@ -28,13 +28,24 @@ const itemVariants = {
   animate: { opacity: 1, y: 0 },
 };
 
-function MsgBox({ mensagem, msgType, msgRef }) {
+function getThemeState() {
+  if (typeof window === "undefined") return "dark";
+  return localStorage.getItem("navbar-theme-override") || "dark";
+}
+
+function MsgBox({ mensagem, msgType, msgRef, isDark }) {
   if (!mensagem) return null;
   const styles =
     msgType === "success"
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      ? isDark
+        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+        : "border-emerald-200 bg-emerald-50 text-emerald-800"
       : msgType === "error"
-      ? "border-red-200 bg-red-50 text-red-800"
+      ? isDark
+        ? "border-red-500/20 bg-red-500/10 text-red-300"
+        : "border-red-200 bg-red-50 text-red-800"
+      : isDark
+      ? "border-white/10 bg-white/5 text-white/70"
       : "border-zinc-200 bg-zinc-50 text-zinc-800";
   const Icon = msgType === "error" ? XCircle : UserPlus;
   return (
@@ -47,27 +58,29 @@ function MsgBox({ mensagem, msgType, msgRef }) {
   );
 }
 
-function InputShell({ icon: Icon, label, hint, children }) {
+function InputShell({ icon: Icon, label, hint, children, isDark }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-extrabold text-zinc-900">{label}</label>
+      <label className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
+        {label}
+      </label>
       <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? "text-white/35" : "text-zinc-400"}`}>
           <Icon className="w-4 h-4" />
         </div>
         {children}
       </div>
-      {hint && <p className="text-xs text-zinc-500 leading-relaxed">{hint}</p>}
+      {hint && <p className={`text-xs leading-relaxed ${isDark ? "text-white/45" : "text-zinc-500"}`}>{hint}</p>}
     </div>
   );
 }
 
-function PasswordField({ label, hint, value, onChange, show, setShow, autoComplete, baseInput }) {
+function PasswordField({ label, hint, value, onChange, show, setShow, autoComplete, baseInput, isDark }) {
   return (
     <div className="space-y-1">
-      <label className="text-sm font-extrabold text-zinc-900">{label}</label>
+      <label className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>{label}</label>
       <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">
+        <div className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? "text-white/35" : "text-zinc-400"}`}>
           <Lock className="w-4 h-4" />
         </div>
         <input
@@ -82,13 +95,17 @@ function PasswordField({ label, hint, value, onChange, show, setShow, autoComple
         <button
           type="button"
           onClick={() => setShow((p) => !p)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-xl grid place-items-center text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50 transition"
+          className={`absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-xl grid place-items-center transition ${
+            isDark
+              ? "text-white/50 hover:text-white hover:bg-white/5"
+              : "text-zinc-500 hover:text-zinc-800 hover:bg-zinc-50"
+          }`}
           aria-label={show ? "Ocultar senha" : "Mostrar senha"}
         >
           {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
       </div>
-      {hint && <p className="text-xs text-zinc-500 leading-relaxed">{hint}</p>}
+      {hint && <p className={`text-xs leading-relaxed ${isDark ? "text-white/45" : "text-zinc-500"}`}>{hint}</p>}
     </div>
   );
 }
@@ -110,13 +127,12 @@ export default function RegisterAdmin() {
   const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   /* ── Theme ── */
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem("navbar-theme-override");
-    return saved ? saved === "dark" : true;
-  });
+  const [theme, setTheme] = useState(getThemeState);
   useEffect(() => {
-    localStorage.setItem("navbar-theme-override", isDark ? "dark" : "light");
-  }, [isDark]);
+    localStorage.setItem("navbar-theme-override", theme);
+  }, [theme]);
+
+  const isDark = theme === "dark";
 
   const navigate = useNavigate();
   const msgRef = useRef(null);
@@ -207,22 +223,41 @@ export default function RegisterAdmin() {
     }
   };
 
-  const baseInput = `w-full rounded-2xl border pl-11 pr-4 py-3.5 text-[15px] leading-5 outline-none transition focus:ring-2 focus:ring-red-500/25 focus:border-red-300 ${
+  /* ── Classes ── */
+  const headerClass = [
+    "sticky top-0 pt-20 z-20 border-b transition-colors",
     isDark
-      ? "border-white/10 bg-white/5 text-white placeholder:text-white/35 focus:border-red-500 focus:ring-red-500/20"
-      : "border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-red-300"
-  }`;
+      ? "bg-[#1A1A1A]/90 backdrop-blur-xl border-white/5"
+      : "bg-white/90 backdrop-blur border-zinc-200",
+  ].join(" ");
+
+  const cardShadow = isDark
+    ? "shadow-[0_18px_50px_rgba(0,0,0,0.24)]"
+    : "shadow-[0_12px_35px_rgba(15,23,42,0.05)]";
+
+  const baseInput = [
+    "w-full rounded-2xl border pl-11 pr-4 py-3.5 text-[15px] leading-5 outline-none transition-all duration-300 focus:ring-2 focus:ring-red-500/25 focus:border-red-500/50",
+    isDark
+      ? "border-white/10 bg-white/5 text-white placeholder:text-white/30"
+      : "border-zinc-200 bg-white text-zinc-900 placeholder:text-zinc-400",
+  ].join(" ");
+
+  const panelClass = [
+    "rounded-[28px] border transition-colors duration-300 overflow-hidden",
+    cardShadow,
+    isDark ? "border-white/10 bg-white/[0.04]" : "border-zinc-200 bg-white",
+  ].join(" ");
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-gray-50" : "bg-gray-50"}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-transparent text-white" : "bg-zinc-900 text-zinc-900"}`}>
       <PageTitle title="Cadastro Admin | Painel" />
 
-      {/* Theme toggle — fixed */}
+      {/* Theme toggle */}
       <button
-        onClick={() => setIsDark((p) => !p)}
+        onClick={() => setTheme((p) => (p === "dark" ? "light" : "dark"))}
         className={`fixed top-4 right-4 z-50 flex items-center justify-center w-11 h-11 rounded-2xl border transition-all duration-300 shadow-sm ${
           isDark
-            ? "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
+            ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
             : "border-zinc-200 bg-white text-zinc-900 hover:bg-zinc-50"
         }`}
         aria-label="Trocar tema"
@@ -231,20 +266,14 @@ export default function RegisterAdmin() {
       </button>
 
       {/* Header */}
-      <section
-        className={`sticky top-0 pt-20 z-20 border-b transition-colors ${
-          isDark
-            ? "bg-white/90 backdrop-blur border-zinc-200"
-            : "bg-white/90 backdrop-blur border-zinc-200"
-        }`}
-      >
+      <section className={headerClass}>
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-start sm:items-center justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 truncate">
+              <h1 className={`text-xl sm:text-2xl font-extrabold truncate ${isDark ? "text-white" : "text-zinc-900"}`}>
                 Criar conta admin
               </h1>
-              <p className="text-sm text-zinc-500 mt-1">
+              <p className={`text-sm mt-1 ${isDark ? "text-white/50" : "text-zinc-500"}`}>
                 Cadastre-se para gerenciar restaurantes e acessar o painel.
               </p>
             </div>
@@ -252,7 +281,7 @@ export default function RegisterAdmin() {
               to="/dashboard/login"
               className={`shrink-0 inline-flex items-center gap-2 px-4 py-3 rounded-2xl border text-sm font-semibold transition ${
                 isDark
-                  ? "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
+                  ? "border-white/10 bg-white/5 text-white hover:bg-white/10"
                   : "border-zinc-200 bg-white text-zinc-800 hover:bg-zinc-50"
               }`}
             >
@@ -262,185 +291,197 @@ export default function RegisterAdmin() {
         </div>
       </section>
 
-      {/* Conteúdo */}
-      <div className="py-6 sm:py-8 w-full max-w-5xl mx-auto px-4 sm:px-6">
-        <motion.div
-          variants={containerVariants}
-          initial="initial"
-          animate="animate"
-          className="grid grid-cols-1 gap-6"
-        >
-          <motion.div variants={itemVariants}>
-            <div
-              className={`rounded-3xl border border-zinc-200 bg-white overflow-hidden shadow-sm`}
-            >
-              <div className="px-5 sm:px-8 py-5 border-b border-zinc-100 bg-zinc-50/50">
-                <h3 className="text-sm font-extrabold text-zinc-900">Dados pessoais</h3>
-                <p className="text-xs text-zinc-500 mt-1">
-                  Essas informações serão usadas para seu acesso ao painel.
-                </p>
-              </div>
+      {/* Área interna com fundo escuro */}
+      <div className={`transition-colors duration-300 ${isDark ? "bg-[#0D0D0D]/60" : "bg-zinc-900"}`}>
+        <div className="py-6 sm:py-8 w-full max-w-5xl mx-auto px-4 sm:px-6">
+          <motion.div
+            variants={containerVariants}
+            initial="initial"
+            animate="animate"
+            className="grid grid-cols-1 gap-6"
+          >
+            <motion.div variants={itemVariants}>
+              <div className={panelClass}>
+                <div className={`px-5 sm:px-8 py-5 border-b ${isDark ? "border-white/10" : "border-zinc-100"}`}>
+                  <h3 className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                    Dados pessoais
+                  </h3>
+                  <p className={`text-xs mt-1 ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                    Essas informações serão usadas para seu acesso ao painel.
+                  </p>
+                </div>
 
-              <div className="p-5 sm:p-8 space-y-4">
-                <MsgBox mensagem={mensagem} msgType={msgType} msgRef={msgRef} />
+                <div className="p-5 sm:p-8 space-y-4">
+                  <MsgBox mensagem={mensagem} msgType={msgType} msgRef={msgRef} isDark={isDark} />
 
-                <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <InputShell icon={User} label="Nome completo" hint="Ex: João da Silva">
-                    <input
-                      type="text"
-                      placeholder="Seu nome"
-                      className={baseInput}
-                      value={nomeCompleto}
-                      onChange={(e) => setNomeCompleto(e.target.value)}
-                      required
-                      autoComplete="name"
-                    />
-                  </InputShell>
+                  <form onSubmit={handleRegister} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <InputShell icon={User} label="Nome completo" hint="Ex: João da Silva" isDark={isDark}>
+                      <input
+                        type="text"
+                        placeholder="Seu nome"
+                        className={baseInput}
+                        value={nomeCompleto}
+                        onChange={(e) => setNomeCompleto(e.target.value)}
+                        required
+                        autoComplete="name"
+                      />
+                    </InputShell>
 
-                  <InputShell icon={Mail} label="E-mail" hint="Será seu nome de login alternativo">
-                    <input
-                      type="email"
-                      placeholder="seuemail@exemplo.com"
-                      className={baseInput}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      autoComplete="email"
-                      inputMode="email"
-                    />
-                  </InputShell>
+                    <InputShell icon={Mail} label="E-mail" hint="Será seu nome de login alternativo" isDark={isDark}>
+                      <input
+                        type="email"
+                        placeholder="seuemail@exemplo.com"
+                        className={baseInput}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        autoComplete="email"
+                        inputMode="email"
+                      />
+                    </InputShell>
 
-                  <InputShell icon={User} label="Nome de usuário" hint="Mínimo 6 caracteres">
-                    <input
-                      type="text"
-                      placeholder="Ex: joaosilva"
-                      className={baseInput}
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      required
-                      minLength={6}
-                      autoComplete="username"
-                    />
-                  </InputShell>
+                    <InputShell icon={User} label="Nome de usuário" hint="Mínimo 6 caracteres" isDark={isDark}>
+                      <input
+                        type="text"
+                        placeholder="Ex: joaosilva"
+                        className={baseInput}
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        required
+                        minLength={6}
+                        autoComplete="username"
+                      />
+                    </InputShell>
 
-                  <InputShell icon={Phone} label="Telefone" hint="Com DDD">
-                    <IMaskInput
-                      mask="(00) 00000-0000"
-                      placeholder="(00) 00000-0000"
-                      className={baseInput}
-                      value={telefone}
-                      onAccept={(v) => setTelefone(v)}
-                      required
-                      inputMode="tel"
-                    />
-                  </InputShell>
+                    <InputShell icon={Phone} label="Telefone" hint="Com DDD" isDark={isDark}>
+                      <IMaskInput
+                        mask="(00) 00000-0000"
+                        placeholder="(00) 00000-0000"
+                        className={baseInput}
+                        value={telefone}
+                        onAccept={(v) => setTelefone(v)}
+                        required
+                        inputMode="tel"
+                      />
+                    </InputShell>
 
-                  <InputShell icon={IdCard} label="CPF" hint="Necessário para cadastro administrativo">
-                    <IMaskInput
-                      mask="000.000.000-00"
-                      placeholder="000.000.000-00"
-                      className={baseInput}
-                      value={cpf}
-                      onAccept={(v) => setCpf(v)}
-                      required
-                      inputMode="numeric"
-                    />
-                  </InputShell>
+                    <InputShell icon={IdCard} label="CPF" hint="Necessário para cadastro administrativo" isDark={isDark}>
+                      <IMaskInput
+                        mask="000.000.000-00"
+                        placeholder="000.000.000-00"
+                        className={baseInput}
+                        value={cpf}
+                        onAccept={(v) => setCpf(v)}
+                        required
+                        inputMode="numeric"
+                      />
+                    </InputShell>
 
-                  {/* Divider */}
-                  <div className="sm:col-span-2 pt-2">
-                    <div className="h-px bg-zinc-100" />
-                    <div className="mt-4">
-                      <h3 className="text-sm font-extrabold text-zinc-900">Dados de acesso</h3>
+                    {/* Divider */}
+                    <div className="sm:col-span-2 pt-2">
+                      <div className={`h-px ${isDark ? "bg-white/10" : "bg-zinc-100"}`} />
+                      <div className="mt-4">
+                        <h3 className={`text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                          Dados de acesso
+                        </h3>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="sm:col-span-2">
-                    <PasswordField
-                      label="Senha"
-                      hint={senhaLabel}
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      show={showPass}
-                      setShow={setShowPass}
-                      autoComplete="new-password"
-                      baseInput={baseInput}
-                    />
-                  </div>
+                    <div className="sm:col-span-2">
+                      <PasswordField
+                        label="Senha"
+                        hint={senhaLabel}
+                        value={senha}
+                        onChange={(e) => setSenha(e.target.value)}
+                        show={showPass}
+                        setShow={setShowPass}
+                        autoComplete="new-password"
+                        baseInput={baseInput}
+                        isDark={isDark}
+                      />
+                    </div>
 
-                  <div className="sm:col-span-2">
-                    <PasswordField
-                      label="Confirmar senha"
-                      hint="Repita a senha"
-                      value={confirmarSenha}
-                      onChange={(e) => setConfirmarSenha(e.target.value)}
-                      show={showConfirmPass}
-                      setShow={setShowConfirmPass}
-                      autoComplete="new-password"
-                      baseInput={baseInput}
-                    />
-                  </div>
+                    <div className="sm:col-span-2">
+                      <PasswordField
+                        label="Confirmar senha"
+                        hint="Repita a senha"
+                        value={confirmarSenha}
+                        onChange={(e) => setConfirmarSenha(e.target.value)}
+                        show={showConfirmPass}
+                        setShow={setShowConfirmPass}
+                        autoComplete="new-password"
+                        baseInput={baseInput}
+                        isDark={isDark}
+                      />
+                    </div>
 
-                  {/* Barra de força */}
-                  <div className="sm:col-span-2 -mt-1">
-                    <div className="grid grid-cols-4 gap-1 px-1">
-                      {Array.from({ length: 4 }).map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`h-1.5 rounded-full transition-colors ${
-                            senha
-                              ? idx < senhaScore
-                                ? "bg-emerald-500"
+                    {/* Barra de força */}
+                    <div className="sm:col-span-2 -mt-1">
+                      <div className="grid grid-cols-4 gap-1 px-1">
+                        {Array.from({ length: 4 }).map((_, idx) => (
+                          <div
+                            key={idx}
+                            className={`h-1.5 rounded-full transition-colors ${
+                              senha
+                                ? idx < senhaScore
+                                  ? "bg-emerald-500"
+                                  : isDark
+                                  ? "bg-white/10"
+                                  : "bg-zinc-200"
+                                : isDark
+                                ? "bg-white/10"
                                 : "bg-zinc-200"
-                              : "bg-zinc-200"
-                          }`}
-                        />
-                      ))}
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Submit */}
-                  <div className="sm:col-span-2 pt-2">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className={`w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 font-extrabold transition shadow-[0_14px_30px_rgba(229,37,42,0.20)] ${
-                        loading
-                          ? "bg-zinc-200 text-zinc-500 cursor-not-allowed"
-                          : "bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] hover:opacity-90 text-white"
-                      }`}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="animate-spin w-5 h-5" />
-                          Criando sua conta...
-                        </>
-                      ) : (
-                        <>
-                          Criar conta admin <ArrowRight className="w-5 h-5" />
-                        </>
-                      )}
-                    </button>
-
-                    <p className="mt-4 text-xs text-zinc-500 text-center leading-relaxed">
-                      Esta conta dará acesso ao painel administrativo de restaurantes.
-                    </p>
-
-                    <p className="mt-3 text-sm text-center text-zinc-600">
-                      Já tem uma conta?{" "}
-                      <Link
-                        to="/dashboard/login"
-                        className="font-semibold text-red-600 hover:text-red-500"
+                    {/* Submit */}
+                    <div className="sm:col-span-2 pt-2">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`w-full inline-flex items-center justify-center gap-2 rounded-2xl py-3.5 font-extrabold transition shadow-[0_14px_30px_rgba(229,37,42,0.20)] ${
+                          loading
+                            ? isDark
+                              ? "bg-white/5 text-white/30 cursor-not-allowed"
+                              : "bg-zinc-200 text-zinc-500 cursor-not-allowed"
+                            : "bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] hover:opacity-90 text-white"
+                        }`}
                       >
-                        Fazer login
-                      </Link>
-                    </p>
-                  </div>
-                </form>
+                        {loading ? (
+                          <>
+                            <Loader2 className="animate-spin w-5 h-5" />
+                            Criando sua conta...
+                          </>
+                        ) : (
+                          <>
+                            Criar conta admin <ArrowRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
+
+                      <p className={`mt-4 text-xs text-center leading-relaxed ${isDark ? "text-white/40" : "text-zinc-500"}`}>
+                        Esta conta dará acesso ao painel administrativo de restaurantes.
+                      </p>
+
+                      <p className={`mt-3 text-sm text-center ${isDark ? "text-white/50" : "text-zinc-600"}`}>
+                        Já tem uma conta?{" "}
+                        <Link
+                          to="/dashboard/login"
+                          className="font-semibold text-red-400 hover:text-red-300"
+                        >
+                          Fazer login
+                        </Link>
+                      </p>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );
