@@ -3,15 +3,15 @@ spring.application.name=digitaltricks
 # ==============================
 # AMBIENTE
 # ==============================
-server.port=${SERVER_PORT:8080}
+server.port=8080
 
 # ==============================
 # DATABASE (DEV - H2)
 # ==============================
-spring.datasource.url=${DB_URL:jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-spring.datasource.driverClassName=${DB_DRIVER:org.h2.Driver}
-spring.datasource.username=${DB_USERNAME:sa}
-spring.datasource.password=${DB_PASSWORD:}
+spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
 spring.h2.console.enabled=true
 spring.h2.console.path=/h2-console
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
@@ -23,40 +23,37 @@ spring.jpa.defer-datasource-initialization=true
 # ==============================
 # SEGURANA / JWT
 # ==============================
-jwt.secret=${JWT_SECRET}
+# GERE UMA CHAVE SEGURA: head -c 64 /dev/urandom | base64
+jwt.secret=${JWT_SECRET:COLOQUE_SUA_CHAVE_BASE64_AQUI}
 jwt.expiration=86400000
 
 # ==============================
 # MERCADO PAGO
 # ==============================
-mp.accessToken=${MP_ACCESS_TOKEN}
+mp.accessToken=${MP_ACCESS_TOKEN:COLOQUE_SEU_TOKEN_AQUI}
 
 # ==============================
 # CLOUDINARY
 # ==============================
-cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME}
-cloudinary.api-key=${CLOUDINARY_API_KEY}
-cloudinary.api-secret=${CLOUDINARY_API_SECRET}
+cloudinary.cloud-name=${CLOUDINARY_CLOUD_NAME:COLOQUE_AQUI}
+cloudinary.api-key=${CLOUDINARY_API_KEY:COLOQUE_AQUI}
+cloudinary.api-secret=${CLOUDINARY_API_SECRET:COLOQUE_AQUI}
 
 # ==============================
 # EMAIL
 # ==============================
 spring.mail.host=smtp.hostinger.com
 spring.mail.port=587
-spring.mail.username=${MAIL_USERNAME}
-spring.mail.password=${MAIL_PASSWORD}
+spring.mail.username=${MAIL_USERNAME:COLOQUE_AQUI}
+spring.mail.password=${MAIL_PASSWORD:COLOQUE_AQUI}
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 spring.mail.default-encoding=UTF-8
 
 # ==============================
-# WHATSAPP
-# ==============================
-whatsapp.verify.token=${WHATSAPP_VERIFY_TOKEN}
-# ==============================
 # CORS
 # ==============================
-cors.allowed-origins=${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+cors.allowed-origins=http://localhost:5173,http://localhost:3000
 
 # ==============================
 # LOGS
