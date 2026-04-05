@@ -20,12 +20,12 @@ public class PedidoStatusService {
     private final PedidoRepository pedidoRepository;
     private final PedidoStatusLogRepository pedidoStatusLogRepository;
 
-    // Flujo normal de status
+    // Fluxo de status — inclui delivery e retirada
     private static final Map<StatusPedido, List<StatusPedido>> FLUXO = Map.of(
             StatusPedido.AGUARDANDO_PAGAMENTO, List.of(StatusPedido.RECEBIDO, StatusPedido.CANCELADO),
             StatusPedido.RECEBIDO, List.of(StatusPedido.EM_PREPARO, StatusPedido.AGUARDANDO_RETIRADA, StatusPedido.CANCELADO),
-            StatusPedido.EM_PREPARO, List.of(StatusPedido.PRONTO, StatusPedido.CANCELADO),
-            StatusPedido.PRONTO, List.of(StatusPedido.SAIU_PARA_ENTREGA, StatusPedido.RETIRADO, StatusPedido.ENTREGUE),
+            StatusPedido.EM_PREPARO, List.of(StatusPedido.PRONTO, StatusPedido.AGUARDANDO_RETIRADA, StatusPedido.CANCELADO),
+            StatusPedido.PRONTO, List.of(StatusPedido.SAIU_PARA_ENTREGA, StatusPedido.AGUARDANDO_RETIRADA, StatusPedido.RETIRADO, StatusPedido.ENTREGUE),
             StatusPedido.AGUARDANDO_RETIRADA, List.of(StatusPedido.RETIRADO, StatusPedido.CANCELADO),
             StatusPedido.SAIU_PARA_ENTREGA, List.of(StatusPedido.ENTREGUE, StatusPedido.CANCELADO),
             StatusPedido.RETIRADO, List.of(),
@@ -33,15 +33,24 @@ public class PedidoStatusService {
             StatusPedido.CANCELADO, List.of()
     );
 
-    // Ordenação de progresso para "avanço automático"
-    // Cada status pode pular direto para o final se não houver bloqueio
-    private static final List<StatusPedido> ORDEM_PROGRESSO = List.of(
+    // Caminho de progresso para entrega
+    private static final List<StatusPedido> ORDEM_PROGRESSO_ENTREGA = List.of(
             StatusPedido.AGUARDANDO_PAGAMENTO,
             StatusPedido.RECEBIDO,
             StatusPedido.EM_PREPARO,
             StatusPedido.PRONTO,
             StatusPedido.SAIU_PARA_ENTREGA,
             StatusPedido.ENTREGUE
+    );
+
+    // Caminho de progresso para retirada
+    private static final List<StatusPedido> ORDEM_PROGRESSO_RETIRADA = List.of(
+            StatusPedido.AGUARDANDO_PAGAMENTO,
+            StatusPedido.RECEBIDO,
+            StatusPedido.EM_PREPARO,
+            StatusPedido.PRONTO,
+            StatusPedido.AGUARDANDO_RETIRADA,
+            StatusPedido.RETIRADO
     );
 
     // Status que permitem entrega direta (ignora pagamento)
@@ -216,8 +225,25 @@ public class PedidoStatusService {
     /* ── Helpers ── */
 
     private List<StatusPedido> construirCaminho(StatusPedido de, StatusPedido para) {
-        int idxDe = ORDEM_PROGRESSO.indexOf(de);
-        int idxPara = ORDEM_PROGRESSO.indexOf(para);
+        // Tenta caminho de entrega
+        List<StatusPedido> resultado = construirCaminhoPorOrdem(de, para, ORDEM_PROGRESSO_ENTREGA);
+        if (!resultado.isEmpty()) return resultado;
+
+        // Tenta caminho de retirada
+        resultado = construirCaminhoPorOrdem(de, para, ORDEM_PROGRESSO_RETIRADA);
+        if (!resultado.isEmpty()) return resultado;
+
+        // Fallback: transição direta (status finais ou não-lineares)
+        if (FLUXO.getOrDefault(de, List.of()).contains(para)) {
+            return List.of(para);
+        }
+
+        return List.of();
+    }
+
+    private List<StatusPedido> construirCaminhoPorOrdem(StatusPedido de, StatusPedido para, List<StatusPedido> ordem) {
+        int idxDe = ordem.indexOf(de);
+        int idxPara = ordem.indexOf(para);
 
         if (idxDe < 0 || idxPara < 0 || idxPara <= idxDe) {
             return List.of();
@@ -225,18 +251,15 @@ public class PedidoStatusService {
 
         List<StatusPedido> caminho = new ArrayList<>();
         for (int i = idxDe + 1; i <= idxPara; i++) {
-            StatusPedido s = ORDEM_PROGRESSO.get(i);
-            // Verifica se cada transição é válida no FLUXO
-            StatusPedido anterior = i == idxDe + 1 ? de : ORDEM_PROGRESSO.get(i - 1);
+            StatusPedido s = ordem.get(i);
+            StatusPedido anterior = i == idxDe + 1 ? de : ordem.get(i - 1);
             List<StatusPedido> validos = FLUXO.getOrDefault(anterior, List.of());
             if (validos.contains(s)) {
                 caminho.add(s);
             } else {
-                // Transição inválida no meio do caminho
                 break;
             }
         }
-
         return caminho;
     }
 
