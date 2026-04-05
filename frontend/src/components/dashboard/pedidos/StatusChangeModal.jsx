@@ -134,7 +134,21 @@ export default function StatusChangeModal({
   const caminho = useMemo(() => {
     if (!statusAtual || !desejado || statusAtual === desejado) return [];
 
-    const ordem = [
+    // Verifica se é transição direta
+    const diretas = {
+      AGUARDANDO_PAGAMENTO: ["RECEBIDO", "CANCELADO"],
+      RECEBIDO: ["EM_PREPARO", "CANCELADO", "AGUARDANDO_RETIRADA"],
+      EM_PREPARO: ["PRONTO", "CANCELADO", "AGUARDANDO_RETIRADA"],
+      PRONTO: ["SAIU_PARA_ENTREGA", "ENTREGUE", "RETIRADO", "AGUARDANDO_RETIRADA"],
+      SAIU_PARA_ENTREGA: ["ENTREGUE"],
+      AGUARDANDO_RETIRADA: ["RETIRADO"],
+    };
+
+    if ((diretas[statusAtual] || []).includes(desejado)) {
+      return [desejado];
+    }
+
+    const ordemEntrega = [
       "AGUARDANDO_PAGAMENTO",
       "RECEBIDO",
       "EM_PREPARO",
@@ -143,11 +157,35 @@ export default function StatusChangeModal({
       "ENTREGUE",
     ];
 
-    const idxAtual = ordem.indexOf(statusAtual);
-    const idxDesejado = ordem.indexOf(desejado);
-    if (idxAtual < 0 || idxDesejado <= idxAtual) return [];
+    const ordemRetirada = [
+      "AGUARDANDO_PAGAMENTO",
+      "RECEBIDO",
+      "EM_PREPARO",
+      "PRONTO",
+      "AGUARDANDO_RETIRADA",
+      "RETIRADO",
+    ];
 
-    return ordem.slice(idxAtual + 1, idxDesejado + 1);
+    // Tenta caminho de entrega
+    let idxAtual = ordemEntrega.indexOf(statusAtual);
+    let idxDesejado = ordemEntrega.indexOf(desejado);
+    if (idxAtual >= 0 && idxDesejado > idxAtual) {
+      return ordemEntrega.slice(idxAtual + 1, idxDesejado + 1);
+    }
+
+    // Tenta caminho de retirada
+    idxAtual = ordemRetirada.indexOf(statusAtual);
+    idxDesejado = ordemRetirada.indexOf(desejado);
+    if (idxAtual >= 0 && idxDesejado > idxAtual) {
+      return ordemRetirada.slice(idxAtual + 1, idxDesejado + 1);
+    }
+
+    // Fallback: transição direta para o alvo mesmo que esteja fora de ordem (ex: RETIRADO para ENTREGUE)
+    if (desejado === "ENTREGUE" || desejado === "RETIRADO" || desejado === "CANCELADO") {
+      return [desejado];
+    }
+
+    return [];
   }, [statusAtual, desejado]);
 
   const pulaEtapas = caminho.length > 1;
