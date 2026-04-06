@@ -1,11 +1,9 @@
 package com.ecommerce.digitaltricks.admin.dto;
 
-import com.ecommerce.digitaltricks.customer.dto.EnderecoDTO;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import java.util.List;
 
 public class RegisterRequest {
 
@@ -24,14 +22,38 @@ public class RegisterRequest {
     )
     private String password;
 
-    @NotBlank(message = "O e-mail é obrigatório")
-    @Email(message = "E-mail inválido")
+    @NotBlank(message = "O email é obrigatório")
+    @Email(message = "Email inválido")
     private String email;
 
     private String telefone;
     private String cpf;
 
-    private List<EnderecoDTO> enderecos;
+    /* ====== Dados do restaurante (obrigatórios) ====== */
+
+    @NotBlank(message = "O nome do restaurante é obrigatório")
+    private String nomeRestaurante;
+
+    @Size(max = 20, message = "CNPJ deve ter no máximo 20 caracteres")
+    private String cnpj;
+
+    @Size(max = 20, message = "CEP deve ter no máximo 20 caracteres")
+    private String cep;
+
+    private String logradouro;
+    private String numero;
+    private String bairro;
+    private String cidade;
+    private String complemento;
+
+    @Size(max = 2, message = "UF deve ter no máximo 2 caracteres")
+    private String uf;
+
+    private Double latitude;
+    private Double longitude;
+
+    private Boolean aceitaRetirada;
+    private Boolean aceitaDelivery;
 
     // Getters e Setters
     public String getUsername() { return username; }
@@ -52,6 +74,43 @@ public class RegisterRequest {
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
 
-    public List<EnderecoDTO> getEnderecos() { return enderecos; }
-    public void setEnderecos(List<EnderecoDTO> enderecos) { this.enderecos = enderecos; }
+    public String getNomeRestaurante() { return nomeRestaurante; }
+    public void setNomeRestaurante(String nomeRestaurante) { this.nomeRestaurante = nomeRestaurante; }
+
+    public String getCnpj() { return cnpj; }
+    public void setCnpj(String cnpj) { this.cnpj = cnpj; }
+
+    public String getCep() { return cep; }
+    public void setCep(String cep) { this.cep = cep; }
+
+    public String getLogradouro() { return logradouro; }
+    public void setLogradouro(String logradouro) { this.logradouro = logradouro; }
+
+    public String getNumero() { return numero; }
+    public void setNumero(String numero) { this.numero = numero; }
+
+    public String getBairro() { return bairro; }
+    public void setBairro(String bairro) { this.bairro = bairro; }
+
+    public String getCidade() { return cidade; }
+    public void setCidade(String cidade) { this.cidade = cidade; }
+
+    public String getComplemento() { return complemento; }
+    public void setComplemento(String complemento) { this.complemento = complemento; }
+
+    public String getUf() { return uf; }
+    public void setUf(String uf) { this.uf = uf; }
+
+    public Double getLatitude() { return latitude; }
+    public void setLatitude(Double latitude) { this.latitude = latitude; }
+
+    public Double getLongitude() { return longitude; }
+    public void setLongitude(Double longitude) { this.longitude = longitude; }
+
+    public Boolean getAceitaRetirada() { return aceitaRetirada; }
+    public void setAceitaRetirada(Boolean val) { this.aceitaRetirada = val; }
+
+    public Boolean getAceitaDelivery() { return aceitaDelivery; }
+    public void setAceitaDelivery(Boolean val) { this.aceitaDelivery = val; }
+
 }

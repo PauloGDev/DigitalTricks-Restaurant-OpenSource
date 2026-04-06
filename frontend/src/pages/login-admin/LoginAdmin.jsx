@@ -86,7 +86,12 @@ export default function LoginAdmin() {
       setTipoMsg("success");
       setMsg("Login realizado com sucesso!");
 
-      navigate("/dashboard", { replace: true });
+      if (!data.empresaId) {
+        // Admin sem restaurante vinculado -> redirecionar para cadastro
+        navigate("/dashboard/register", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch {
       setTipoMsg("error");
       setMsg("Usuário ou senha inválidos.");
