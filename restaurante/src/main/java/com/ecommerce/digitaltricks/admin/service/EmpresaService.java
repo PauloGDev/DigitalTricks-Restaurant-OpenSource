@@ -264,6 +264,10 @@ public class EmpresaService {
             throw new BadRequestException("Usuário não pertence a esta empresa");
         }
 
+        if (vinculoAlvo.getPapel() == PapelEmpresa.DONO) {
+            throw new BadRequestException("Não é permitido alterar a role ou o status do DONO da empresa");
+        }
+
         if (request.papel() != null) {
             if (request.papel() != PapelEmpresa.DONO
                     && request.papel() != PapelEmpresa.GERENTE

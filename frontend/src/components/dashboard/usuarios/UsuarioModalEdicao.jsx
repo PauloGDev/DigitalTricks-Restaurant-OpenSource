@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { X, Shield, ToggleLeft, Loader2, AlertCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 
+const cx = (...c) => c.filter(Boolean).join(" ");
+
 const STATUS_OPTIONS = [
   { value: "ATIVO", label: "Ativo" },
   { value: "INATIVO", label: "Inativo" },
@@ -168,37 +170,59 @@ const UsuarioModalEdicao = ({
               </p>
             </div>
 
-            <div>
-              <FieldLabel label="Papel na empresa" isDark={isDark} />
-              <SelectField
-                icon={<Shield className="h-4 w-4" />}
-                value={usuarioSelecionado?.papel || "ATENDENTE"}
-                onChange={(e) =>
-                  setUsuarioSelecionado({
-                    ...usuarioSelecionado,
-                    papel: e.target.value,
-                  })
-                }
-                options={PAPEL_OPTIONS}
-                isDark={isDark}
-              />
-            </div>
+            {usuarioSelecionado?.papel === "DONO" ? (
+              <div
+                className={`rounded-2xl border p-4 ${
+                  isDark
+                    ? "border-white/10 bg-white/5"
+                    : "border-zinc-200 bg-zinc-50"
+                }`}
+              >
+                <p
+                  className={cx(
+                    "text-center text-sm",
+                    isDark ? "text-white/60" : "text-zinc-500"
+                  )}
+                >
+                  O usuário <strong>{usuarioSelecionado?.nome || usuarioSelecionado?.username}</strong> é o DONO da empresa.
+                  A role e o status deste usuário não podem ser alterados.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <FieldLabel label="Papel na empresa" isDark={isDark} />
+                  <SelectField
+                    icon={<Shield className="h-4 w-4" />}
+                    value={usuarioSelecionado?.papel || "ATENDENTE"}
+                    onChange={(e) =>
+                      setUsuarioSelecionado({
+                        ...usuarioSelecionado,
+                        papel: e.target.value,
+                      })
+                    }
+                    options={PAPEL_OPTIONS}
+                    isDark={isDark}
+                  />
+                </div>
 
-            <div>
-              <FieldLabel label="Status do usuário" isDark={isDark} />
-              <SelectField
-                icon={<ToggleLeft className="h-4 w-4" />}
-                value={statusAtual}
-                onChange={(e) =>
-                  setUsuarioSelecionado({
-                    ...usuarioSelecionado,
-                    ativo: e.target.value === "ATIVO",
-                  })
-                }
-                options={STATUS_OPTIONS}
-                isDark={isDark}
-              />
-            </div>
+                <div>
+                  <FieldLabel label="Status do usuário" isDark={isDark} />
+                  <SelectField
+                    icon={<ToggleLeft className="h-4 w-4" />}
+                    value={statusAtual}
+                    onChange={(e) =>
+                      setUsuarioSelecionado({
+                        ...usuarioSelecionado,
+                        ativo: e.target.value === "ATIVO",
+                      })
+                    }
+                    options={STATUS_OPTIONS}
+                    isDark={isDark}
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div

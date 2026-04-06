@@ -151,27 +151,36 @@ const UsuarioTabela = ({
                     className="px-4 py-3"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => abrirModal(u)}
-                        className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] px-3 text-sm font-extrabold text-white shadow-[0_10px_25px_rgba(229,37,42,0.25)] transition hover:opacity-90"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Editar
-                      </button>
+                    {u.papel === "DONO" ? (
+                      <span className={cx(
+                        "text-xs",
+                        isDark ? "text-white/30" : "text-zinc-400"
+                      )}>
+                        —
+                      </span>
+                    ) : (
+                      <div className="flex justify-end gap-2">
+                        <button
+                          onClick={() => abrirModal(u)}
+                          className="flex h-9 items-center gap-2 rounded-xl bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] px-3 text-sm font-extrabold text-white shadow-[0_10px_25px_rgba(229,37,42,0.25)] transition hover:opacity-90"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </button>
 
-                      <button
-                        onClick={() => excluirUsuario(u.usuarioEmpresaId || u.id)}
-                        className={cx(
-                          "grid h-9 w-10 place-items-center rounded-xl transition",
-                          isDark
-                            ? "border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20"
-                            : "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
-                        )}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => excluirUsuario(u.usuarioEmpresaId || u.id)}
+                          className={cx(
+                            "grid h-9 w-10 place-items-center rounded-xl transition",
+                            isDark
+                              ? "border border-red-500/20 bg-red-500/10 text-red-300 hover:bg-red-500/20"
+                              : "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                          )}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </motion.tr>
               ))
