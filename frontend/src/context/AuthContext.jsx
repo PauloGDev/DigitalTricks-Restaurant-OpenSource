@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     // Token localmente válido — validar no backend se o usuário ainda existe
-    const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:8080"}/api`;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
 
