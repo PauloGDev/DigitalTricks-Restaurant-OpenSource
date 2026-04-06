@@ -208,6 +208,15 @@ const Cardapio = () => {
   const [showOfertas, setShowOfertas] = useState(false);
   const [showPedidos, setShowPedidos] = useState(false);
 
+  // Fechar modal anterior quando outro abre
+  useEffect(() => {
+    if (showOfertas) setShowPedidos(false);
+  }, [showOfertas]);
+
+  useEffect(() => {
+    if (showPedidos) setShowOfertas(false);
+  }, [showPedidos]);
+
   const cancelSearch = useRef(null);
   const cancelByCat = useRef({});
   const sectionEls = useRef({});
