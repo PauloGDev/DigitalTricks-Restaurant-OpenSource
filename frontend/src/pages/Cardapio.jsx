@@ -12,6 +12,7 @@ import { MOCK_CATEGORIAS, mockListarFiltroShop } from "../mock/mockCardapio";
 
 import CategorySelector from "../components/cardapio/CategorySelector";
 import MobileBottomNav from "../components/cardapio/MobileBottomNav";
+import DesktopTopNav from "../components/Cardapio/DesktopTopNav";
 import OfertasModal from "../components/Cardapio/OfertasModal";
 import PedidosRestauranteModal from "../components/Cardapio/PedidosRestauranteModal";
 import OfertasCarousel from "../components/cardapio/OfertasCarousel";
@@ -795,6 +796,12 @@ const produtosEmOferta = useMemo(() => {
   return (
     <div className="min-h-screen bg-zinc-50 pb-24 md:pb-10">
       <PageTitle title={`Cardápio | ${restauranteView.nome}`} />
+
+      <DesktopTopNav
+        slug={slug}
+        onOfertas={() => setShowOfertas(true)}
+        onPedidos={() => setShowPedidos(true)}
+      />
 
       <RestaurantHero
         restaurante={restauranteView}
