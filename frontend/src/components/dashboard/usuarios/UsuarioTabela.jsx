@@ -3,22 +3,14 @@ import { Trash2, Pencil } from "lucide-react";
 
 const cx = (...c) => c.filter(Boolean).join(" ");
 
-const getStatusStyle = (status, isDark) => {
-  const normalized = String(status || "").toUpperCase();
-
-  const map = {
-    ATIVO: isDark
+const getStatusStyle = (ativo, isDark) => {
+  return ativo
+    ? isDark
       ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-      : "bg-emerald-50 text-emerald-700 border-emerald-200",
-    INATIVO: isDark
+      : "bg-emerald-50 text-emerald-700 border-emerald-200"
+    : isDark
       ? "bg-white/5 text-white/60 border-white/10"
-      : "bg-zinc-50 text-zinc-600 border-zinc-200",
-    BANIDO: isDark
-      ? "bg-red-500/10 text-red-300 border-red-500/20"
-      : "bg-red-50 text-red-700 border-red-200",
-  };
-
-  return map[normalized] || map.INATIVO;
+      : "bg-zinc-50 text-zinc-600 border-zinc-200";
 };
 
 const getPapelStyle = (papel, isDark) => {
@@ -137,10 +129,10 @@ const UsuarioTabela = ({
                     <span
                       className={cx(
                         "rounded-full border px-3 py-1 text-xs font-extrabold",
-                        getStatusStyle(u.status, isDark)
+                        getStatusStyle(u.ativo, isDark)
                       )}
                     >
-                      {u.status || "INATIVO"}
+                      {u.ativo ? "ATIVO" : "INATIVO"}
                     </span>
                   </td>
 

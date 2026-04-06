@@ -81,6 +81,32 @@ public class EmpresaController {
         return clienteEmpresaService.listarClientesDaEmpresa(id);
     }
 
+    @PatchMapping("/{id}/usuarios/{usuarioEmpresaId}")
+    public UsuarioEmpresaDTO atualizarUsuario(@PathVariable Long id,
+                                              @PathVariable Long usuarioEmpresaId,
+                                              @Valid @RequestBody AtualizarUsuarioEmpresaRequest request,
+                                              Authentication authentication) {
+        String username = authentication.getName();
+        return empresaService.atualizarUsuarioDaEmpresa(id, usuarioEmpresaId, request, username);
+    }
+
+    /** @deprecated use {@link #atualizarUsuario} */
+    @PutMapping("/{id}/usuarios/{usuarioEmpresaId}")
+    public UsuarioEmpresaDTO atualizarUsuarioLegacy(@PathVariable Long id,
+                                                    @PathVariable Long usuarioEmpresaId,
+                                                    @Valid @RequestBody AtualizarUsuarioEmpresaRequest request,
+                                                    Authentication authentication) {
+        return atualizarUsuario(id, usuarioEmpresaId, request, authentication);
+    }
+
+    @DeleteMapping("/{id}/usuarios/{usuarioEmpresaId}")
+    public void removerUsuario(@PathVariable Long id,
+                               @PathVariable Long usuarioEmpresaId,
+                               Authentication authentication) {
+        String username = authentication.getName();
+        empresaService.removerUsuarioDaEmpresa(id, usuarioEmpresaId, username);
+    }
+
     @PostMapping("/{id}/logo")
     public EmpresaDTO uploadLogo(@PathVariable Long id,
                                  @RequestParam("file") MultipartFile file,

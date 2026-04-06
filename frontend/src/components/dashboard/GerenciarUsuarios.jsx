@@ -93,11 +93,13 @@ const GerenciarUsuarios = ({ empresaId, isDark = true }) => {
 
       const listaFiltrada = lista.filter((item) => {
         const papel = String(item?.papel || "").toUpperCase();
-        const status = String(item?.status || "").toUpperCase();
+        const ativo = item?.ativo === true;
+
+        const statusFiltro = filtro === "ATIVO" ? true : filtro === "INATIVO" ? false : null;
 
         return (
           papeisPermitidos.includes(papel) &&
-          (!filtro || status === filtro)
+          (statusFiltro === null || ativo === statusFiltro)
         );
       });
 
@@ -195,7 +197,7 @@ const GerenciarUsuarios = ({ empresaId, isDark = true }) => {
           },
           body: JSON.stringify({
             papel: usuarioSelecionado.papel,
-            status: usuarioSelecionado.status,
+            ativo: usuarioSelecionado.ativo,
           })
         }
       );

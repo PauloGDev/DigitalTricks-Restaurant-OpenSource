@@ -23,7 +23,7 @@ const UsuarioModalEdicao = ({
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState("");
 
-  const statusAtual = String(usuarioSelecionado?.status || "INATIVO").toUpperCase();
+  const statusAtual = usuarioSelecionado?.ativo ? "ATIVO" : "INATIVO";
 
   const statusTone = useMemo(() => {
     if (statusAtual === "ATIVO") {
@@ -192,7 +192,7 @@ const UsuarioModalEdicao = ({
                 onChange={(e) =>
                   setUsuarioSelecionado({
                     ...usuarioSelecionado,
-                    status: e.target.value,
+                    ativo: e.target.value === "ATIVO",
                   })
                 }
                 options={STATUS_OPTIONS}
