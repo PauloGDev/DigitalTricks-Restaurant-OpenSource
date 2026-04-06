@@ -13,6 +13,8 @@ const GerenciarClientes = ({ empresaId, isDark = true }) => {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState("");
+  const [migrando, setMigrando] = useState(false);
+  const [msgInfo, setMsgInfo] = useState("");
 
   useEffect(() => {
     if (empresaId) {
@@ -36,6 +38,27 @@ const GerenciarClientes = ({ empresaId, isDark = true }) => {
 
     return { totalClientes, totalPedidos, totalGasto };
   }, [clientes]);
+
+  const migrarClientes = async () => {
+    setMigrando(true);
+    setMsgInfo("");
+    setErro("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_URL}/empresas/${empresaId}/clientes/migrar`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Falha na migração");
+      const text = await res.text();
+      setMsgInfo(text);
+      fetchClientes();
+    } catch (err) {
+      setErro("Erro ao migrar clientes: " + err.message);
+    } finally {
+      setMigrando(false);
+    }
+  };
 
   const formatCurrency = (value) => {
     const number = Number(value || 0);
@@ -125,6 +148,36 @@ const GerenciarClientes = ({ empresaId, isDark = true }) => {
             Relacionamento ativo
           </div>
         </div>
+
+        {msgInfo && (
+          <div
+            className={[
+              "mt-4 rounded-2xl border p-3 text-sm font-bold",
+              isDark
+                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                : "border-emerald-200 bg-emerald-50 text-emerald-700",
+            ].join(" ")}
+          >
+            {msgInfo}
+          </div>
+        )}
+
+        {clientes.length === 0 && !loading && (
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={migrarClientes}
+              disabled={migrando}
+              className={[
+                "rounded-2xl border px-4 py-2.5 text-sm font-bold transition",
+                isDark
+                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
+                  : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100",
+              ].join(" ")}
+            >
+              {migrando ? "Migrando..." : "Importar clientes dos pedidos"}
+            </button>
+          </div>
+        )}
 
         {/* RESUMO */}
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">

@@ -7,6 +7,7 @@ import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
 import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.order.model.Pedido;
 import com.ecommerce.digitaltricks.admin.repository.ClienteEmpresaRepository;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +19,12 @@ import java.util.stream.Collectors;
 public class ClienteEmpresaService {
 
     private final ClienteEmpresaRepository clienteEmpresaRepository;
+    private final PedidoRepository pedidoRepository;
 
-    public ClienteEmpresaService(ClienteEmpresaRepository clienteEmpresaRepository) {
+    public ClienteEmpresaService(ClienteEmpresaRepository clienteEmpresaRepository,
+                                 PedidoRepository pedidoRepository) {
         this.clienteEmpresaRepository = clienteEmpresaRepository;
+        this.pedidoRepository = pedidoRepository;
     }
 
     @Transactional
@@ -62,6 +66,33 @@ public class ClienteEmpresaService {
         clienteEmpresa.setUltimoPedidoEm(pedido.getData());
 
         clienteEmpresaRepository.save(clienteEmpresa);
+    }
+
+    @Transactional
+    public int migrarPedidosParaClientes(Long empresaId) {
+        List<Pedido> pedidos = pedidoRepository.findByEmpresaId(empresaId);
+        int criados = 0;
+
+        for (Pedido pedido : pedidos) {
+            if (pedido.getCliente() == null) continue;
+
+            boolean exists = clienteEmpresaRepository
+                    .existsByClienteIdAndEmpresaId(pedido.getCliente().getId(), empresaId);
+
+            if (!exists) {
+                ClienteEmpresa novo = new ClienteEmpresa();
+                novo.setCliente(pedido.getCliente());
+                novo.setEmpresa(pedido.getEmpresa());
+                novo.setAtivo(true);
+                novo.setBloqueado(false);
+                novo.setTotalPedidos(0);
+                novo.setTotalGasto(BigDecimal.ZERO);
+                clienteEmpresaRepository.save(novo);
+                criados++;
+            }
+        }
+
+        return criados;
     }
 
     public List<ClienteEmpresaDTO> listarClientesDaEmpresa(Long empresaId) {

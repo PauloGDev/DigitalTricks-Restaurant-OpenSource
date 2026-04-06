@@ -120,4 +120,12 @@ public class EmpresaController {
         String username = authentication.getName();
         return analyticsService.buscarAnalyticsEmpresa(id, username);
     }
+
+    @PostMapping("/{id}/clientes/migrar")
+    public String migrarClientes(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        empresaService.buscarEmpresaDoUsuario(id, username);
+        int criados = clienteEmpresaService.migrarPedidosParaClientes(id);
+        return criados + " cliente(s) criado(s) a partir de pedidos existentes";
+    }
 }
