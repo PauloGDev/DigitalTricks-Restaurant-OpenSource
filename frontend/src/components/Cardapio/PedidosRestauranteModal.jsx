@@ -62,16 +62,23 @@ export default function PedidosRestauranteModal({ slug, onClose }) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    const apiUrl = base.endsWith("/api") ? base : `${base}/api`;
+
+    if (!token) {
+      setLoading(false);
+      return;
+    }
 
     axios
-      .get(
-        `${(
-          import.meta.env.VITE_API_URL || ""
-        ).replace(/\/$/, "")}/restaurantes/${slug}/pedidos/me`,
-        token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-      )
+      .get(`${apiUrl}/restaurantes/${slug}/pedidos/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => setPedidos(Array.isArray(res.data) ? res.data : []))
-      .catch(() => setErro(true))
+      .catch((err) => {
+        console.error("Erro ao buscar pedidos do restaurante:", err);
+        setErro(true);
+      })
       .finally(() => setLoading(false));
   }, [slug]);
 
