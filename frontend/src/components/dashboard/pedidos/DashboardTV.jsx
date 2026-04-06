@@ -19,6 +19,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { useRestaurantNotifications } from "../../../context/RestaurantNotificationContext";
+import { useAuth } from "../../../context/AuthContext";
 
 const formatMoney = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -598,6 +599,7 @@ export default function DashboardTV() {
   const API_URL = API_URL_RAW.replace(/\/$/, "");
 
   const { ultimoPedido, conectado } = useRestaurantNotifications();
+  const { user } = useAuth();
   const ultimoEventoProcessadoRef = useRef(null);
 
   const classes = useMemo(() => getThemeClasses(theme), [theme]);
@@ -633,20 +635,7 @@ export default function DashboardTV() {
 
         const token = localStorage.getItem("token");
 
-        let empresaId =
-          localStorage.getItem("empresaId") ||
-          localStorage.getItem("empresa_id") ||
-          localStorage.getItem("restauranteId");
-
-        if (!empresaId) {
-          try {
-            const userRaw = localStorage.getItem("user");
-            if (userRaw) {
-              const user = JSON.parse(userRaw);
-              empresaId = user?.empresaId;
-            }
-          } catch {}
-        }
+        const empresaId = user?.empresaId;
 
         if (!token) {
           throw new Error("Token não encontrado no localStorage.");
@@ -694,7 +683,7 @@ export default function DashboardTV() {
         }
       }
     },
-    [API_URL]
+    [API_URL, user]
   );
 
   const handleAtualizarManual = useCallback(async () => {

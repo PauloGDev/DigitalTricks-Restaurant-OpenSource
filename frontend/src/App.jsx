@@ -264,7 +264,7 @@ const App = () => {
               redirectToLoginIfDenied
             >
               <RestaurantNotificationProvider
-                empresaId={Number(localStorage.getItem("empresaId") || 0)}
+                empresaId={Number(user?.empresaId || 0)}
               >
                 <Dashboard />
               </RestaurantNotificationProvider>
@@ -283,7 +283,7 @@ const App = () => {
               redirectToLoginIfDenied
             >
               <RestaurantNotificationProvider
-                empresaId={Number(localStorage.getItem("empresaId") || 0)}
+                empresaId={Number(user?.empresaId || 0)}
               >
                 <DashboardTV />
               </RestaurantNotificationProvider>

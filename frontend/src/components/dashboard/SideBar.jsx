@@ -16,14 +16,8 @@ import {
   BarChart3,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-
-const parseJwt = (token) => {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return null;
-  }
-};
+import { useAuth } from "../../context/AuthContext";
+import { buildPermissions, normalizeRoles } from "../../utils/acl";
 
 function NavItemButton({ active, onClick, icon: Icon, label, hint, isDark }) {
   return (
@@ -146,7 +140,7 @@ function SectionTitle({ children, isDark }) {
 }
 
 const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
-  const [role, setRole] = useState(null);
+  const { user, logout: authLogout } = useAuth();
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("navbar-theme-override") || "dark";
   });
@@ -167,32 +161,16 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
     return () => window.removeEventListener("storage", syncTheme);
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setRole(null);
-      return;
-    }
-
-    const decoded = parseJwt(token);
-    const userRoles = decoded?.roles || [];
-
-    if (Array.isArray(userRoles) && userRoles.includes("ROLE_ADMIN")) {
-      setRole("ADMIN");
-    } else {
-      setRole("USER");
-    }
-  }, [location.pathname]);
+  const perms = useMemo(() => {
+    const roles = normalizeRoles(user?.roles || []);
+    return buildPermissions(roles);
+  }, [user?.roles]);
 
   const closeMobile = () => setSidebarOpen?.(false);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("empresaId");
-    setRole(null);
-    window.location.href = "/dashboard/login";
+    authLogout();
+    navigate("/dashboard/login", { replace: true });
   };
 
   const toggleTheme = () => {
@@ -330,10 +308,8 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                       isDark ? "text-white/45" : "text-zinc-500"
                     }`}
                   >
-                    {role === "ADMIN"
-                      ? "Administrador"
-                      : role === "USER"
-                      ? "Operador"
+                    {perms.isAdmin ? "Administrador"
+                      : perms.isRestaurantStaff ? "Operador"
                       : "Visitante"}
                   </p>
                 </div>
@@ -517,7 +493,7 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
               <div className="space-y-3">
                 <SectionTitle isDark={isDark}>Conta</SectionTitle>
 
-                {role ? (
+                {user ? (
                   <button
                     onClick={() => {
                       handleLogout();
