@@ -107,6 +107,7 @@ public class ProdutoInitializer implements CommandLineRunner {
 
         Empresa burgerKingDom = getOrCreateEmpresaBurgerKingDom();
         inicializarUsuariosInternos(burgerKingDom, PapelEmpresa.DONO);
+        inicializarClientes(burgerKingDom);
         List<Categoria> categorias2 = criarCategoriasBurger(burgerKingDom);
         inicializarProdutosBurger(burgerKingDom, categorias2);
         criarCuponsBurger(burgerKingDom);
