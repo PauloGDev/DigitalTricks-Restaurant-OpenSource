@@ -10,6 +10,7 @@ import com.ecommerce.digitaltricks.order.service.PedidoFacadeService;
 import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,6 +60,7 @@ public class PedidoPublicoController {
     }
 
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     public ResponseEntity<List<PedidoDTO>> listarMeusPedidos(
             @PathVariable String slug,
             Authentication authentication
