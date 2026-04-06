@@ -270,7 +270,7 @@ const NavBar = () => {
                   Quero ser parceiro
                 </Link>
                 <Link
-                  to="/login"
+                  to="dashboard"
                   className="hidden md:inline-flex items-center justify-center px-5 py-2.5 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-[#E5252A] to-[#ff4b4f] hover:shadow-[0_14px_35px_rgba(229,37,42,0.35)] hover:scale-[1.03] active:scale-[0.98] transition-all duration-300"
                 >
                   Entrar
