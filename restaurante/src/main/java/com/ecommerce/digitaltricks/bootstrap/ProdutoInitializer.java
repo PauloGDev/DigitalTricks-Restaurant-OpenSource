@@ -94,6 +94,15 @@ public class ProdutoInitializer implements CommandLineRunner {
         this.cupomRepository = cupomRepository;
     }
 
+    private static final String HORARIOS_PADRAO =
+        "{\"segunda\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+        "\"terca\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+        "\"quarta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+        "\"quinta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+        "\"sexta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:59\"}," +
+        "\"sabado\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:59\"}," +
+        "\"domingo\":{\"aberto\":false,\"inicio\":\"18:00\",\"fim\":\"23:00\"}}";
+
     @Override
     @Transactional
     public void run(String... args) {
@@ -112,6 +121,18 @@ public class ProdutoInitializer implements CommandLineRunner {
         inicializarProdutosBurger(burgerKingDom, categorias2);
         criarCuponsBurger(burgerKingDom);
         gerarPedidosFake(burgerKingDom);
+
+        migrarHorariosDeTodasEmpresas();
+    }
+
+    private void migrarHorariosDeTodasEmpresas() {
+        empresaRepository.findAll().forEach(empresa -> {
+            if (empresa.getHorariosFuncionamento() == null || empresa.getHorariosFuncionamento().isBlank()) {
+                empresa.setHorariosFuncionamento(HORARIOS_PADRAO);
+                empresaRepository.save(empresa);
+                System.out.println("[ProdutoInitializer] Horarios definidos para empresa: " + empresa.getNomeFantasia());
+            }
+        });
     }
 
     // ──────────────────── EMPRESA 1: Sabor da Praça ────────────────────
@@ -143,6 +164,7 @@ public class ProdutoInitializer implements CommandLineRunner {
                     empresa.setValorPorKm(1.50);
                     empresa.setPedidoMinimoDelivery(20.0);
                     empresa.setValorFreteGratis(80.0);
+                    empresa.setHorariosFuncionamento(HORARIOS_PADRAO);
 
                     try {
                         enderecoGeocodingService.enriquecerEmpresa(empresa);
@@ -182,6 +204,16 @@ public class ProdutoInitializer implements CommandLineRunner {
                     empresa.setValorPorKm(2.00);
                     empresa.setPedidoMinimoDelivery(25.0);
                     empresa.setValorFreteGratis(100.0);
+
+                    empresa.setHorariosFuncionamento(
+                        "{\"segunda\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+                        "\"terca\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+                        "\"quarta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+                        "\"quinta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:00\"}," +
+                        "\"sexta\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:59\"}," +
+                        "\"sabado\":{\"aberto\":true,\"inicio\":\"18:00\",\"fim\":\"23:59\"}," +
+                        "\"domingo\":{\"aberto\":false,\"inicio\":\"18:00\",\"fim\":\"23:00\"}}"
+                    );
 
                     try {
                         enderecoGeocodingService.enriquecerEmpresa(empresa);

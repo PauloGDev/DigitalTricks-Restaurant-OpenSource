@@ -225,6 +225,7 @@ const Cardapio = () => {
     avaliacao: 4.8,
     tempoEntrega: "25-40 min",
     taxaEntrega: "R$ 6,99",
+    horariosFuncionamento: null,
     abertoAgora: true,
     horarios: [],
     categorias: [],
@@ -321,7 +322,7 @@ const produtosEmOferta = useMemo(() => {
   logoUrl: data.logoUrl,
   logo: data.logoUrl || restauranteFallback.logo,
 
-  capa: restauranteFallback.capa, 
+  capa: restauranteFallback.capa,
 
   avaliacao: data.avaliacao || 4.8,
   tempoEntrega: data.tempoEntrega || "25-40 min",
@@ -330,7 +331,7 @@ const produtosEmOferta = useMemo(() => {
   abertoAgora:
     typeof data.abertoAgora === "boolean" ? data.abertoAgora : true,
 
-  horarios: Array.isArray(data.horarios) ? data.horarios : [],
+  horariosFuncionamento: data.horariosFuncionamento || null,
 });
     } catch (err) {
       console.error("[ERRO] restaurante público:", err);

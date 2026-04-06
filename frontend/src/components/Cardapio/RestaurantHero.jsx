@@ -6,28 +6,13 @@ import {
   Store,
   BadgeDollarSign,
   PackageCheck,
-  Truck,
+  Star,
+  Clock,
+  ChevronDown,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import DeliveryAddressCard from "./DeliveryAddressCard";
-import { useEffect } from "react";
-
-function MetaItem({ icon: Icon, children, tone = "default" }) {
-  const toneClass =
-    tone === "highlight"
-      ? "bg-red-50 text-red-700 ring-red-100"
-      : tone === "success"
-      ? "bg-emerald-50 text-emerald-700 ring-emerald-100"
-      : "bg-zinc-100 text-zinc-700 ring-zinc-200";
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ${toneClass}`}
-    >
-      <Icon className="h-3.5 w-3.5" />
-      <span className="truncate">{children}</span>
-    </span>
-  );
-}
+import RestaurantHoursCard from "./RestaurantHoursCard";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("pt-BR", {
@@ -36,15 +21,64 @@ const formatCurrency = (value) =>
   }).format(Number(value || 0));
 
 function buildEnderecoRestaurante(restaurante) {
-  const parts = [
-    restaurante?.logradouro,
-    restaurante?.numero ? `, ${restaurante.numero}` : "",
-    restaurante?.bairro ? ` • ${restaurante.bairro}` : "",
-    restaurante?.cidade ? ` • ${restaurante.cidade}` : "",
-    restaurante?.uf ? `/${restaurante.uf}` : "",
-  ].filter(Boolean);
+  if (!restaurante) return null;
+  const parts = [];
+  if (restaurante.logradouro) parts.push(restaurante.logradouro);
+  if (restaurante.numero) parts.push(", " + restaurante.numero);
+  if (restaurante.bairro) parts.push(" - " + restaurante.bairro);
+  if (restaurante.cidade) parts.push(" - " + restaurante.cidade);
+  if (restaurante.uf) parts.push("/" + restaurante.uf);
+  return parts.length > 0 ? parts.join("") : null;
+}
 
-  return parts.length ? parts.join("") : null;
+function buildHorarioResumo(horariosFuncionamento) {
+  if (!horariosFuncionamento) return null;
+  try {
+    const map = typeof horariosFuncionamento === "string" ? JSON.parse(horariosFuncionamento) : horariosFuncionamento;
+    const abertos = Object.entries(map)
+      .filter(([, v]) => v?.aberto)
+      .sort(([, a], [, b]) => {
+        const order = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+        return order.indexOf(a.inicio) - order.indexOf(b.inicio);
+      });
+    if (abertos.length === 0) return "Fechado hoje";
+
+    const diasMap = {
+      segunda: "Seg", terca: "Ter", quarta: "Qua", quinta: "Qui",
+      sexta: "Sex", sabado: "Sab", domingo: "Dom",
+    };
+    const primeiro = abertos[0];
+    const ultimo = abertos[abertos.length - 1];
+    const diaLabels = abertos.map(([d]) => diasMap[d] || d);
+
+    if (abertos.length === 7) return `Todos os dias ${primeiro[1].inicio}-${primeiro[1].fim}`;
+    if (abertos.length >= 6) return `Seg-Dom ${primeiro[1].inicio}-${primeiro[1].fim}`;
+    if (abertos.length >= 3) return `${diaLabels[0]}-${diaLabels.at(-1)} ${primeiro[1].inicio}-${primeiro[1].fim}`;
+    return diaLabels.join(", ") + " " + primeiro[1].inicio + " " + ultimo[1].fim;
+  } catch {
+    return null;
+  }
+}
+
+function buildHorariosDetalhados(horariosFuncionamento) {
+  if (!horariosFuncionamento) return [];
+  try {
+    const map = typeof horariosFuncionamento === "string" ? JSON.parse(horariosFuncionamento) : horariosFuncionamento;
+    const orden = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+    const labels = {
+      segunda: "Segunda", terca: "Terca", quarta: "Quarta", quinta: "Quinta",
+      sexta: "Sexta", sabado: "Sabado", domingo: "Domingo",
+    };
+    return orden
+      .filter((d) => map[d])
+      .map((d) => ({
+        dia: labels[d],
+        abre: map[d].inicio || "--:--",
+        fecha: map[d].fim || "--:--",
+      }));
+  } catch {
+    return [];
+  }
 }
 
 export default function RestaurantHero({
@@ -56,15 +90,13 @@ export default function RestaurantHero({
 }) {
   const logoSrc = restaurante?.logoUrl || restaurante?.logo || "";
   const capaSrc = restaurante?.capaUrl || restaurante?.capa || logoSrc || "";
-  const nomeRestaurante =
-    restaurante?.nomeFantasia || restaurante?.nome || "Restaurante";
+  const nomeRestaurante = restaurante?.nomeFantasia || restaurante?.nome || "Restaurante";
+
+  const [showHours, setShowHours] = useState(false);
 
   useEffect(() => {
-    console.log("🔥 RESTAURANTE COMPLETO:", restaurante);
-    console.log("🖼️ logoSrc:", logoSrc);
-    console.log("🖼️ capaSrc:", capaSrc);
-    console.log("📛 nomeRestaurante:", nomeRestaurante);
-  }, [restaurante, logoSrc, capaSrc, nomeRestaurante]);
+    console.log("[restaurante] dados:", restaurante);
+  }, [restaurante]);
 
   const abertoAgora = Boolean(restaurante?.abertoAgora);
   const enderecoRestaurante = buildEnderecoRestaurante(restaurante);
@@ -86,171 +118,158 @@ export default function RestaurantHero({
       ? restaurante.taxaEntrega
       : null;
 
-  const horarioResumo =
-    restaurante?.horariosFuncionamento || restaurante?.horarios?.length
-      ? "Horários configurados"
-      : null;
+  const horarioResumo = buildHorarioResumo(restaurante?.horariosFuncionamento);
+  const horariosDetalhados = buildHorariosDetalhados(restaurante?.horariosFuncionamento);
 
   return (
-    <section className="relative overflow-hidden bg-white">
-      <div className="relative h-[180px] sm:h-[220px] lg:h-[260px]">
+    <section className="relative overflow-hidden bg-zinc-50 pb-4 sm:pb-6">
+      <div className="relative h-[200px] sm:h-[260px] lg:h-[300px]">
         {capaSrc ? (
           <>
             <img
               src={capaSrc}
               alt={nomeRestaurante}
               className="h-full w-full object-cover"
-              onLoad={() => console.log("✅ Banner carregado:", capaSrc)}
+              onLoad={() => console.log("Banner carregado:", capaSrc)}
               onError={(e) => {
-                console.error("❌ Erro ao carregar banner:", capaSrc);
-                console.error("Evento banner:", e);
+                console.error("Erro ao carregar banner:", capaSrc);
               }}
             />
-            <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-              IMAGEM OK
-            </div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/5 to-black/50" />
           </>
         ) : (
-          <>
-            <div className="h-full w-full bg-gradient-to-r from-red-600 via-red-500 to-orange-400" />
-            <div className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
-              SEM IMAGEM
-            </div>
-          </>
+          <div className="relative h-full w-full bg-gradient-to-br from-red-600 via-red-500 to-orange-400">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40" />
+          </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/15 to-white" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white via-white/80 to-transparent" />
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+          <div
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold shadow-lg backdrop-blur-md ${
+              abertoAgora
+                ? "bg-emerald-600/90 text-white"
+                : "bg-zinc-800/80 text-zinc-300"
+            }`}
+          >
+            <span className={`h-2 w-2 rounded-full ${abertoAgora ? "bg-white" : "bg-zinc-400"}`} />
+            {abertoAgora ? "Aberto" : "Fechado"}
+          </div>
+        </div>
       </div>
 
-      <div className="relative z-10 mx-auto -mt-14 max-w-7xl px-4 sm:-mt-16 sm:px-6 lg:px-8">
-        <div className="mb-12 overflow-hidden rounded-[2rem] border border-zinc-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.10)]">
-          <div className="p-4 sm:p-5 lg:p-6">
-            <div className="flex flex-col gap-5">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                  <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm sm:h-24 sm:w-24">
-                    {logoSrc ? (
-                      <img
-                        src={logoSrc}
-                        alt={nomeRestaurante}
-                        className="h-full w-full object-cover"
-                        onLoad={() => console.log("✅ Logo carregada:", logoSrc)}
-                        onError={(e) => {
-                          console.error("❌ Erro ao carregar logo:", logoSrc);
-                          console.error("Evento logo:", e);
-                        }}
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-zinc-50 text-zinc-400">
-                        <Store className="h-8 w-8" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.16em] ${
-                          abertoAgora
-                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
-                            : "bg-zinc-100 text-zinc-600 ring-1 ring-zinc-200"
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            abertoAgora ? "bg-emerald-500" : "bg-zinc-400"
-                          }`}
-                        />
-                        {abertoAgora ? "Aberto agora" : "Fechado"}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={onVerPerfil}
-                      className="group mt-2 max-w-full text-left"
-                    >
-                      <h1 className="line-clamp-2 text-xl font-black tracking-tight text-zinc-950 transition group-hover:text-red-600 sm:text-2xl lg:text-3xl">
-                        {nomeRestaurante}
-                      </h1>
-                    </button>
-
-                    {restaurante?.categoriaPreview ? (
-                      <p className="mt-1.5 line-clamp-2 text-sm text-zinc-500 sm:text-[15px]">
-                        {restaurante.categoriaPreview}
-                      </p>
-                    ) : null}
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      {aceitaDelivery ? (
-                        <MetaItem icon={Truck} tone="success">
-                          Delivery
-                        </MetaItem>
-                      ) : null}
-
-                      {aceitaRetirada ? (
-                        <MetaItem icon={PackageCheck}>
-                          Retirada
-                        </MetaItem>
-                      ) : null}
-
-                      {pedidoMinimo ? (
-                        <MetaItem icon={ShoppingBag}>
-                          Mínimo {pedidoMinimo}
-                        </MetaItem>
-                      ) : null}
-
-                      {taxaEntrega && aceitaDelivery ? (
-                        <MetaItem icon={BadgeDollarSign}>
-                          Entrega {taxaEntrega}
-                        </MetaItem>
-                      ) : null}
-
-                      {enderecoRestaurante ? (
-                        <MetaItem icon={MapPin}>
-                          {enderecoRestaurante}
-                        </MetaItem>
-                      ) : null}
-
-                      {horarioResumo ? (
-                        <MetaItem icon={Clock3}>
-                          {horarioResumo}
-                        </MetaItem>
-                      ) : null}
-                    </div>
-                  </div>
+      <div className="relative z-10 mx-auto -mt-16 max-w-7xl px-4 sm:-mt-20 sm:px-6 lg:px-8">
+        <div className="rounded-[1.5rem] border border-zinc-200/80 bg-white p-4 shadow-[0_10px_40px_rgba(0,0,0,0.08)] sm:p-5">
+          <div className="flex items-start gap-4">
+            <div className="relative -mt-8 sm:-mt-12 h-20 w-20 shrink-0 overflow-hidden rounded-[1.25rem] border-4 border-white bg-zinc-100 shadow-lg sm:h-24 sm:w-24 sm:rounded-[1.5rem]">
+              {logoSrc ? (
+                <img
+                  src={logoSrc}
+                  alt={nomeRestaurante}
+                  className="h-full w-full object-cover"
+                  onLoad={() => console.log("Logo carregada:", logoSrc)}
+                  onError={(e) => {
+                    console.error("Erro ao carregar logo:", logoSrc);
+                  }}
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-zinc-400">
+                  <Store className="h-8 w-8" />
                 </div>
+              )}
+            </div>
 
-                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-                  {onVerPedido ? (
-                    <button
-                      onClick={onVerPedido}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-bold text-zinc-800 transition hover:bg-zinc-50"
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                      Ver pedido
-                    </button>
-                  ) : null}
+            <div className="min-w-0 flex-1 pt-0">
+              <h1 className="line-clamp-1 text-xl font-black tracking-tight text-zinc-900 sm:text-2xl">
+                {nomeRestaurante}
+              </h1>
 
-                  {onVerPerfil ? (
-                    <button
-                      onClick={onVerPerfil}
-                      className="inline-flex items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-500"
-                    >
-                      Perfil
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  ) : null}
-                </div>
+              {restaurante?.categoriaPreview && (
+                <p className="mt-0.5 line-clamp-1 text-sm text-zinc-500">
+                  {restaurante.categoriaPreview}
+                </p>
+              )}
+
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-zinc-600">
+                <span className="inline-flex items-center gap-1">
+                  <Star className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="font-bold text-zinc-900">
+                    {restaurante?.avaliacao || "4.8"}
+                  </span>
+                </span>
+
+                {horariosDetalhados.length > 0 && horarioResumo && (
+                  <button
+                    onClick={() => setShowHours((p) => !p)}
+                    className="inline-flex items-center gap-1 transition hover:text-red-600"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    <span className="font-semibold">{horarioResumo}</span>
+                    <ChevronDown className={`h-3 w-3 transition ${showHours ? "rotate-180" : ""}`} />
+                  </button>
+                )}
+
+                {enderecoRestaurante && (
+                  <span className="inline-flex items-center gap-1 truncate max-w-[200px]" title={enderecoRestaurante}>
+                    <MapPin className="h-3.5 w-3.5 text-zinc-400" />
+                    <span className="truncate">{enderecoRestaurante}</span>
+                  </span>
+                )}
               </div>
 
-              <div className="border-t border-zinc-100 pt-4">
-                <DeliveryAddressCard
-                  endereco={endereco}
-                  onTrocarEndereco={onTrocarEndereco}
-                />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {aceitaDelivery && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700">
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    Delivery
+                    {taxaEntrega && (
+                      <span className="text-emerald-500">- {taxaEntrega}</span>
+                    )}
+                  </span>
+                )}
+
+                {aceitaRetirada && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 py-1.5 text-xs font-semibold text-zinc-700">
+                    <PackageCheck className="h-3.5 w-3.5" />
+                    Retirada
+                  </span>
+                )}
+
+                {pedidoMinimo && aceitaDelivery && (
+                  <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 px-2.5 py-1.5 text-xs font-semibold text-amber-700">
+                    <BadgeDollarSign className="h-3.5 w-3.5" />
+                    Min {pedidoMinimo}
+                  </span>
+                )}
               </div>
             </div>
+
+            <div className="hidden shrink-0 flex-col gap-2 sm:flex">
+              {onVerPedido && (
+                <button
+                  onClick={onVerPedido}
+                  className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-bold text-zinc-800 shadow-sm transition hover:bg-zinc-50"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Ver pedido
+                </button>
+              )}
+            </div>
+          </div>
+
+          {showHours && horariosDetalhados.length > 0 && (
+            <div className="mt-4 border-t border-zinc-100 pt-4">
+              <RestaurantHoursCard
+                abertoAgora={abertoAgora}
+                horarios={horariosDetalhados}
+              />
+            </div>
+          )}
+
+          <div className="mt-4 border-t border-zinc-100 pt-4">
+            <DeliveryAddressCard
+              endereco={endereco}
+              onTrocarEndereco={onTrocarEndereco}
+            />
           </div>
         </div>
       </div>
