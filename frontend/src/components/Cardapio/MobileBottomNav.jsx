@@ -1,10 +1,11 @@
 // components/cardapio/MobileBottomNav.jsx
-import { Gift, House, ReceiptText } from "lucide-react";
+import { Gift, House, ReceiptText, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function MobileBottomNav({
   onOfertas,
   onPedidos,
+  onFidelidade,
   slug,
 }) {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function MobileBottomNav({
     {
       label: "Início",
       icon: House,
-      action: () => navigate(slug ? `/cardapio/${slug}` : "/"),
+      action: () => navigate(slug ? `/restaurante/${slug}` : "/"),
     },
     {
       label: "Ofertas",
@@ -25,11 +26,16 @@ export default function MobileBottomNav({
       icon: ReceiptText,
       action: () => onPedidos && onPedidos(),
     },
+    {
+      label: "Fidelidade",
+      icon: Star,
+      action: () => onFidelidade && onFidelidade(),
+    },
   ];
 
   return (
     <nav className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-zinc-200 bg-white/95 backdrop-blur-xl">
-      <div className="grid grid-cols-3 h-16">
+      <div className="grid grid-cols-4 h-16">
         {items.map((item) => {
           const Icon = item.icon;
           return (

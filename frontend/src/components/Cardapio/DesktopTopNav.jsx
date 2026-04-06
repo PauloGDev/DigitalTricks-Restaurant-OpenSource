@@ -1,14 +1,14 @@
-import { Gift, House, ReceiptText } from "lucide-react";
+import { Gift, House, ReceiptText, Star } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-export default function DesktopTopNav({ onOfertas, onPedidos, slug }) {
+export default function DesktopTopNav({ onOfertas, onPedidos, onFidelidade, slug }) {
   const navigate = useNavigate();
 
   const items = [
     {
       label: "Inicio",
       icon: House,
-      action: () => navigate(slug ? `/cardapio/${slug}` : "/"),
+      action: () => navigate(slug ? `/restaurante/${slug}` : "/"),
     },
     {
       label: "Ofertas",
@@ -19,6 +19,11 @@ export default function DesktopTopNav({ onOfertas, onPedidos, slug }) {
       label: "Meus Pedidos",
       icon: ReceiptText,
       action: () => onPedidos && onPedidos(),
+    },
+    {
+      label: "Fidelidade",
+      icon: Star,
+      action: () => onFidelidade && onFidelidade(),
     },
   ];
 

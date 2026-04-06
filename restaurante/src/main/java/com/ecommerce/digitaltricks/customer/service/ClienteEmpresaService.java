@@ -46,6 +46,7 @@ public class ClienteEmpresaService {
                     novo.setBloqueado(false);
                     novo.setTotalPedidos(0);
                     novo.setTotalGasto(BigDecimal.ZERO);
+                    novo.setPontosFidelidade(0);
                     return novo;
                 });
 
@@ -64,6 +65,12 @@ public class ClienteEmpresaService {
                 )
         );
         clienteEmpresa.setUltimoPedidoEm(pedido.getData());
+
+        // Fidelidade: 1 ponto por pedido
+        Integer pontosAtual = clienteEmpresa.getPontosFidelidade() != null
+                ? clienteEmpresa.getPontosFidelidade()
+                : 0;
+        clienteEmpresa.setPontosFidelidade(pontosAtual + 1);
 
         clienteEmpresaRepository.save(clienteEmpresa);
     }
@@ -87,6 +94,7 @@ public class ClienteEmpresaService {
                 novo.setBloqueado(false);
                 novo.setTotalPedidos(0);
                 novo.setTotalGasto(BigDecimal.ZERO);
+                novo.setPontosFidelidade(0);
                 clienteEmpresaRepository.save(novo);
                 criados++;
             }
@@ -123,7 +131,8 @@ public class ClienteEmpresaService {
                 ce.getTotalPedidos(),
                 ce.getTotalGasto(),
                 ce.getUltimoPedidoEm(),
-                ce.getObservacoesInternas()
+                ce.getObservacoesInternas(),
+                ce.getPontosFidelidade()
         );
     }
 }

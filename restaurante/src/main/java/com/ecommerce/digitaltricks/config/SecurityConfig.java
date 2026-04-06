@@ -85,6 +85,8 @@ public class SecurityConfig {
                         // PEDIDO DO CLIENTE POR SLUG
                         // =========================
                         .requestMatchers(HttpMethod.POST, "/api/restaurantes/*/pedidos").hasAnyRole("CLIENTE", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/me").hasAnyRole("CLIENTE", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/fidelidade").hasAnyRole("CLIENTE", "ADMIN")
 
                         // =========================
                         // PEDIDOS DO USUÁRIO

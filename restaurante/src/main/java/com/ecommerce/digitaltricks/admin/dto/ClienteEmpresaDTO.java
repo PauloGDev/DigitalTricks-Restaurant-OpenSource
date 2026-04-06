@@ -16,6 +16,7 @@ public record ClienteEmpresaDTO(
         Integer totalPedidos,
         BigDecimal totalGasto,
         LocalDateTime ultimoPedidoEm,
-        String observacoesInternas
+        String observacoesInternas,
+        Integer pontosFidelidade
 ) {
 }

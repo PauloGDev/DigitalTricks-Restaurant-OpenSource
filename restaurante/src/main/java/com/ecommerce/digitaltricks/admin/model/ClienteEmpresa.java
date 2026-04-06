@@ -44,6 +44,9 @@ public class ClienteEmpresa {
     @Column(length = 500)
     private String observacoesInternas;
 
+    @Column(nullable = false)
+    private Integer pontosFidelidade = 0;
+
     public ClienteEmpresa() {
     }
 
@@ -117,5 +120,13 @@ public class ClienteEmpresa {
 
     public void setObservacoesInternas(String observacoesInternas) {
         this.observacoesInternas = observacoesInternas;
+    }
+
+    public Integer getPontosFidelidade() {
+        return pontosFidelidade;
+    }
+
+    public void setPontosFidelidade(Integer pontosFidelidade) {
+        this.pontosFidelidade = pontosFidelidade;
     }
 }

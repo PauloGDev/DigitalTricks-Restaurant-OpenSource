@@ -13,6 +13,7 @@ import {
 import { useEffect, useState } from "react";
 import DeliveryAddressCard from "./DeliveryAddressCard";
 import RestaurantHoursCard from "./RestaurantHoursCard";
+import FidelidadeCard from "./FidelidadeCard";
 
 const formatCurrency = (value) =>
   new Intl.NumberFormat("pt-BR", {
@@ -84,6 +85,8 @@ function buildHorariosDetalhados(horariosFuncionamento) {
 export default function RestaurantHero({
   restaurante,
   endereco,
+  fidelidadePontos = 0,
+  onAbrirFidelidade,
   onTrocarEndereco,
   onVerPerfil,
   onVerPedido,
@@ -265,11 +268,16 @@ export default function RestaurantHero({
             </div>
           )}
 
-          <div className="mt-4 border-t border-zinc-100 pt-4">
-            <DeliveryAddressCard
-              endereco={endereco}
-              onTrocarEndereco={onTrocarEndereco}
-            />
+          <div className="mt-4 flex items-center gap-3">
+            {fidelidadePontos > 0 && (
+              <FidelidadeCard pontos={fidelidadePontos} onAbrirFidelidade={onAbrirFidelidade} />
+            )}
+            <div className="flex-1 border-t border-zinc-100 pt-4">
+              <DeliveryAddressCard
+                endereco={endereco}
+                onTrocarEndereco={onTrocarEndereco}
+              />
+            </div>
           </div>
         </div>
       </div>

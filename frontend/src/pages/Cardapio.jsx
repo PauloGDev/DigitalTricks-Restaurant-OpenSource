@@ -5,7 +5,7 @@ import axios from "axios";
 import PageTitle from "../context/PageTitle";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { useNotification } from "../context/NotificationContext";
-import { XCircle } from "lucide-react";
+import { XCircle, Gift } from "lucide-react";
 import ProdutoCard from "./Produtos/ProdutoCard";
 
 import { MOCK_CATEGORIAS, mockListarFiltroShop } from "../mock/mockCardapio";
@@ -18,6 +18,7 @@ import PedidosRestauranteModal from "../components/Cardapio/PedidosRestauranteMo
 import OfertasCarousel from "../components/cardapio/OfertasCarousel";
 import RestaurantHero from "../components/Cardapio/RestaurantHero";
 import CarrinhoPopup from "../context/CarrinhoPopup";
+import FidelidadeModal from "../components/Cardapio/FidelidadeModal";
 
 const containerVariants = {
   initial: { opacity: 0 },
@@ -208,15 +209,21 @@ const Cardapio = () => {
 
   const [showOfertas, setShowOfertas] = useState(false);
   const [showPedidos, setShowPedidos] = useState(false);
+  const [showFidelidade, setShowFidelidade] = useState(false);
+  const [fidelidade, setFidelidade] = useState({ pontos: 0, totalPedidos: 0, totalGasto: 0 });
 
   // Fechar modal anterior quando outro abre
   useEffect(() => {
-    if (showOfertas) setShowPedidos(false);
+    if (showOfertas) { setShowPedidos(false); setShowFidelidade(false); }
   }, [showOfertas]);
 
   useEffect(() => {
-    if (showPedidos) setShowOfertas(false);
+    if (showPedidos) { setShowOfertas(false); setShowFidelidade(false); }
   }, [showPedidos]);
+
+  useEffect(() => {
+    if (showFidelidade) { setShowOfertas(false); setShowPedidos(false); }
+  }, [showFidelidade]);
 
   const cancelSearch = useRef(null);
   const cancelByCat = useRef({});
@@ -307,6 +314,21 @@ const produtosEmOferta = useMemo(() => {
 
     fetchEnderecoPadrao();
   }, [api]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || !slug) return;
+
+    const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    const apiUrl = base.endsWith("/api") ? base : `${base}/api`;
+
+    axios
+      .get(`${apiUrl}/restaurantes/${slug}/pedidos/fidelidade`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setFidelidade(res.data || { pontos: 0, totalPedidos: 0, totalGasto: 0 }))
+      .catch(() => setFidelidade({ pontos: 0, totalPedidos: 0, totalGasto: 0 }));
+  }, [slug]);
 
   const fetchRestaurante = useCallback(async () => {
     try {
@@ -801,11 +823,14 @@ const produtosEmOferta = useMemo(() => {
         slug={slug}
         onOfertas={() => setShowOfertas(true)}
         onPedidos={() => setShowPedidos(true)}
+        onFidelidade={() => setShowFidelidade(true)}
       />
 
       <RestaurantHero
         restaurante={restauranteView}
         endereco={enderecoSelecionado}
+        fidelidadePontos={fidelidade.pontos}
+        onAbrirFidelidade={() => setShowFidelidade(true)}
         onTrocarEndereco={() => navigate(`/restaurante/${restauranteView.slug}/carrinho`)}
         onVerPerfil={() => navigate(`/restaurante/${restauranteView.slug}`)}
         onVerPedido={() =>
@@ -1003,10 +1028,20 @@ const produtosEmOferta = useMemo(() => {
         />
       )}
 
+      {showFidelidade && (
+        <FidelidadeModal
+          pontos={fidelidade.pontos}
+          totalPedidos={fidelidade.totalPedidos}
+          totalGasto={fidelidade.totalGasto}
+          onClose={() => setShowFidelidade(false)}
+        />
+      )}
+
       <MobileBottomNav
         slug={slug}
         onOfertas={() => setShowOfertas(true)}
         onPedidos={() => setShowPedidos(true)}
+        onFidelidade={() => setShowFidelidade(true)}
       />
     </div>
   );
