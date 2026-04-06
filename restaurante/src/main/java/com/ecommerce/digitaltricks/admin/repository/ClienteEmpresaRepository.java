@@ -13,9 +13,9 @@ public interface ClienteEmpresaRepository extends JpaRepository<ClienteEmpresa, 
     @Query("""
     select ce
     from ClienteEmpresa ce
-    join fetch ce.cliente c
+    left join fetch ce.cliente c
     left join fetch c.perfil
-    join fetch ce.empresa e
+    left join fetch ce.empresa e
     where e.id = :empresaId
 """)
     List<ClienteEmpresa> buscarComPerfil(@Param("empresaId") Long empresaId);
