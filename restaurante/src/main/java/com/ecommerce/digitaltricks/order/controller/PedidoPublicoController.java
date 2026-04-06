@@ -7,9 +7,12 @@ import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.customer.repository.ClienteRepository;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import com.ecommerce.digitaltricks.order.service.PedidoFacadeService;
+import com.ecommerce.digitaltricks.order.repository.PedidoRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/restaurantes/{slug}/pedidos")
@@ -18,15 +21,18 @@ public class PedidoPublicoController {
     private final EmpresaRepository empresaRepository;
     private final PedidoFacadeService pedidoFacadeService;
     private final ClienteRepository clienteRepository;
+    private final PedidoRepository pedidoRepository;
 
     public PedidoPublicoController(
             EmpresaRepository empresaRepository,
             PedidoFacadeService pedidoFacadeService,
-            ClienteRepository clienteRepository
+            ClienteRepository clienteRepository,
+            PedidoRepository pedidoRepository
     ) {
         this.empresaRepository = empresaRepository;
         this.pedidoFacadeService = pedidoFacadeService;
         this.clienteRepository = clienteRepository;
+        this.pedidoRepository = pedidoRepository;
     }
 
     @PostMapping
@@ -50,5 +56,31 @@ public class PedidoPublicoController {
         return ResponseEntity.ok(
                 pedidoFacadeService.criarPedidoCliente(cliente, empresa, pedidoRequest)
         );
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<PedidoDTO>> listarMeusPedidos(
+            @PathVariable String slug,
+            Authentication authentication
+    ) {
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            throw new RuntimeException("Cliente não autenticado");
+        }
+
+        String telefone = authentication.getName();
+
+        Cliente cliente = clienteRepository.findByTelefone(telefone)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
+
+        Empresa empresa = empresaRepository.findBySlugIgnoreCase(slug)
+                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
+
+        List<PedidoDTO> pedidos = pedidoRepository.findByClienteIdAndEmpresaIdOrderByDataDesc(
+                cliente.getId(), empresa.getId()
+        ).stream()
+         .map(p -> pedidoFacadeService.toDTO(p))
+         .toList();
+
+        return ResponseEntity.ok(pedidos);
     }
 }

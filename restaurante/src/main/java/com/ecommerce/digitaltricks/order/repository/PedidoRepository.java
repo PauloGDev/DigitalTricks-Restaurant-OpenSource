@@ -30,6 +30,8 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     List<Pedido> findByClienteIdOrderByDataDesc(Long clienteId);
 
+    List<Pedido> findByClienteIdAndEmpresaIdOrderByDataDesc(Long clienteId, Long empresaId);
+
     Page<Pedido> findByEmpresaIdOrderByDataDesc(Long empresaId, Pageable pageable);
 
     Optional<Pedido> findTopByTelefoneOrderByDataDesc(String telefone);

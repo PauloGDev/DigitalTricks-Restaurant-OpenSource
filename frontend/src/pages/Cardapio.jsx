@@ -12,6 +12,8 @@ import { MOCK_CATEGORIAS, mockListarFiltroShop } from "../mock/mockCardapio";
 
 import CategorySelector from "../components/cardapio/CategorySelector";
 import MobileBottomNav from "../components/cardapio/MobileBottomNav";
+import OfertasModal from "../components/Cardapio/OfertasModal";
+import PedidosRestauranteModal from "../components/Cardapio/PedidosRestauranteModal";
 import OfertasCarousel from "../components/cardapio/OfertasCarousel";
 import RestaurantHero from "../components/Cardapio/RestaurantHero";
 import CarrinhoPopup from "../context/CarrinhoPopup";
@@ -202,6 +204,9 @@ const Cardapio = () => {
   const [searchLoading, setSearchLoading] = useState(false);
 
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
+
+  const [showOfertas, setShowOfertas] = useState(false);
+  const [showPedidos, setShowPedidos] = useState(false);
 
   const cancelSearch = useRef(null);
   const cancelByCat = useRef({});
@@ -965,7 +970,28 @@ const produtosEmOferta = useMemo(() => {
         )}
       </div>
       <CarrinhoPopup/>
-      <MobileBottomNav />
+
+      {showOfertas && (
+        <OfertasModal
+          produtos={Object.values(porCategoria).flatMap(s => s?.items || [])}
+          slug={slug}
+          onClose={() => setShowOfertas(false)}
+          onAdicionar={handleAdicionar}
+        />
+      )}
+
+      {showPedidos && (
+        <PedidosRestauranteModal
+          slug={slug}
+          onClose={() => setShowPedidos(false)}
+        />
+      )}
+
+      <MobileBottomNav
+        slug={slug}
+        onOfertas={() => setShowOfertas(true)}
+        onPedidos={() => setShowPedidos(true)}
+      />
     </div>
   );
 };
