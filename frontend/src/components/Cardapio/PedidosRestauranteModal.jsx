@@ -58,26 +58,43 @@ export default function PedidosRestauranteModal({ slug, onClose }) {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [erro, setErro] = useState(false);
+  const [semToken, setSemToken] = useState(false);
   const [expandidos, setExpandidos] = useState({});
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
-    const apiUrl = base.endsWith("/api") ? base : `${base}/api`;
-
     if (!token) {
       setLoading(false);
+      setSemToken(true);
       return;
     }
 
+    const base = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+    const apiUrl = base.endsWith("/api") ? base : `${base}/api`;
+    const url = `${apiUrl}/restaurantes/${slug}/pedidos/me`;
+    console.log("[PedidosRestauranteModal] slug:", slug, "| url:", url);
+
     axios
-      .get(`${apiUrl}/restaurantes/${slug}/pedidos/me`, {
+      .get(url, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setPedidos(Array.isArray(res.data) ? res.data : []))
+      .then((res) => {
+        console.log("[PedidosRestauranteModal] response:", res.status, res.data);
+        setPedidos(Array.isArray(res.data) ? res.data : []);
+      })
       .catch((err) => {
-        console.error("Erro ao buscar pedidos do restaurante:", err);
-        setErro(true);
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          // não autenticado como cliente autorizado — mostra vazio sem erro
+          setPedidos([]);
+        } else {
+          console.error(
+            "[PedidosRestauranteModal] erro:",
+            status,
+            err.response?.data || err.message
+          );
+          setErro(true);
+        }
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -144,6 +161,11 @@ export default function PedidosRestauranteModal({ slug, onClose }) {
                   <Package className="h-8 w-8 text-zinc-300" />
                 </motion.div>
                 <p className="mt-3 text-sm">Buscando seus pedidos...</p>
+              </div>
+            ) : semToken ? (
+              <div className="rounded-3xl border border-zinc-200 bg-white px-6 py-16 text-center">
+                <ReceiptText className="mx-auto mb-3 h-10 w-10 text-zinc-300" />
+                <p className="font-bold text-zinc-700">Faca login para ver seus pedidos</p>
               </div>
             ) : erro ? (
               <div className="rounded-3xl border border-amber-200 bg-amber-50 px-6 py-12 text-center">
