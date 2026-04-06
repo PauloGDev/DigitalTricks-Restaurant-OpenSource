@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Users, Mail, ShoppingBag, Wallet } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -12,10 +12,14 @@ const fadeUp = {
 const GerenciarClientes = ({ empresaId, isDark = true }) => {
   const [clientes, setClientes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     if (empresaId) {
       fetchClientes();
+    } else {
+      setLoading(false);
+      setErro("Nenhuma empresa selecionada.");
     }
   }, [empresaId]);
 
@@ -44,18 +48,28 @@ const GerenciarClientes = ({ empresaId, isDark = true }) => {
   const fetchClientes = async () => {
     try {
       setLoading(true);
+      setErro("");
       const token = localStorage.getItem("token");
 
       const res = await fetch(`${API_URL}/empresas/${empresaId}/clientes`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error("Erro ao carregar clientes");
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(res.status === 403
+          ? "Você não tem permissão para ver os clientes. Apenas ADMIN pode acessar."
+          : res.status === 404
+          ? "Empresa não encontrada."
+          : `Erro ao carregar clientes (${res.status})${text ? ": " + text : ""}`
+        );
+      }
 
       const data = await res.json();
       setClientes(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Erro ao buscar clientes:", err);
+      setErro(err.message);
       setClientes([]);
     } finally {
       setLoading(false);
@@ -149,6 +163,25 @@ const GerenciarClientes = ({ empresaId, isDark = true }) => {
             {Array.from({ length: 4 }).map((_, index) => (
               <SkeletonClienteCard key={index} isDark={isDark} />
             ))}
+          </div>
+        ) : erro ? (
+          <div
+            className={[
+              "rounded-2xl border p-8 text-center",
+              isDark
+                ? "border-red-500/20 bg-red-500/10 text-red-200"
+                : "border-red-200 bg-red-50 text-red-600",
+            ].join(" ")}
+          >
+            <p className="text-base font-bold">{erro}</p>
+            <button
+              onClick={fetchClientes}
+              className={`mt-4 text-sm font-semibold underline ${
+                isDark ? "text-red-300" : "text-red-700"
+              }`}
+            >
+              Tentar novamente
+            </button>
           </div>
         ) : clientes.length === 0 ? (
           <div
