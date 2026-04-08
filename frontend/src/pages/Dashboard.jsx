@@ -1,15 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Bell,
-  ShoppingBag,
-  ChevronRight,
-  Package,
-  Users,
-  TicketPercent,
-  BarChart3,
-  Store,
-} from "lucide-react";
+import { Bell, ShoppingBag, ChevronRight, Package, Users, TicketPercent, BarChart3, Store, QrCode } from "lucide-react";
 import PageTitle from "../context/PageTitle";
 import GerenciarProdutos from "../components/dashboard/GerenciarProdutos";
 import GerenciarUsuarios from "../components/dashboard/GerenciarUsuarios";
@@ -19,6 +10,7 @@ import Sidebar from "../components/dashboard/SideBar";
 import GerenciarCupons from "../components/dashboard/cupons/GerenciarCupons";
 import DashboardAnalytics from "../components/dashboard/analytics/DashboardAnalytics";
 import GerenciarPerfil from "../components/dashboard/GerenciarPerfil";
+import GerenciarQRCode from "../components/dashboard/GerenciarQRCode";
 import { useRestaurantNotifications } from "../context/RestaurantNotificationContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -75,7 +67,7 @@ const Dashboard = () => {
       const hash = window.location.hash.replace("#", "");
 
       if (
-        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics", "perfil"].includes(hash)
+        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics", "perfil", "qrcode"].includes(hash)
       ) {
         setSection(hash);
       }
@@ -121,6 +113,7 @@ const Dashboard = () => {
     cupons: <GerenciarCupons isDark={isDark} user={user} />,
     analytics: <DashboardAnalytics isDark={isDark} empresaId={empresaId} />,
     perfil: <GerenciarPerfil isDark={isDark} empresaId={empresaId} />,
+    qrcode: <GerenciarQRCode isDark={isDark} />,
   }[section];
 
   const sectionLabel =
@@ -138,6 +131,8 @@ const Dashboard = () => {
       ? "Analytics"
       : section === "perfil"
       ? "Perfil do restaurante"
+      : section === "qrcode"
+      ? "QR Code Cardápio"
       : "Dashboard";
 
   const sectionDescription =

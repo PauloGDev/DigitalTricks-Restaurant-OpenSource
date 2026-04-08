@@ -32,5 +32,6 @@ public record PedidoDTO(
         String email,
         String servicoFrete,
         Double valorFrete,
-        String prazoFrete
+        String prazoFrete,
+        Integer numeroMesa
 ) {}

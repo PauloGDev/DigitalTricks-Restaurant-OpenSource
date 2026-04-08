@@ -117,6 +117,8 @@ public class Pedido {
 
     private String cupomCodigo;
 
+    private Integer numeroMesa;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal subtotal;
 
@@ -387,5 +389,13 @@ public class Pedido {
 
     public void setDescontoCupom(BigDecimal descontoCupom) {
         this.descontoCupom = descontoCupom;
+    }
+
+    public Integer getNumeroMesa() {
+        return numeroMesa;
+    }
+
+    public void setNumeroMesa(Integer numeroMesa) {
+        this.numeroMesa = numeroMesa;
     }
 }

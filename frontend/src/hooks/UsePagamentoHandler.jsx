@@ -36,6 +36,7 @@ export default function usePagamentoHandler({
   limparCarrinho,
   setPagando,
   restauranteSlug,
+  numeroMesa,
 }) {
   const navigate = useNavigate();
 
@@ -87,9 +88,10 @@ export default function usePagamentoHandler({
           : null,
 
       empresaId,
+      numeroMesa: numeroMesa ? Number(numeroMesa) : null,
     };
   },
-  [carrinho, enderecoEntrega, freteInfo, empresaId, tipoEntrega]
+  [carrinho, enderecoEntrega, freteInfo, empresaId, tipoEntrega, numeroMesa]
 );
 
   const limparCarrinhoComSeguranca = useCallback(async () => {

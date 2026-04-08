@@ -377,6 +377,7 @@ public class PedidoFacadeService {
         pedido.setSubtotal(subtotal);
         pedido.setDescontoCupom(descontoCupom);
         pedido.setCupomCodigo(carrinho != null && carrinho.getCupom() != null ? carrinho.getCupom().getCodigo() : null);
+        pedido.setNumeroMesa(pedidoRequest.numeroMesa());
 
         Pedido salvo = pedidoRepository.save(pedido);
         pedidoStatusService.registrarStatusInicial(salvo);
@@ -447,7 +448,8 @@ public class PedidoFacadeService {
                 pedido.getEmail(),
                 pedido.getServicoFrete(),
                 pedido.getValorFrete(),
-                pedido.getPrazoFrete()
+                pedido.getPrazoFrete(),
+                pedido.getNumeroMesa()
         );
     }
 

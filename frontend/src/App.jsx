@@ -34,6 +34,7 @@ import DashboardTV from "./components/dashboard/pedidos/DashboardTV";
 import { useAuth } from "./context/AuthContext";
 import LoginAdmin from "./pages/login-admin/LoginAdmin";
 import RegisterAdmin from "./pages/register-admin/RegisterAdmin";
+import MenuPublico from "./pages/MenuPublico";
 import { normalizeRoles, getPrimaryRole, buildPermissions } from "./utils/acl";
 
 const App = () => {
@@ -128,6 +129,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
 
         <Route path="/restaurante/:slug" element={<Cardapio />} />
+        <Route path="/menu/:slug" element={<MenuPublico />} />
         <Route
           path="/restaurante/:slug/carrinho"
           element={<CarrinhoPage />}

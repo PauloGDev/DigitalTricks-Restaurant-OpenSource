@@ -14,8 +14,9 @@ import {
   Sun,
   X,
   BarChart3,
+  QrCode,
 } from "lucide-react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { buildPermissions, normalizeRoles } from "../../utils/acl";
 
@@ -146,6 +147,7 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
   });
 
   const location = useLocation();
+  const { slug } = useParams();
   const navigate = useNavigate();
 
   const isDark = theme === "dark";
@@ -153,6 +155,7 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
   useEffect(() => {
     const syncTheme = () => {
       setTheme(localStorage.getItem("navbar-theme-override") || "dark");
+      console.log("slug:", slug);
     };
 
     window.addEventListener("storage", syncTheme);
@@ -243,6 +246,15 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
         tone: isDark
           ? "border-gray-500/20 bg-gray-500/10 text-gray-300"
           : "border-gray-200 bg-gray-50 text-gray-700",
+      };
+    }
+
+    if (section === "qrcode") {
+      return {
+        label: "QR Code Cardápio",
+        tone: isDark
+          ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+          : "border-amber-200 bg-amber-50 text-amber-700",
       };
     }
 
@@ -447,6 +459,18 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                     icon={BarChart3}
                     label="Analytics"
                     hint="Métricas e desempenho"
+                    isDark={isDark}
+                  />
+
+                  <NavItemButton
+                    active={section === "qrcode"}
+                    onClick={() => {
+                      changeSection("qrcode");
+                      closeMobile();
+                    }}
+                    icon={QrCode}
+                    label="QR Code Cardápio"
+                    hint="Gerar QR codes para mesas"
                     isDark={isDark}
                   />
 

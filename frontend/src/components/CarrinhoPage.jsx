@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CarrinhoItensSection from "./carrinhoPage/CarrinhoItensSection";
 import EnderecoSection from "./carrinhoPage/EnderecoSection";
 import usePagamentoHandler from "../hooks/UsePagamentoHandler";
@@ -10,7 +10,7 @@ import { useCarrinho } from "../context/CarrinhoContext";
 import PageTitle from "../context/PageTitle";
 import FinalizarCompra from "./carrinhoPage/FinalizarCompra";
 import ResumoValoresCarrinho from "./carrinho/ResumoValoresCarrinho";
-import { ShoppingBag, MapPin, Store, Truck } from "lucide-react";
+import { ShoppingBag, MapPin, Store, Truck, Armchair } from "lucide-react";
 import CupomSection from "./carrinhoPage/CupomSection";
 
 const fadeUp = {
@@ -46,11 +46,22 @@ export default function CarrinhoPage() {
     normalizarCarrinho,
     aplicarCupom,
     removerCupom,
+    numeroMesa,
+    setNumeroMesa,
   } = useCarrinho();
 
   const { usuario } = useUsuarioLogado(navigate);
 
   const [enderecoEntrega, setEnderecoEntrega] = useState(null);
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const mesaUrl = searchParams.get("mesa");
+    if (mesaUrl && !numeroMesa) {
+      setNumeroMesa(mesaUrl);
+    }
+  }, [searchParams, setNumeroMesa, numeroMesa]);
+
   const [freteInfo, setFreteInfo] = useState(null);
   const [loadingFrete, setLoadingFrete] = useState(false);
   const [pagando, setPagando] = useState(false);
@@ -180,6 +191,7 @@ export default function CarrinhoPage() {
     limparCarrinho: () => limparCarrinho(slug),
     setPagando,
     restauranteSlug: slug,
+    numeroMesa,
   });
 
   return (
@@ -290,6 +302,26 @@ export default function CarrinhoPage() {
                     <p className="text-xs text-gray/55">Sem custo de frete</p>
                   </div>
                 )}
+
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5">
+                      <Armchair className="h-4 w-4 text-gray/60" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-extrabold text-gray/80">Número da Mesa <span className="font-normal text-gray/50 text-xs">(opcional)</span></p>
+                      <p className="text-xs text-gray/55">Informe a mesa para pedidos no local</p>
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 5"
+                    value={numeroMesa}
+                    onChange={(e) => setNumeroMesa(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-gray/80 placeholder:text-gray/40 focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                  />
+                </div>
               </div>
             </motion.div>
 

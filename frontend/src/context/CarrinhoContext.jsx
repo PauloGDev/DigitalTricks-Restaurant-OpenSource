@@ -6,6 +6,7 @@ const CarrinhoContext = createContext();
 const API_URL = import.meta.env.VITE_API_URL;
 const STORAGE_KEY = "carrinho_local";
 const SYNCED_FLAG = "carrinho_synced_flag";
+const MESA_KEY = "carrinho_mesa";
 
 const brNumber = (v) => {
   const n = typeof v === "string" ? Number(v.replace(",", ".")) : Number(v);
@@ -74,6 +75,14 @@ export const CarrinhoProvider = ({ children }) => {
     return itens.length > 0 ? carrinhoLocal(itens) : carrinhoVazio();
   });
   const [loading, setLoading] = useState(false);
+  const [numeroMesa, setNumeroMesa] = useState(() => {
+    try { return localStorage.getItem(MESA_KEY) || ""; } catch { return ""; }
+  });
+
+  const setNumeroMesaPersisted = useCallback((value) => {
+    setNumeroMesa(value);
+    try { if (value) localStorage.setItem(MESA_KEY, String(value)); else localStorage.removeItem(MESA_KEY); } catch {}
+  }, []);
 
   /* Track login state */
   const [token, setToken] = useState(localStorage.getItem("token"));
@@ -338,7 +347,8 @@ export const CarrinhoProvider = ({ children }) => {
 
   return (
     <CarrinhoContext.Provider value={{
-      carrinho, setCarrinho, adicionarAoCarrinho, removerDoCarrinho,
+      carrinho, setCarrinho, numeroMesa, setNumeroMesa: setNumeroMesaPersisted,
+      adicionarAoCarrinho, removerDoCarrinho,
       incrementarItem, decrementarItem, limparCarrinho, carregarCarrinho,
       aplicarCupom, removerCupom, loading, normalizarCarrinho,
       restauranteSlug: slug, limparEstadoLocal, sincronizarComBackend,
