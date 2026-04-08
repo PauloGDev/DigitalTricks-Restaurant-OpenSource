@@ -97,7 +97,7 @@ function MesaQRCard({ slug, mesa, isDark, onRemove }) {
   );
 }
 
-export default function GerenciarQRCode({ isDark }) {
+export default function GerenciarQRCode({ isDark, empresaId }) {
   const { user } = useAuth();
   const [restaurante, setRestaurante] = useState(null);
   const [novaMesa, setNovaMesa] = useState("");
@@ -109,26 +109,19 @@ export default function GerenciarQRCode({ isDark }) {
     if (!user?.empresaId || !API_URL) return;
     const fetchSlug = async () => {
       try {
-        const res = await fetch(`${API_URL}/api/public/restaurantes/me`, {
-          headers: user?.roles?.includes("ADMIN") || user?.roles?.includes("SUPER_ADMIN")
-            ? {}
-            : { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setRestaurante(data);
-          return;
-        }
-      } catch {}
-      try {
+        // Novo endpoint: /api/public/restaurantes/me
         const res = await fetch(`${API_URL}/public/restaurantes/me`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (res.ok) {
           const data = await res.json();
+          console.log("Restaurante data:", data);
           setRestaurante(data);
+          return;
         }
-      } catch {}
+      } catch (error) {
+        console.error("Erro ao buscar restaurante:", error);
+      }
     };
     fetchSlug();
   }, [user]);

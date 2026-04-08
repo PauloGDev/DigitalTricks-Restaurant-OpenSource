@@ -6,6 +6,7 @@ public record EmpresaDTO(
         Long id,
         String nomeFantasia,
         String razaoSocial,
+        String slug,
         String cnpj,
         String email,
         String telefone,

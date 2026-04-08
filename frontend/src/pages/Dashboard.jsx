@@ -113,7 +113,7 @@ const Dashboard = () => {
     cupons: <GerenciarCupons isDark={isDark} user={user} />,
     analytics: <DashboardAnalytics isDark={isDark} empresaId={empresaId} />,
     perfil: <GerenciarPerfil isDark={isDark} empresaId={empresaId} />,
-    qrcode: <GerenciarQRCode isDark={isDark} />,
+    qrcode: <GerenciarQRCode isDark={isDark} empresaId={empresaId} />,
   }[section];
 
   const sectionLabel =

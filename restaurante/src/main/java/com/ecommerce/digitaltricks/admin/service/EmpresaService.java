@@ -363,6 +363,7 @@ public class EmpresaService {
                 empresa.getId(),
                 empresa.getNomeFantasia(),
                 empresa.getRazaoSocial(),
+                empresa.getSlug(),
                 empresa.getCnpj(),
                 empresa.getEmail(),
                 empresa.getTelefone(),

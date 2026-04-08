@@ -40,4 +40,6 @@ public interface UsuarioEmpresaRepository extends JpaRepository<UsuarioEmpresa, 
     List<UsuarioEmpresa> findAllByEmpresaIdAndAtivoTrue(Long id);
 
     Optional<UsuarioEmpresa> findFirstByUsuarioIdAndAtivoTrueOrderByIdAsc(Long id);
+
+    List<UsuarioEmpresa> findByUsuarioUsernameAndAtivoTrue(String username);
 }
