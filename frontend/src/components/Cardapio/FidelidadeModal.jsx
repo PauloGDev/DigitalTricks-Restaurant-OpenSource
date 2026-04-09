@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Gift, Sparkles, Trophy, Award } from "lucide-react";
+import { X, Star, Gift, Sparkles, Trophy, Award, Package, Percent, DollarSign, Check, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const levels = [
   { nome: "Bronze", min: 0, cor: "text-orange-500", bg: "bg-orange-500", border: "border-orange-200", bgSoft: "bg-orange-50" },
@@ -35,10 +36,113 @@ function progresso(pontos) {
 const formatBRL = (v) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v || 0));
 
-export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onClose }) {
+export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onClose, empresaId }) {
   const nivel = nivelAtual(pontos || 0);
   const prox = proximoNivel(pontos || 0);
   const pct = progresso(pontos || 0);
+  const [recompensas, setRecompensas] = useState([]);
+  const [carregando, setCarregando] = useState(false);
+  const [recompensaSelecionada, setRecompensaSelecionada] = useState(null);
+  const [mensagem, setMensagem] = useState("");
+
+  useEffect(() => {
+    if (empresaId && pontos > 0) {
+      carregarRecompensas();
+    }
+  }, [empresaId, pontos]);
+
+  const carregarRecompensas = async () => {
+    if (!empresaId) return;
+    setCarregando(true);
+    try {
+      // TODO: integrar com API real
+      // const API_URL = import.meta.env.VITE_API_URL || "";
+      // const response = await fetch(`${API_URL}/api/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
+      // const data = await response.json();
+      // setRecompensas(data);
+
+      // Mock data
+      setTimeout(() => {
+        setRecompensas([
+          {
+            id: 1,
+            nome: "10% de desconto",
+            descricao: "Desconto em qualquer pedido",
+            tipo: "DESCONTO_PERCENTUAL",
+            valorPontos: 10,
+            descontoPercentual: 10,
+            descontoValorFixo: null,
+            produtoId: null,
+            ativo: true,
+            estoque: 0,
+            estoqueUtilizado: 5
+          },
+          {
+            id: 2,
+            nome: "Coca-Cola Grátis",
+            descricao: "Refrigerante 350ml",
+            tipo: "PRODUTO_GRATIS",
+            valorPontos: 5,
+            descontoPercentual: null,
+            descontoValorFixo: null,
+            produtoId: 123,
+            produtoNome: "Coca-Cola 350ml",
+            ativo: true,
+            estoque: 50,
+            estoqueUtilizado: 12
+          },
+          {
+            id: 3,
+            nome: "R$ 5,00 de desconto",
+            descricao: "Desconto no próximo pedido",
+            tipo: "DESCONTO_VALOR_FIXO",
+            valorPontos: 15,
+            descontoPercentual: null,
+            descontoValorFixo: 5,
+            produtoId: null,
+            ativo: true,
+            estoque: 20,
+            estoqueUtilizado: 3
+          }
+        ].filter(r => r.valorPontos <= pontos));
+        setCarregando(false);
+      }, 500);
+    } catch (err) {
+      console.error("Erro ao carregar recompensas:", err);
+      setCarregando(false);
+    }
+  };
+
+  const resgatarRecompensa = async (recompensa) => {
+    if (!empresaId) return;
+    if (pontos < recompensa.valorPontos) {
+      setMensagem("Pontos insuficientes para esta recompensa");
+      return;
+    }
+    if (!confirm(`Resgatar "${recompensa.nome}" por ${recompensa.valorPontos} pontos?`)) return;
+
+    setCarregando(true);
+    try {
+      // TODO: integrar com API real
+      // const API_URL = import.meta.env.VITE_API_URL || "";
+      // const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
+      //   method: 'PATCH'
+      // });
+      // const data = await response.json();
+
+      // Mock success
+      setTimeout(() => {
+        setMensagem(`Recompensa "${recompensa.nome}" resgatada com sucesso!`);
+        setRecompensaSelecionada(recompensa);
+        setCarregando(false);
+        // Atualizar pontos localmente (simulação)
+        // Em produção, isso viria do backend
+      }, 800);
+    } catch (err) {
+      setMensagem("Erro ao resgatar recompensa: " + err.message);
+      setCarregando(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -164,6 +268,112 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                 })}
               </div>
             </div>
+
+            {/* Recompensas Disponíveis */}
+            {pontos > 0 && (
+              <div className="mt-6">
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-700">
+                  <Gift className="h-4 w-4" />
+                  Recompensas Disponíveis ({pontos} pontos)
+                </h3>
+                {mensagem && (
+                  <div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+                    {mensagem}
+                  </div>
+                )}
+                {carregando ? (
+                  <div className="flex items-center justify-center py-8 text-zinc-400">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"></div>
+                    <span className="ml-2 text-sm">Carregando recompensas...</span>
+                  </div>
+                ) : recompensas.length === 0 ? (
+                  <div className="rounded-xl border border-zinc-200 bg-white p-6 text-center">
+                    <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
+                    <p className="text-sm font-bold text-zinc-700">Nenhuma recompensa disponível</p>
+                    <p className="text-xs text-zinc-500">
+                      {pontos < 5 ? "Acumule mais pontos para desbloquear recompensas" : "Nenhuma recompensa configurada para seus pontos"}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {recompensas.map((recompensa) => (
+                      <div
+                        key={recompensa.id}
+                        className={`rounded-xl border p-4 transition ${recompensaSelecionada?.id === recompensa.id ? "border-amber-300 bg-amber-50" : "border-zinc-200 bg-white"}`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${recompensaSelecionada?.id === recompensa.id ? "bg-amber-100" : "bg-zinc-100"}`}>
+                                {recompensa.tipo === "DESCONTO_PERCENTUAL" && <Percent className="h-5 w-5 text-amber-600" />}
+                                {recompensa.tipo === "DESCONTO_VALOR_FIXO" && <DollarSign className="h-5 w-5 text-emerald-600" />}
+                                {recompensa.tipo === "PRODUTO_GRATIS" && <Package className="h-5 w-5 text-blue-600" />}
+                              </div>
+                              <div>
+                                <p className="font-bold text-zinc-900">{recompensa.nome}</p>
+                                <p className="text-xs text-zinc-500">{recompensa.descricao}</p>
+                                <div className="mt-1 flex items-center gap-3">
+                                  <span className="flex items-center gap-1 text-xs text-amber-600">
+                                    <Star className="h-3 w-3" />
+                                    {recompensa.valorPontos} pontos
+                                  </span>
+                                  {recompensa.estoque > 0 && (
+                                    <span className="text-xs text-zinc-400">
+                                      {recompensa.estoqueUtilizado || 0}/{recompensa.estoque} disponíveis
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {recompensa.tipo === "DESCONTO_PERCENTUAL" && (
+                              <div className="mt-2 text-sm text-zinc-700">
+                                <span className="font-semibold">Desconto:</span> {recompensa.descontoPercentual}% em qualquer pedido
+                              </div>
+                            )}
+                            {recompensa.tipo === "DESCONTO_VALOR_FIXO" && (
+                              <div className="mt-2 text-sm text-zinc-700">
+                                <span className="font-semibold">Desconto:</span> R$ {recompensa.descontoValorFixo} no próximo pedido
+                              </div>
+                            )}
+                            {recompensa.tipo === "PRODUTO_GRATIS" && (
+                              <div className="mt-2 text-sm text-zinc-700">
+                                <span className="font-semibold">Produto:</span> {recompensa.produtoNome || `ID ${recompensa.produtoId}`}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => resgatarRecompensa(recompensa)}
+                            disabled={carregando || pontos < recompensa.valorPontos}
+                            className={`ml-4 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold ${pontos >= recompensa.valorPontos ? "bg-amber-500 text-white hover:bg-amber-600" : "bg-zinc-100 text-zinc-400"} disabled:opacity-50`}
+                          >
+                            {carregando && recompensaSelecionada?.id === recompensa.id ? (
+                              <>
+                                <div className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent"></div>
+                                Resgatando...
+                              </>
+                            ) : (
+                              <>
+                                <Zap className="h-3 w-3" />
+                                Resgatar
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        {recompensaSelecionada?.id === recompensa.id && (
+                          <div className="mt-2 rounded-lg bg-emerald-50 p-2 text-center text-xs text-emerald-700">
+                            <Check className="mx-auto mb-1 h-4 w-4" />
+                            Recompensa resgatada! Use no próximo pedido.
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-3 text-xs text-zinc-500">
+                  Escolha uma recompensa e resgate usando seus pontos acumulados.
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
       </motion.div>

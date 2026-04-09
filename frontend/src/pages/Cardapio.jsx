@@ -1033,6 +1033,7 @@ const produtosEmOferta = useMemo(() => {
           pontos={fidelidade.pontos}
           totalPedidos={fidelidade.totalPedidos}
           totalGasto={fidelidade.totalGasto}
+          empresaId={null} // TODO: obter empresaId do contexto/API
           onClose={() => setShowFidelidade(false)}
         />
       )}

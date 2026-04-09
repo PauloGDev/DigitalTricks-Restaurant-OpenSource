@@ -87,6 +87,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/restaurantes/*/pedidos").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/me").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/fidelidade").hasAnyRole("CLIENTE", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/recompensas-fidelidade/**").permitAll()
 
                         // =========================
                         // PEDIDOS DO USUÁRIO
