@@ -10,10 +10,10 @@ const fadeUp = {
 };
 
 const initialLevels = [
-  { id: 1, nome: "Bronze", minPontos: 0, cor: "#f97316", descricao: "Cliente inicial", recompensa: "Bem-vindo!" },
-  { id: 2, nome: "Prata", minPontos: 5, cor: "#71717a", descricao: "Cliente frequente", recompensa: "10% de desconto" },
-  { id: 3, nome: "Ouro", minPontos: 10, cor: "#f59e0b", descricao: "Cliente VIP", recompensa: "15% de desconto + brinde" },
-  { id: 4, nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente Mestre", recompensa: "20% de desconto + surpresa" },
+  { id: 1, nome: "Bronze", minPontos: 0, cor: "#f97316", descricao: "Cliente inicial", recompensaIds: [] },
+  { id: 2, nome: "Prata", minPontos: 5, cor: "#71717a", descricao: "Cliente frequente", recompensaIds: [] },
+  { id: 3, nome: "Ouro", minPontos: 10, cor: "#f59e0b", descricao: "Cliente VIP", recompensaIds: [] },
+  { id: 4, nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente Mestre", recompensaIds: [] },
 ];
 
 const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
@@ -30,7 +30,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const [salvandoRecompensa, setSalvandoRecompensa] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
-  const [novoLevel, setNovoLevel] = useState({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensa: "" });
+  const [novoLevel, setNovoLevel] = useState({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaIds: [] });
   const [recompensas, setRecompensas] = useState([]);
   const [editingRecompensa, setEditingRecompensa] = useState(null);
   const [novaRecompensa, setNovaRecompensa] = useState({
@@ -56,6 +56,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     pontosDistribuidos: 0,
     recompensasResgatadas: 0
   });
+  const [levelEditandoRecompensas, setLevelEditandoRecompensas] = useState(null);
 
   const carregarConfig = useCallback(async () => {
     setLoading(true);
@@ -118,7 +119,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     const maxId = levels.length > 0 ? Math.max(...levels.map(l => l.id)) : 0;
     const novoId = maxId + 1;
     setLevels([...levels, { ...novoLevel, id: novoId }].sort((a, b) => a.minPontos - b.minPontos));
-    setNovoLevel({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensa: "" });
+    setNovoLevel({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaIds: [] });
     setErro("");
   };
 
@@ -485,6 +486,12 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     }
   }, [empresaId, recompensas]);
 
+  const salvarRecompensasLevel = (levelId, recompensaIds) => {
+    setLevels(levels.map(l => l.id === levelId ? { ...l, recompensaIds } : l));
+    setLevelEditandoRecompensas(null);
+    setMensagem("Recompensas associadas ao nível com sucesso!");
+  };
+
   useEffect(() => {
     if (empresaId && abaAtiva === "recompensas") {
       carregarRecompensas();
@@ -766,13 +773,6 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               onChange={(e) => setNovoLevel({...novoLevel, descricao: e.target.value})}
               className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
             />
-            <input
-              type="text"
-              placeholder="Recompensa"
-              value={novoLevel.recompensa}
-              onChange={(e) => setNovoLevel({...novoLevel, recompensa: e.target.value})}
-              className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
-            />
           </div>
           <button
             onClick={adicionarLevel}
@@ -808,10 +808,16 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                     {level.descricao}
                   </p>
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Recompensa: {level.recompensa}
+                    Recompensas: {level.recompensaIds?.length || 0} associadas
                   </p>
                 </div>
 
+                <button
+                  onClick={() => setLevelEditandoRecompensas(level)}
+                  className={`rounded-xl p-2 ${isDark ? "hover:bg-white/10" : "hover:bg-zinc-100"}`}
+                >
+                  <Gift className="h-4 w-4 text-blue-500" />
+                </button>
                 <button
                   onClick={() => removerLevel(level.id)}
                   className={`rounded-xl p-2 ${isDark ? "hover:bg-white/10" : "hover:bg-zinc-100"}`}
@@ -823,6 +829,97 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           ))}
         </div>
       </div>
+
+      {/* Modal para Associar Recompensas ao Nível */}
+      {levelEditandoRecompensas && (
+        <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center ${isDark ? "" : ""}`}>
+          <div className={`relative rounded-2xl border p-6 max-w-lg w-full mx-4 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                <Gift className="inline h-5 w-5 mr-2" />
+                Recompensas para nível {levelEditandoRecompensas.nome}
+              </h3>
+              <button
+                onClick={() => setLevelEditandoRecompensas(null)}
+                className={`rounded-xl p-2 ${isDark ? "hover:bg-white/10" : "hover:bg-zinc-100"}`}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className={`mb-4 text-sm ${isDark ? "text-white/70" : "text-zinc-600"}`}>
+              Selecione as recompensas que serão automaticamente oferecidas aos clientes quando atingem este nível.
+            </p>
+
+            {recompensas.length === 0 ? (
+              <div className={`rounded-xl border p-4 text-center ${isDark ? "border-white/10" : "border-zinc-200"}`}>
+                <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
+                <p className={`text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+                  Nenhuma recompensa configurada
+                </p>
+                <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                  Crie recompensas primeiro na aba "Recompensas"
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recompensas.map(recompensa => (
+                  <div
+                    key={recompensa.id}
+                    className={`flex items-center justify-between rounded-xl border p-3 ${isDark ? "border-white/10" : "border-zinc-200"}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-3 w-3 rounded-full ${levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? (isDark ? "bg-blue-500" : "bg-blue-500") : (isDark ? "bg-white/20" : "bg-zinc-200")}`} />
+                      <div>
+                        <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                          {recompensa.nome}
+                        </p>
+                        <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                          {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}% de desconto`}
+                          {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo} de desconto`}
+                          {recompensa.tipo === "PRODUTO_GRATIS" && `Produto grátis`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs ${isDark ? "text-white/60" : "text-zinc-500"}`}>
+                        {recompensa.valorPontos} pontos
+                      </span>
+                      <button
+                        onClick={() => {
+                          const currentIds = levelEditandoRecompensas.recompensaIds;
+                          const newIds = currentIds.includes(recompensa.id)
+                            ? currentIds.filter(id => id !== recompensa.id)
+                            : [...currentIds, recompensa.id];
+                          setLevelEditandoRecompensas({...levelEditandoRecompensas, recompensaIds: newIds});
+                        }}
+                        className={`rounded-full px-3 py-1 text-xs font-bold ${levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? (isDark ? "bg-blue-500 text-white" : "bg-blue-500 text-white") : (isDark ? "bg-white/10 text-white/70" : "bg-zinc-100 text-zinc-700")}`}
+                      >
+                        {levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? "Remover" : "Adicionar"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setLevelEditandoRecompensas(null)}
+                className={`rounded-xl px-4 py-2 font-bold ${isDark ? "text-white/70 hover:text-white/90" : "text-zinc-600 hover:text-zinc-800"}`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => salvarRecompensasLevel(levelEditandoRecompensas.id, levelEditandoRecompensas.recompensaIds)}
+                className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-2 font-bold text-white"
+              >
+                Salvar Associações
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Visualização para Cliente */}
       <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
@@ -848,6 +945,50 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             Os clientes verão seus pontos e progresso no modal de fidelidade.
             Use as configurações acima para personalizar a experiência.
           </p>
+
+          {/* Recompensas do nível Prata */}
+          <div className={`mt-4 ${isDark ? "" : ""}`}>
+            <p className={`text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
+              Recompensas disponíveis no nível Prata:
+            </p>
+            {(() => {
+              const nivelPrata = levels.find(l => l.nome === "Prata");
+              if (!nivelPrata || nivelPrata.recompensaIds.length === 0) {
+                return (
+                  <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                    Nenhuma recompensa associada a este nível ainda.
+                  </p>
+                );
+              }
+
+              const recompensasPrata = recompensas.filter(r => nivelPrata.recompensaIds.includes(r.id));
+              if (recompensasPrata.length === 0) {
+                return (
+                  <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                    Recompensas associadas não encontradas.
+                  </p>
+                );
+              }
+
+              return (
+                <div className="space-y-2">
+                  {recompensasPrata.map(recompensa => (
+                    <div key={recompensa.id} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${isDark ? "border-white/10" : "border-zinc-200"}`}>
+                      <Gift className={`h-4 w-4 ${isDark ? "text-blue-400" : "text-blue-500"}`} />
+                      <div className="flex-1">
+                        <p className={`text-xs font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>{recompensa.nome}</p>
+                        <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                          {recompensa.valorPontos} pontos • {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}%`}
+                          {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo}`}
+                          {recompensa.tipo === "PRODUTO_GRATIS" && "Produto grátis"}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </div>
         </>
