@@ -50,6 +50,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const [abaAtiva, setAbaAtiva] = useState("config"); // "config" ou "recompensas"
   const [produtos, setProdutos] = useState([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(false);
+  const [carregandoRecompensas, setCarregandoRecompensas] = useState(false);
   const [estatisticas, setEstatisticas] = useState({
     totalClientes: 0,
     clientesAtivos: 0,
@@ -138,10 +139,12 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   // Funções para recompensas
   const carregarRecompensas = useCallback(async () => {
     if (!empresaId || !API_URL) return;
+    setCarregandoRecompensas(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) {
         setErro("Não autenticado. Faça login novamente.");
+        setCarregandoRecompensas(false);
         return;
       }
 
@@ -156,6 +159,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         if (response.status === 404) {
           // Endpoint não encontrado ou nenhuma recompensa ainda
           setRecompensas([]);
+          setCarregandoRecompensas(false);
           return;
         }
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
@@ -204,6 +208,8 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           }
         ]);
       }
+    } finally {
+      setCarregandoRecompensas(false);
     }
   }, [empresaId]);
 
@@ -217,8 +223,8 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       if (!novaRecompensa.nome.trim()) {
         throw new Error("Nome da recompensa é obrigatório");
       }
-      if (!novaRecompensa.valorPontos || novaRecompensa.valorPontos < 1) {
-        throw new Error("Pontos necessários devem ser pelo menos 1");
+      if (!novaRecompensa.valorPontos || novaRecompensa.valorPontos <= 0) {
+        throw new Error("Pontos necessários devem ser maior que zero");
       }
 
       // Validação por tipo
@@ -237,20 +243,28 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       }
 
       // Validação de datas
-      if (novaRecompensa.dataInicio && novaRecompensa.dataFim) {
-        const inicio = new Date(novaRecompensa.dataInicio);
-        const fim = new Date(novaRecompensa.dataFim);
-        if (fim < inicio) {
-          throw new Error("Data de fim não pode ser anterior à data de início");
+      if (novaRecompensa.dataInicio || novaRecompensa.dataFim) {
+        // Se uma data existe, a outra deve existir também
+        if ((novaRecompensa.dataInicio && !novaRecompensa.dataFim) ||
+            (!novaRecompensa.dataInicio && novaRecompensa.dataFim)) {
+          throw new Error("Ambas as datas (início e fim) devem ser preenchidas ou deixadas vazias");
+        }
+
+        if (novaRecompensa.dataInicio && novaRecompensa.dataFim) {
+          const inicio = new Date(novaRecompensa.dataInicio);
+          const fim = new Date(novaRecompensa.dataFim);
+          if (fim < inicio) {
+            throw new Error("Data de fim não pode ser anterior à data de início");
+          }
         }
       }
 
       const payload = { ...novaRecompensa };
-      // Converter campos vazios para null
+      // Converter campos vazios para null (mas 0 é valor válido para descontos)
       if (!payload.dataInicio) payload.dataInicio = null;
       if (!payload.dataFim) payload.dataFim = null;
-      if (!payload.descontoPercentual) payload.descontoPercentual = null;
-      if (!payload.descontoValorFixo) payload.descontoValorFixo = null;
+      if (payload.descontoPercentual === undefined || payload.descontoPercentual === "") payload.descontoPercentual = null;
+      if (payload.descontoValorFixo === undefined || payload.descontoValorFixo === "") payload.descontoValorFixo = null;
       if (!payload.produtoId) payload.produtoId = null;
 
       const token = localStorage.getItem("token");
@@ -851,7 +865,16 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               Selecione UMA recompensa que será automaticamente oferecida aos clientes quando atingem este nível.
             </p>
 
-            {recompensas.length === 0 ? (
+            {carregandoRecompensas ? (
+              <div className={`rounded-xl border p-8 text-center ${isDark ? "border-white/10" : "border-zinc-200"}`}>
+                <div className="flex flex-col items-center gap-2">
+                  <RefreshCw className="h-6 w-6 animate-spin text-zinc-400" />
+                  <p className={`text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+                    Carregando recompensas...
+                  </p>
+                </div>
+              </div>
+            ) : recompensas.length === 0 ? (
               <div className={`rounded-xl border p-4 text-center ${isDark ? "border-white/10" : "border-zinc-200"}`}>
                 <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
                 <p className={`text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
