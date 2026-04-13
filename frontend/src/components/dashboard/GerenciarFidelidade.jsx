@@ -144,7 +144,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`, {
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -259,8 +259,8 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       }
 
       const url = editingRecompensa
-        ? `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${editingRecompensa.id}`
-        : `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`;
+        ? `${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade/${editingRecompensa.id}`
+        : `${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade`;
       const method = editingRecompensa ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -319,7 +319,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}`, {
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -347,7 +347,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         return;
       }
 
-      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}/status`, {
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade/${id}/status`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -438,7 +438,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       // TODO: Verificar endpoint correto para buscar produtos
       // Usando endpoint provisório baseado no padrão do sistema
-      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/produtos`, {
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/produtos`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -465,7 +465,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       // TODO: Implementar endpoint de estatísticas
       // Por enquanto, usar valores calculados das recompensas
       // Quando endpoint existir:
-      // const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/fidelidade/estatisticas`, {
+      // const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/fidelidade/estatisticas`, {
       //   headers: { 'Authorization': `Bearer ${token}` }
       // });
       // const data = await response.json();

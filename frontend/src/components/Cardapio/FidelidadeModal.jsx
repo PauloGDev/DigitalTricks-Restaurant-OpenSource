@@ -61,7 +61,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
         throw new Error("API_URL não configurada");
       }
 
-      const response = await fetch(`${API_URL}/api/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
+      const response = await fetch(`${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -144,7 +144,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
         throw new Error("API_URL não configurada");
       }
 
-      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
