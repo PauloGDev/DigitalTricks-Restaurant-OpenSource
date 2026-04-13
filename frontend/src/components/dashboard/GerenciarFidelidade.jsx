@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Star, Trophy, Target, Settings, RefreshCw, Save, Plus, Trash2, Award, Users, Gift, ToggleLeft, ToggleRight, Package, Percent, DollarSign, Calendar, Image, Edit, Check, X } from "lucide-react";
+import { Star, Trophy, Target, Settings, RefreshCw, Save, Plus, Trash2, Award, Users, Gift, ToggleLeft, ToggleRight, Package, Percent, DollarSign, Calendar, Edit, Check, X } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -27,6 +27,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const [levels, setLevels] = useState(initialLevels);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [salvandoRecompensa, setSalvandoRecompensa] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
   const [novoLevel, setNovoLevel] = useState({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensa: "" });
@@ -48,16 +49,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   });
   const [abaAtiva, setAbaAtiva] = useState("config"); // "config" ou "recompensas"
 
-  useEffect(() => {
-    if (empresaId) {
-      carregarConfig();
-    } else {
-      setLoading(false);
-      setErro("Nenhuma empresa selecionada.");
-    }
-  }, [empresaId]);
-
-  const carregarConfig = async () => {
+  const carregarConfig = useCallback(async () => {
     setLoading(true);
     setErro("");
     try {
@@ -76,7 +68,16 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       setErro("Erro ao carregar configuração: " + err.message);
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (empresaId) {
+      carregarConfig();
+    } else {
+      setLoading(false);
+      setErro("Nenhuma empresa selecionada.");
+    }
+  }, [empresaId, carregarConfig]);
 
   const salvarConfig = async () => {
     setSalvando(true);
@@ -100,7 +101,8 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       return;
     }
 
-    const novoId = Math.max(...levels.map(l => l.id)) + 1;
+    const maxId = levels.length > 0 ? Math.max(...levels.map(l => l.id)) : 0;
+    const novoId = maxId + 1;
     setLevels([...levels, { ...novoLevel, id: novoId }].sort((a, b) => a.minPontos - b.minPontos));
     setNovoLevel({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensa: "" });
     setErro("");
@@ -119,7 +121,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   };
 
   // Funções para recompensas
-  const carregarRecompensas = async () => {
+  const carregarRecompensas = useCallback(async () => {
     if (!empresaId) return;
     try {
       // TODO: integrar com API
@@ -166,10 +168,13 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     } catch (err) {
       console.error("Erro ao carregar recompensas:", err);
     }
-  };
+  }, [empresaId]);
 
   const salvarRecompensa = async () => {
     if (!empresaId) return;
+    setSalvandoRecompensa(true);
+    setMensagem("");
+    setErro("");
     try {
       const payload = { ...novaRecompensa };
       // Converter campos vazios para null
@@ -213,6 +218,8 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       setMensagem(editingRecompensa ? "Recompensa atualizada!" : "Recompensa criada!");
     } catch (err) {
       setErro("Erro ao salvar recompensa: " + err.message);
+    } finally {
+      setSalvandoRecompensa(false);
     }
   };
 
@@ -285,7 +292,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     if (empresaId && abaAtiva === "recompensas") {
       carregarRecompensas();
     }
-  }, [empresaId, abaAtiva]);
+  }, [empresaId, abaAtiva, carregarRecompensas]);
 
   const stats = useMemo(() => {
     return {
@@ -335,10 +342,11 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         {abaAtiva === "recompensas" && (
           <button
             onClick={salvarRecompensa}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-3 font-bold text-white transition hover:shadow-[0_8px_25px_rgba(147,51,234,0.3)]"
+            disabled={salvandoRecompensa}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 px-4 py-3 font-bold text-white transition hover:shadow-[0_8px_25px_rgba(147,51,234,0.3)] disabled:opacity-50"
           >
-            {editingRecompensa ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-            {editingRecompensa ? "Atualizar Recompensa" : "Nova Recompensa"}
+            {salvandoRecompensa ? <RefreshCw className="h-4 w-4 animate-spin" /> : (editingRecompensa ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />)}
+            {salvandoRecompensa ? "Salvando..." : (editingRecompensa ? "Atualizar Recompensa" : "Nova Recompensa")}
           </button>
         )}
       </div>
