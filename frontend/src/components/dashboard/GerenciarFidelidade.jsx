@@ -16,6 +16,17 @@ const initialLevels = [
   { id: 4, nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente Mestre", recompensaId: null },
 ];
 
+const levelColorOptions = [
+  { nome: "Laranja", valor: "#f97316" },
+  { nome: "Cinza", valor: "#71717a" },
+  { nome: "Dourado", valor: "#f59e0b" },
+  { nome: "Roxo", valor: "#8b5cf6" },
+  { nome: "Azul", valor: "#3b82f6" },
+  { nome: "Verde", valor: "#22c55e" },
+  { nome: "Vermelho", valor: "#ef4444" },
+  { nome: "Rosa", valor: "#ec4899" },
+];
+
 const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const [config, setConfig] = useState({
     ativo: true,
@@ -58,6 +69,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     recompensasResgatadas: 0
   });
   const [levelEditandoRecompensas, setLevelEditandoRecompensas] = useState(null);
+  const [colorPickerOpen, setColorPickerOpen] = useState(false);
 
   const carregarConfig = useCallback(async () => {
     setLoading(true);
@@ -146,6 +158,11 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   const atualizarLevel = (id, campo, valor) => {
     setLevels(levels.map(l => l.id === id ? { ...l, [campo]: valor } : l));
+  };
+
+  const selecionarCorNovoNivel = (cor) => {
+    setNovoLevel({ ...novoLevel, cor });
+    setColorPickerOpen(false);
   };
 
   // Funcoes para recompensas
@@ -614,16 +631,6 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           </div>
         </div>
 
-        {abaAtiva === "config" && (
-          <button
-            onClick={salvarConfig}
-            disabled={salvando}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-bold text-white transition hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)] disabled:opacity-50"
-          >
-            {salvando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {salvando ? "Salvando..." : "Salvar Configuracao"}
-          </button>
-        )}
         {abaAtiva === "recompensas" && (
           <button
             onClick={salvarRecompensa}
@@ -802,10 +809,20 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       {/* Niveis de Fidelidade */}
       <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
-        <h3 className={`mb-4 flex items-center gap-2 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
-          <Award className="h-5 w-5" />
-          Niveis de Fidelidade
-        </h3>
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h3 className={`flex items-center gap-2 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
+            <Award className="h-5 w-5" />
+            Niveis de Fidelidade
+          </h3>
+          <button
+            onClick={salvarConfig}
+            disabled={salvando}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-bold text-white transition hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)] disabled:opacity-50 md:self-start"
+          >
+            {salvando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {salvando ? "Salvando..." : "Salvar Configuracao"}
+          </button>
+        </div>
 
         <div className="mb-6 space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -824,13 +841,22 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               onChange={(e) => setNovoLevel({...novoLevel, minPontos: parseInt(e.target.value) || 0})}
               className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
             />
-            <input
-              type="text"
-              placeholder="Cor (hex)"
-              value={novoLevel.cor}
-              onChange={(e) => setNovoLevel({...novoLevel, cor: e.target.value})}
-              className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
-            />
+            <button
+              type="button"
+              onClick={() => setColorPickerOpen(true)}
+              className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
+            >
+              <span className="flex items-center gap-3">
+                <span
+                  className="h-5 w-5 rounded-full border border-black/10"
+                  style={{ backgroundColor: novoLevel.cor }}
+                />
+                <span>Selecionar cor</span>
+              </span>
+              <span className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                {levelColorOptions.find((option) => option.valor === novoLevel.cor)?.nome || "Padrao"}
+              </span>
+            </button>
             <input
               type="text"
               placeholder="Descricao"
@@ -873,7 +899,11 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                     {level.descricao}
                   </p>
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Recompensa: {level.recompensaId ? "Associada" : "Nenhuma"}
+                    Recompensa: {(() => {
+                      if (!level.recompensaId) return "Nenhuma";
+                      const recompensaAssociada = recompensas.find((r) => r.id === level.recompensaId);
+                      return recompensaAssociada?.nome || "Associacao invalida";
+                    })()}
                   </p>
                 </div>
 
@@ -894,6 +924,52 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           ))}
         </div>
       </div>
+
+      {colorPickerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm">
+          <div className={`w-full max-w-sm rounded-2xl border p-5 ${isDark ? "border-white/10 bg-zinc-950 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}>
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h4 className="text-base font-bold">Escolha uma cor</h4>
+                <p className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>
+                  Selecione uma opcao padrao para o nivel.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setColorPickerOpen(false)}
+                className={`rounded-xl p-2 ${isDark ? "hover:bg-white/10" : "hover:bg-zinc-100"}`}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              {levelColorOptions.map((option) => {
+                const selected = novoLevel.cor === option.valor;
+                return (
+                  <button
+                    key={option.valor}
+                    type="button"
+                    onClick={() => selecionarCorNovoNivel(option.valor)}
+                    className={`flex flex-col items-center gap-2 rounded-2xl border px-2 py-3 transition ${selected ? (isDark ? "border-white/40 bg-white/10" : "border-zinc-400 bg-zinc-50") : (isDark ? "border-white/10 hover:border-white/20" : "border-zinc-200 hover:border-zinc-300")}`}
+                  >
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10"
+                      style={{ backgroundColor: option.valor }}
+                    >
+                      {selected && <Check className="h-4 w-4 text-white" />}
+                    </span>
+                    <span className={`text-[11px] font-semibold ${isDark ? "text-white/80" : "text-zinc-700"}`}>
+                      {option.nome}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal para Associar Recompensas ao Nivel */}
       {levelEditandoRecompensas && (
