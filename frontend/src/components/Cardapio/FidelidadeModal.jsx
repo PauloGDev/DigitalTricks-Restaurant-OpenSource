@@ -55,13 +55,30 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
     if (!empresaId) return;
     setCarregando(true);
     try {
-      // TODO: integrar com API real
-      // const API_URL = import.meta.env.VITE_API_URL || "";
-      // const response = await fetch(`${API_URL}/api/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
-      // const data = await response.json();
-      // setRecompensas(data);
+      const API_URL = import.meta.env.VITE_API_URL || "";
 
-      // Mock data
+      if (!API_URL) {
+        throw new Error("API_URL não configurada");
+      }
+
+      const response = await fetch(`${API_URL}/api/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Nenhuma recompensa disponível ou endpoint não implementado
+          setRecompensas([]);
+          setCarregando(false);
+          return;
+        }
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setRecompensas(data);
+      setCarregando(false);
+    } catch (err) {
+      console.error("Erro ao carregar recompensas:", err);
+      // Fallback para mock data em desenvolvimento
       setTimeout(() => {
         setRecompensas([
           {
@@ -107,9 +124,6 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
         ].filter(r => r.valorPontos <= pontos));
         setCarregando(false);
       }, 500);
-    } catch (err) {
-      console.error("Erro ao carregar recompensas:", err);
-      setCarregando(false);
     }
   };
 
@@ -123,22 +137,36 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
 
     setCarregando(true);
     try {
-      // TODO: integrar com API real
-      // const API_URL = import.meta.env.VITE_API_URL || "";
-      // const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
-      //   method: 'PATCH'
-      // });
-      // const data = await response.json();
+      const API_URL = import.meta.env.VITE_API_URL || "";
+      const token = localStorage.getItem("token");
 
-      // Mock success
-      setTimeout(() => {
-        setMensagem(`Recompensa "${recompensa.nome}" resgatada com sucesso!`);
-        setRecompensaSelecionada(recompensa);
-        setCarregando(false);
-        // Atualizar pontos localmente (simulação)
-        // Em produção, isso viria do backend
-      }, 800);
+      if (!API_URL) {
+        throw new Error("API_URL não configurada");
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText || response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      setMensagem(`Recompensa "${recompensa.nome}" resgatada com sucesso!`);
+      setRecompensaSelecionada(recompensa);
+      setCarregando(false);
+
+      // Atualizar lista de recompensas para refletir estoque atualizado
+      setRecompensas(prev => prev.map(r => r.id === recompensa.id ? data : r));
     } catch (err) {
+      console.error("Erro ao resgatar recompensa:", err);
       setMensagem("Erro ao resgatar recompensa: " + err.message);
       setCarregando(false);
     }

@@ -48,12 +48,23 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     dataFim: ""
   });
   const [abaAtiva, setAbaAtiva] = useState("config"); // "config" ou "recompensas"
+  const [produtos, setProdutos] = useState([]);
+  const [carregandoProdutos, setCarregandoProdutos] = useState(false);
+  const [estatisticas, setEstatisticas] = useState({
+    totalClientes: 0,
+    clientesAtivos: 0,
+    pontosDistribuidos: 0,
+    recompensasResgatadas: 0
+  });
 
   const carregarConfig = useCallback(async () => {
     setLoading(true);
     setErro("");
     try {
-      // Simulação de carregamento
+      const token = localStorage.getItem("token");
+
+      // TODO: Buscar configuração real da API quando endpoint existir
+      // Por enquanto, usar valores padrão
       setTimeout(() => {
         setConfig({
           ativo: true,
@@ -84,9 +95,12 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     setMensagem("");
     setErro("");
     try {
-      // Simulação de salvamento
+      const token = localStorage.getItem("token");
+
+      // TODO: Salvar configuração na API quando endpoint existir
+      // Por enquanto, simular salvamento
       setTimeout(() => {
-        setMensagem("Configuração salva com sucesso!");
+        setMensagem("Configuração salva com sucesso! (API em desenvolvimento)");
         setSalvando(false);
       }, 800);
     } catch (err) {
@@ -122,51 +136,73 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   // Funções para recompensas
   const carregarRecompensas = useCallback(async () => {
-    if (!empresaId) return;
+    if (!empresaId || !API_URL) return;
     try {
-      // TODO: integrar com API
-      // const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`);
-      // const data = await response.json();
-      // setRecompensas(data);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setErro("Não autenticado. Faça login novamente.");
+        return;
+      }
 
-      // Mock data
-      setRecompensas([
-        {
-          id: 1,
-          nome: "10% de desconto",
-          descricao: "Desconto em qualquer pedido",
-          tipo: "DESCONTO_PERCENTUAL",
-          valorPontos: 10,
-          descontoPercentual: 10,
-          descontoValorFixo: null,
-          produtoId: null,
-          imagemUrl: "",
-          ativo: true,
-          estoque: 0,
-          estoqueUtilizado: 5,
-          dataInicio: null,
-          dataFim: null
-        },
-        {
-          id: 2,
-          nome: "Coca-Cola Grátis",
-          descricao: "Refrigerante 350ml",
-          tipo: "PRODUTO_GRATIS",
-          valorPontos: 5,
-          descontoPercentual: null,
-          descontoValorFixo: null,
-          produtoId: 123,
-          produtoNome: "Coca-Cola 350ml",
-          imagemUrl: "",
-          ativo: true,
-          estoque: 50,
-          estoqueUtilizado: 12,
-          dataInicio: null,
-          dataFim: null
+      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      ]);
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Endpoint não encontrado ou nenhuma recompensa ainda
+          setRecompensas([]);
+          return;
+        }
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setRecompensas(data);
     } catch (err) {
       console.error("Erro ao carregar recompensas:", err);
+      setErro("Falha ao carregar recompensas. Verifique sua conexão.");
+      // Fallback para mock data em desenvolvimento
+      if (API_URL.includes('localhost') || API_URL === '') {
+        setRecompensas([
+          {
+            id: 1,
+            nome: "10% de desconto",
+            descricao: "Desconto em qualquer pedido",
+            tipo: "DESCONTO_PERCENTUAL",
+            valorPontos: 10,
+            descontoPercentual: 10,
+            descontoValorFixo: null,
+            produtoId: null,
+            imagemUrl: "",
+            ativo: true,
+            estoque: 0,
+            estoqueUtilizado: 5,
+            dataInicio: null,
+            dataFim: null
+          },
+          {
+            id: 2,
+            nome: "Coca-Cola Grátis",
+            descricao: "Refrigerante 350ml",
+            tipo: "PRODUTO_GRATIS",
+            valorPontos: 5,
+            descontoPercentual: null,
+            descontoValorFixo: null,
+            produtoId: 123,
+            produtoNome: "Coca-Cola 350ml",
+            imagemUrl: "",
+            ativo: true,
+            estoque: 50,
+            estoqueUtilizado: 12,
+            dataInicio: null,
+            dataFim: null
+          }
+        ]);
+      }
     }
   }, [empresaId]);
 
@@ -176,6 +212,38 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     setMensagem("");
     setErro("");
     try {
+      // Validação básica
+      if (!novaRecompensa.nome.trim()) {
+        throw new Error("Nome da recompensa é obrigatório");
+      }
+      if (!novaRecompensa.valorPontos || novaRecompensa.valorPontos < 1) {
+        throw new Error("Pontos necessários devem ser pelo menos 1");
+      }
+
+      // Validação por tipo
+      if (novaRecompensa.tipo === "DESCONTO_PERCENTUAL") {
+        if (!novaRecompensa.descontoPercentual || novaRecompensa.descontoPercentual <= 0 || novaRecompensa.descontoPercentual > 100) {
+          throw new Error("Desconto percentual deve estar entre 1 e 100");
+        }
+      } else if (novaRecompensa.tipo === "DESCONTO_VALOR_FIXO") {
+        if (!novaRecompensa.descontoValorFixo || novaRecompensa.descontoValorFixo <= 0) {
+          throw new Error("Desconto valor fixo deve ser maior que zero");
+        }
+      } else if (novaRecompensa.tipo === "PRODUTO_GRATIS") {
+        if (!novaRecompensa.produtoId) {
+          throw new Error("ID do produto é obrigatório para produto grátis");
+        }
+      }
+
+      // Validação de datas
+      if (novaRecompensa.dataInicio && novaRecompensa.dataFim) {
+        const inicio = new Date(novaRecompensa.dataInicio);
+        const fim = new Date(novaRecompensa.dataFim);
+        if (fim < inicio) {
+          throw new Error("Data de fim não pode ser anterior à data de início");
+        }
+      }
+
       const payload = { ...novaRecompensa };
       // Converter campos vazios para null
       if (!payload.dataInicio) payload.dataInicio = null;
@@ -184,20 +252,38 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       if (!payload.descontoValorFixo) payload.descontoValorFixo = null;
       if (!payload.produtoId) payload.produtoId = null;
 
-      // TODO: integrar com API
-      // const url = editingRecompensa
-      //   ? `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${editingRecompensa.id}`
-      //   : `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`;
-      // const method = editingRecompensa ? 'PUT' : 'POST';
-      // const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-      // const data = await response.json();
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setErro("Não autenticado. Faça login novamente.");
+        return;
+      }
 
-      // Mock success
+      const url = editingRecompensa
+        ? `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${editingRecompensa.id}`
+        : `${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade`;
+      const method = editingRecompensa ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Erro ${response.status}: ${errorText || response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Atualizar lista localmente
       if (editingRecompensa) {
-        setRecompensas(recompensas.map(r => r.id === editingRecompensa.id ? { ...payload, id: editingRecompensa.id } : r));
+        setRecompensas(recompensas.map(r => r.id === editingRecompensa.id ? data : r));
       } else {
-        const novoId = Math.max(...recompensas.map(r => r.id), 0) + 1;
-        setRecompensas([...recompensas, { ...payload, id: novoId }]);
+        setRecompensas([...recompensas, data]);
       }
 
       setNovaRecompensa({
@@ -225,12 +311,28 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   const excluirRecompensa = async (id) => {
     if (!empresaId) return;
-    if (!confirm("Tem certeza que deseja excluir esta recompensa?")) return;
+    if (!confirm("Tem certeza que deseja excluir esta recompensa? Esta ação não pode ser desfeita.")) return;
     try {
-      // TODO: integrar com API
-      // await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}`, { method: 'DELETE' });
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setErro("Não autenticado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
       setRecompensas(recompensas.filter(r => r.id !== id));
-      setMensagem("Recompensa excluída!");
+      setMensagem("Recompensa excluída com sucesso!");
     } catch (err) {
       setErro("Erro ao excluir recompensa: " + err.message);
     }
@@ -239,14 +341,28 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const toggleStatusRecompensa = async (id, ativoAtual) => {
     if (!empresaId) return;
     try {
-      // TODO: integrar com API
-      // await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}/status`, {
-      //   method: 'PATCH',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ ativo: !ativoAtual })
-      // });
-      setRecompensas(recompensas.map(r => r.id === id ? { ...r, ativo: !ativoAtual } : r));
-      setMensagem("Status atualizado!");
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setErro("Não autenticado. Faça login novamente.");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/recompensas-fidelidade/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ativo: !ativoAtual })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setRecompensas(recompensas.map(r => r.id === id ? data : r));
+      setMensagem("Status atualizado com sucesso!");
     } catch (err) {
       setErro("Erro ao atualizar status: " + err.message);
     }
@@ -288,20 +404,117 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     });
   };
 
+  const handleDataChange = (campo, valor) => {
+    const novaData = { ...novaRecompensa, [campo]: valor };
+
+    // Validar se dataFim não é anterior a dataInicio
+    if (campo === "dataFim" && valor && novaData.dataInicio) {
+      const inicio = new Date(novaData.dataInicio);
+      const fim = new Date(valor);
+      if (fim < inicio) {
+        setErro("Data de fim não pode ser anterior à data de início");
+        // Não atualizar o estado se a data for inválida
+        return;
+      }
+    } else if (campo === "dataInicio" && valor && novaRecompensa.dataFim) {
+      const inicio = new Date(valor);
+      const fim = new Date(novaRecompensa.dataFim);
+      if (fim < inicio) {
+        setErro("Data de fim não pode ser anterior à data de início");
+        return;
+      }
+    }
+
+    setErro(""); // Limpar erro se validação passar
+    setNovaRecompensa(novaData);
+  };
+
+  const buscarProdutos = useCallback(async () => {
+    if (!empresaId || !API_URL) return;
+    setCarregandoProdutos(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // TODO: Verificar endpoint correto para buscar produtos
+      // Usando endpoint provisório baseado no padrão do sistema
+      const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/produtos`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProdutos(data);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar produtos:", err);
+    } finally {
+      setCarregandoProdutos(false);
+    }
+  }, [empresaId]);
+
+  const buscarEstatisticas = useCallback(async () => {
+    if (!empresaId || !API_URL) return;
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      // TODO: Implementar endpoint de estatísticas
+      // Por enquanto, usar valores calculados das recompensas
+      // Quando endpoint existir:
+      // const response = await fetch(`${API_URL}/api/admin/empresas/${empresaId}/fidelidade/estatisticas`, {
+      //   headers: { 'Authorization': `Bearer ${token}` }
+      // });
+      // const data = await response.json();
+      // setEstatisticas(data);
+
+      // Calcular com base nas recompensas (temporário)
+      const recompensasResgatadas = recompensas.reduce((sum, r) => sum + (r.estoqueUtilizado || 0), 0);
+
+      setEstatisticas({
+        totalClientes: 124, // Mock - buscar do backend
+        clientesAtivos: 89, // Mock - buscar do backend
+        pontosDistribuidos: 456, // Mock - buscar do backend
+        recompensasResgatadas
+      });
+    } catch (err) {
+      console.error("Erro ao buscar estatísticas:", err);
+    }
+  }, [empresaId, recompensas]);
+
   useEffect(() => {
     if (empresaId && abaAtiva === "recompensas") {
       carregarRecompensas();
+      // Buscar produtos quando estiver na aba de recompensas
+      buscarProdutos();
     }
-  }, [empresaId, abaAtiva, carregarRecompensas]);
+  }, [empresaId, abaAtiva, carregarRecompensas, buscarProdutos]);
+
+  useEffect(() => {
+    // Quando o tipo muda para PRODUTO_GRATIS e não há produtos carregados, buscar
+    if (novaRecompensa.tipo === "PRODUTO_GRATIS" && produtos.length === 0 && empresaId) {
+      buscarProdutos();
+    }
+  }, [novaRecompensa.tipo, produtos.length, empresaId, buscarProdutos]);
+
+  useEffect(() => {
+    // Buscar estatísticas quando carregar recompensas
+    if (recompensas.length > 0) {
+      buscarEstatisticas();
+    }
+  }, [recompensas, buscarEstatisticas]);
 
   const stats = useMemo(() => {
     return {
-      totalClientes: 124,
-      clientesAtivos: 89,
-      pontosDistribuidos: 456,
-      recompensasResgatadas: recompensas.reduce((sum, r) => sum + (r.estoqueUtilizado || 0), 0),
+      totalClientes: estatisticas.totalClientes,
+      clientesAtivos: estatisticas.clientesAtivos,
+      pontosDistribuidos: estatisticas.pontosDistribuidos,
+      recompensasResgatadas: estatisticas.recompensasResgatadas,
     };
-  }, [recompensas]);
+  }, [estatisticas]);
 
   if (loading) {
     return (
@@ -733,18 +946,47 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               {novaRecompensa.tipo === "PRODUTO_GRATIS" && (
                 <div>
                   <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-                    ID do Produto *
+                    Produto Grátis *
                   </label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="123"
-                    value={novaRecompensa.produtoId || ""}
-                    onChange={(e) => setNovaRecompensa({...novaRecompensa, produtoId: e.target.value ? parseInt(e.target.value) : null})}
-                    className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
-                  />
+                  {carregandoProdutos ? (
+                    <div className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
+                      <div className="flex items-center gap-2">
+                        <div className={`h-4 w-4 animate-spin rounded-full border-2 ${isDark ? "border-white/20 border-t-white/60" : "border-zinc-200 border-t-zinc-600"}`}></div>
+                        <span className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>Carregando produtos...</span>
+                      </div>
+                    </div>
+                  ) : produtos.length === 0 ? (
+                    <div className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
+                      <div className="flex flex-col gap-1">
+                        <input
+                          type="number"
+                          min="1"
+                          placeholder="ID do produto"
+                          value={novaRecompensa.produtoId || ""}
+                          onChange={(e) => setNovaRecompensa({...novaRecompensa, produtoId: e.target.value ? parseInt(e.target.value) : null})}
+                          className={`w-full bg-transparent ${isDark ? "text-white placeholder-white/30" : "text-zinc-900 placeholder-zinc-400"}`}
+                        />
+                        <p className={`text-xs ${isDark ? "text-amber-300/70" : "text-amber-600"}`}>
+                          Nenhum produto encontrado. Insira o ID manualmente.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <select
+                      value={novaRecompensa.produtoId || ""}
+                      onChange={(e) => setNovaRecompensa({...novaRecompensa, produtoId: e.target.value ? parseInt(e.target.value) : null})}
+                      className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
+                    >
+                      <option value="">Selecione um produto</option>
+                      {produtos.map(produto => (
+                        <option key={produto.id} value={produto.id}>
+                          {produto.nome} - R$ {produto.preco?.toFixed(2) || '0.00'}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                   <p className={`mt-1 text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    ID do produto que será dado como brinde
+                    Produto que será dado como brinde ao cliente
                   </p>
                 </div>
               )}
@@ -782,7 +1024,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 <input
                   type="datetime-local"
                   value={novaRecompensa.dataInicio}
-                  onChange={(e) => setNovaRecompensa({...novaRecompensa, dataInicio: e.target.value})}
+                  onChange={(e) => handleDataChange("dataInicio", e.target.value)}
                   className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
                 />
               </div>
@@ -794,7 +1036,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 <input
                   type="datetime-local"
                   value={novaRecompensa.dataFim}
-                  onChange={(e) => setNovaRecompensa({...novaRecompensa, dataFim: e.target.value})}
+                  onChange={(e) => handleDataChange("dataFim", e.target.value)}
                   className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
                 />
               </div>
