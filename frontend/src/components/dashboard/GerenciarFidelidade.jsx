@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+﻿import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Star, Trophy, Target, Settings, RefreshCw, Save, Plus, Trash2, Award, Users, Gift, ToggleLeft, ToggleRight, Package, Percent, DollarSign, Calendar, Edit, Check, X } from "lucide-react";
 
@@ -64,24 +64,36 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     setErro("");
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Nao autenticado. Faca login novamente.");
+      }
 
-      // TODO: Buscar configuração real da API quando endpoint existir
-      // Por enquanto, usar valores padrão
-      setTimeout(() => {
-        setConfig({
-          ativo: true,
-          pontosPorPedido: 1,
-          pontosPorValor: 0,
-          mensagemBoasVindas: "Bem-vindo ao nosso programa de fidelidade!",
-        });
-        setLevels(initialLevels);
-        setLoading(false);
-      }, 500);
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/niveis-fidelidade`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const niveis = await response.json();
+
+      setConfig({
+        ativo: true,
+        pontosPorPedido: 1,
+        pontosPorValor: 0,
+        mensagemBoasVindas: "Bem-vindo ao nosso programa de fidelidade!",
+      });
+      setLevels(Array.isArray(niveis) && niveis.length > 0 ? niveis : initialLevels);
+      setLoading(false);
     } catch (err) {
-      setErro("Erro ao carregar configuração: " + err.message);
+      setErro("Erro ao carregar configuracao: " + err.message);
       setLoading(false);
     }
-  }, []);
+  }, [empresaId]);
 
   useEffect(() => {
     if (empresaId) {
@@ -99,10 +111,10 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     try {
       const token = localStorage.getItem("token");
 
-      // TODO: Salvar configuração na API quando endpoint existir
+      // TODO: Salvar configuracao na API quando endpoint existir
       // Por enquanto, simular salvamento
       setTimeout(() => {
-        setMensagem("Configuração salva com sucesso! (API em desenvolvimento)");
+        setMensagem("Configuracao salva com sucesso!");
         setSalvando(false);
       }, 800);
     } catch (err) {
@@ -113,7 +125,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   const adicionarLevel = () => {
     if (!novoLevel.nome.trim() || novoLevel.minPontos < 0) {
-      setErro("Preencha nome e pontos mínimos válidos");
+      setErro("Preencha nome e pontos minimos validos");
       return;
     }
 
@@ -126,7 +138,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   const removerLevel = (id) => {
     if (levels.length <= 1) {
-      setErro("É necessário ter pelo menos um nível");
+      setErro("E necessario ter pelo menos um nivel");
       return;
     }
     setLevels(levels.filter(l => l.id !== id));
@@ -136,14 +148,14 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     setLevels(levels.map(l => l.id === id ? { ...l, [campo]: valor } : l));
   };
 
-  // Funções para recompensas
+  // Funcoes para recompensas
   const carregarRecompensas = useCallback(async () => {
     if (!empresaId || !API_URL) return;
     setCarregandoRecompensas(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setErro("Não autenticado. Faça login novamente.");
+        setErro("Nao autenticado. Faca login novamente.");
         setCarregandoRecompensas(false);
         return;
       }
@@ -157,7 +169,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Endpoint não encontrado ou nenhuma recompensa ainda
+          // Endpoint nao encontrado ou nenhuma recompensa ainda
           setRecompensas([]);
           setCarregandoRecompensas(false);
           return;
@@ -169,7 +181,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       setRecompensas(data);
     } catch (err) {
       console.error("Erro ao carregar recompensas:", err);
-      setErro("Falha ao carregar recompensas. Verifique sua conexão.");
+      setErro("Falha ao carregar recompensas. Verifique sua conexao.");
       // Fallback para mock data em desenvolvimento
       if (API_URL.includes('localhost') || API_URL === '') {
         setRecompensas([
@@ -191,7 +203,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           },
           {
             id: 2,
-            nome: "Coca-Cola Grátis",
+            nome: "Coca-Cola Gratis",
             descricao: "Refrigerante 350ml",
             tipo: "PRODUTO_GRATIS",
             valorPontos: 5,
@@ -219,15 +231,15 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     setMensagem("");
     setErro("");
     try {
-      // Validação básica
+      // Validacao basica
       if (!novaRecompensa.nome.trim()) {
-        throw new Error("Nome da recompensa é obrigatório");
+        throw new Error("Nome da recompensa e obrigatorio");
       }
       if (!novaRecompensa.valorPontos || novaRecompensa.valorPontos <= 0) {
-        throw new Error("Pontos necessários devem ser maior que zero");
+        throw new Error("Pontos necessarios devem ser maior que zero");
       }
 
-      // Validação por tipo
+      // Validacao por tipo
       if (novaRecompensa.tipo === "DESCONTO_PERCENTUAL") {
         if (!novaRecompensa.descontoPercentual || novaRecompensa.descontoPercentual <= 0 || novaRecompensa.descontoPercentual > 100) {
           throw new Error("Desconto percentual deve estar entre 1 e 100");
@@ -238,29 +250,29 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         }
       } else if (novaRecompensa.tipo === "PRODUTO_GRATIS") {
         if (!novaRecompensa.produtoId) {
-          throw new Error("ID do produto é obrigatório para produto grátis");
+          throw new Error("ID do produto e obrigatorio para produto gratis");
         }
       }
 
-      // Validação de datas
+      // Validacao de datas
       if (novaRecompensa.dataInicio || novaRecompensa.dataFim) {
-        // Se uma data existe, a outra deve existir também
+        // Se uma data existe, a outra deve existir tambem
         if ((novaRecompensa.dataInicio && !novaRecompensa.dataFim) ||
             (!novaRecompensa.dataInicio && novaRecompensa.dataFim)) {
-          throw new Error("Ambas as datas (início e fim) devem ser preenchidas ou deixadas vazias");
+          throw new Error("Ambas as datas (inicio e fim) devem ser preenchidas ou deixadas vazias");
         }
 
         if (novaRecompensa.dataInicio && novaRecompensa.dataFim) {
           const inicio = new Date(novaRecompensa.dataInicio);
           const fim = new Date(novaRecompensa.dataFim);
           if (fim < inicio) {
-            throw new Error("Data de fim não pode ser anterior à data de início");
+            throw new Error("Data de fim nao pode ser anterior a  data de inicio");
           }
         }
       }
 
       const payload = { ...novaRecompensa };
-      // Converter campos vazios para null (mas 0 é valor válido para descontos)
+      // Converter campos vazios para null (mas 0 e valor valido para descontos)
       if (!payload.dataInicio) payload.dataInicio = null;
       if (!payload.dataFim) payload.dataFim = null;
       if (payload.descontoPercentual === undefined || payload.descontoPercentual === "") payload.descontoPercentual = null;
@@ -269,7 +281,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       const token = localStorage.getItem("token");
       if (!token) {
-        setErro("Não autenticado. Faça login novamente.");
+        setErro("Nao autenticado. Faca login novamente.");
         return;
       }
 
@@ -326,11 +338,11 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
   const excluirRecompensa = async (id) => {
     if (!empresaId) return;
-    if (!confirm("Tem certeza que deseja excluir esta recompensa? Esta ação não pode ser desfeita.")) return;
+    if (!confirm("Tem certeza que deseja excluir esta recompensa? Esta acao nao pode ser desfeita.")) return;
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setErro("Não autenticado. Faça login novamente.");
+        setErro("Nao autenticado. Faca login novamente.");
         return;
       }
 
@@ -347,7 +359,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       }
 
       setRecompensas(recompensas.filter(r => r.id !== id));
-      setMensagem("Recompensa excluída com sucesso!");
+      setMensagem("Recompensa excluida com sucesso!");
     } catch (err) {
       setErro("Erro ao excluir recompensa: " + err.message);
     }
@@ -358,7 +370,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        setErro("Não autenticado. Faça login novamente.");
+        setErro("Nao autenticado. Faca login novamente.");
         return;
       }
 
@@ -422,25 +434,25 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const handleDataChange = (campo, valor) => {
     const novaData = { ...novaRecompensa, [campo]: valor };
 
-    // Validar se dataFim não é anterior a dataInicio
+    // Validar se dataFim nao e anterior a dataInicio
     if (campo === "dataFim" && valor && novaData.dataInicio) {
       const inicio = new Date(novaData.dataInicio);
       const fim = new Date(valor);
       if (fim < inicio) {
-        setErro("Data de fim não pode ser anterior à data de início");
-        // Não atualizar o estado se a data for inválida
+        setErro("Data de fim nao pode ser anterior a  data de inicio");
+        // Nao atualizar o estado se a data for invalida
         return;
       }
     } else if (campo === "dataInicio" && valor && novaRecompensa.dataFim) {
       const inicio = new Date(valor);
       const fim = new Date(novaRecompensa.dataFim);
       if (fim < inicio) {
-        setErro("Data de fim não pode ser anterior à data de início");
+        setErro("Data de fim nao pode ser anterior a  data de inicio");
         return;
       }
     }
 
-    setErro(""); // Limpar erro se validação passar
+    setErro(""); // Limpar erro se validacao passar
     setNovaRecompensa(novaData);
   };
 
@@ -452,7 +464,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       if (!token) return;
 
       // TODO: Verificar endpoint correto para buscar produtos
-      // Usando endpoint provisório baseado no padrão do sistema
+      // Usando endpoint provisorio baseado no padrao do sistema
       const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/produtos`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -477,7 +489,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      // TODO: Implementar endpoint de estatísticas
+      // TODO: Implementar endpoint de estatisticas
       // Por enquanto, usar valores calculados das recompensas
       // Quando endpoint existir:
       // const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/fidelidade/estatisticas`, {
@@ -486,7 +498,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       // const data = await response.json();
       // setEstatisticas(data);
 
-      // Calcular com base nas recompensas (temporário)
+      // Calcular com base nas recompensas (temporario)
       const recompensasResgatadas = recompensas.reduce((sum, r) => sum + (r.estoqueUtilizado || 0), 0);
 
       setEstatisticas({
@@ -496,14 +508,53 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         recompensasResgatadas
       });
     } catch (err) {
-      console.error("Erro ao buscar estatísticas:", err);
+      console.error("Erro ao buscar estatisticas:", err);
     }
   }, [empresaId, recompensas]);
 
-  const salvarRecompensasLevel = (levelId, recompensaId) => {
-    setLevels(levels.map(l => l.id === levelId ? { ...l, recompensaId } : l));
-    setLevelEditandoRecompensas(null);
-    setMensagem("Recompensa associada ao nível com sucesso!");
+  const salvarRecompensasLevel = async (levelId, recompensaId) => {
+    setSalvandoRecompensa(true);
+    setMensagem("");
+    setErro("");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("Nao autenticado. Faca login novamente.");
+      }
+
+      const updatedLevels = levels.map(l => l.id === levelId ? { ...l, recompensaId } : l);
+
+      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/niveis-fidelidade`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(updatedLevels.map((level) => ({
+          id: level.id ?? null,
+          nome: level.nome,
+          minPontos: level.minPontos,
+          cor: level.cor,
+          descricao: level.descricao,
+          recompensaId: level.recompensaId ?? null,
+        })))
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => "");
+        throw new Error(errorText || `Erro ${response.status}: ${response.statusText}`);
+      }
+
+      const savedLevels = await response.json();
+      setLevels(Array.isArray(savedLevels) && savedLevels.length > 0 ? savedLevels : updatedLevels);
+      setLevelEditandoRecompensas(null);
+      setMensagem("Recompensa associada ao nivel com sucesso!");
+    } catch (err) {
+      console.error("Erro ao salvar associacao de nivel:", err);
+      setErro("Erro ao salvar associacao: " + err.message);
+    } finally {
+      setSalvandoRecompensa(false);
+    }
   };
 
   useEffect(() => {
@@ -515,14 +566,14 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   }, [empresaId, abaAtiva, carregarRecompensas, buscarProdutos]);
 
   useEffect(() => {
-    // Quando o tipo muda para PRODUTO_GRATIS e não há produtos carregados, buscar
+    // Quando o tipo muda para PRODUTO_GRATIS e nao ha produtos carregados, buscar
     if (novaRecompensa.tipo === "PRODUTO_GRATIS" && produtos.length === 0 && empresaId) {
       buscarProdutos();
     }
   }, [novaRecompensa.tipo, produtos.length, empresaId, buscarProdutos]);
 
   useEffect(() => {
-    // Buscar estatísticas quando carregar recompensas
+    // Buscar estatisticas quando carregar recompensas
     if (recompensas.length > 0) {
       buscarEstatisticas();
     }
@@ -558,7 +609,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               Programa de Fidelidade
             </h2>
             <p className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>
-              Configure pontos, níveis e recompensas
+              Configure pontos, niveis e recompensas
             </p>
           </div>
         </div>
@@ -570,7 +621,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-3 font-bold text-white transition hover:shadow-[0_8px_25px_rgba(245,158,11,0.3)] disabled:opacity-50"
           >
             {salvando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {salvando ? "Salvando..." : "Salvar Configuração"}
+            {salvando ? "Salvando..." : "Salvar Configuracao"}
           </button>
         )}
         {abaAtiva === "recompensas" && (
@@ -593,7 +644,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         >
           <div className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Configuração
+            Configuracao
           </div>
         </button>
         <button
@@ -621,7 +672,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       {abaAtiva === "config" ? (
         <>
-          {/* Conteúdo da aba Configuração */}
+          {/* Conteudo da aba Configuracao */}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -644,7 +695,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           <p className={`mt-2 text-2xl font-black ${isDark ? "text-white" : "text-zinc-900"}`}>
             {stats.pontosDistribuidos}
           </p>
-          <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>Distribuídos</p>
+          <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>Distribuidos</p>
         </div>
 
         <div className={`rounded-2xl border p-4 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
@@ -670,11 +721,11 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         </div>
       </div>
 
-      {/* Configuração Geral */}
+      {/* Configuracao Geral */}
       <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
         <h3 className={`mb-4 flex items-center gap-2 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
           <Settings className="h-5 w-5" />
-          Configuração Geral
+          Configuracao Geral
         </h3>
 
         <div className="grid gap-6 md:grid-cols-2">
@@ -749,18 +800,18 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         </div>
       </div>
 
-      {/* Níveis de Fidelidade */}
+      {/* Niveis de Fidelidade */}
       <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
         <h3 className={`mb-4 flex items-center gap-2 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
           <Award className="h-5 w-5" />
-          Níveis de Fidelidade
+          Niveis de Fidelidade
         </h3>
 
         <div className="mb-6 space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <input
               type="text"
-              placeholder="Nome do nível"
+              placeholder="Nome do nivel"
               value={novoLevel.nome}
               onChange={(e) => setNovoLevel({...novoLevel, nome: e.target.value})}
               className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
@@ -768,7 +819,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             <input
               type="number"
               min="0"
-              placeholder="Pontos mínimos"
+              placeholder="Pontos minimos"
               value={novoLevel.minPontos}
               onChange={(e) => setNovoLevel({...novoLevel, minPontos: parseInt(e.target.value) || 0})}
               className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
@@ -782,7 +833,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             />
             <input
               type="text"
-              placeholder="Descrição"
+              placeholder="Descricao"
               value={novoLevel.descricao}
               onChange={(e) => setNovoLevel({...novoLevel, descricao: e.target.value})}
               className={`rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5 text-white" : "border-zinc-200 bg-white text-zinc-900"}`}
@@ -793,7 +844,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-3 font-bold text-white"
           >
             <Plus className="h-4 w-4" />
-            Adicionar Nível
+            Adicionar Nivel
           </button>
         </div>
 
@@ -811,7 +862,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 <div>
                   <p className={`font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>{level.nome}</p>
                   <p className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>
-                    {level.minPontos} pontos mínimos
+                    {level.minPontos} pontos minimos
                   </p>
                 </div>
               </div>
@@ -844,14 +895,14 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         </div>
       </div>
 
-      {/* Modal para Associar Recompensas ao Nível */}
+      {/* Modal para Associar Recompensas ao Nivel */}
       {levelEditandoRecompensas && (
         <div className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center ${isDark ? "" : ""}`}>
           <div className={`relative rounded-2xl border p-6 max-w-lg w-full mx-4 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
             <div className="flex items-center justify-between mb-4">
               <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
                 <Gift className="inline h-5 w-5 mr-2" />
-                Recompensas para nível {levelEditandoRecompensas.nome}
+                Recompensas para nivel {levelEditandoRecompensas.nome}
               </h3>
               <button
                 onClick={() => setLevelEditandoRecompensas(null)}
@@ -862,7 +913,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             </div>
 
             <p className={`mb-4 text-sm ${isDark ? "text-white/70" : "text-zinc-600"}`}>
-              Selecione UMA recompensa que será automaticamente oferecida aos clientes quando atingem este nível.
+              Selecione UMA recompensa que sera automaticamente oferecida aos clientes quando atingem este nivel.
             </p>
 
             {carregandoRecompensas ? (
@@ -909,7 +960,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                         <p className={`text-xs ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "text-blue-300/80" : "text-blue-600") : (isDark ? "text-white/50" : "text-zinc-500")}`}>
                           {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}% de desconto`}
                           {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo} de desconto`}
-                          {recompensa.tipo === "PRODUTO_GRATIS" && `Produto grátis`}
+                          {recompensa.tipo === "PRODUTO_GRATIS" && `Produto gratis`}
                         </p>
                       </div>
                     </div>
@@ -943,24 +994,24 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 onClick={() => salvarRecompensasLevel(levelEditandoRecompensas.id, levelEditandoRecompensas.recompensaId)}
                 className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-2 font-bold text-white"
               >
-                Salvar Associação
+                Salvar Associacao
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Visualização para Cliente */}
+      {/* Visualizacao para Cliente */}
       <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
         <h3 className={`mb-4 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
-          Visualização do Cliente
+          Visualizacao do Cliente
         </h3>
         <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-zinc-50"}`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className={`font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>Exemplo: Cliente João</p>
+              <p className={`font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>Exemplo: Cliente Joao</p>
               <p className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>
-                8 pontos acumulados • Nível: Prata
+                8 pontos acumulados • Nivel: Prata
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -971,21 +1022,21 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             </div>
           </div>
           <p className={`mt-4 text-sm ${isDark ? "text-white/70" : "text-zinc-600"}`}>
-            Os clientes verão seus pontos e progresso no modal de fidelidade.
-            Use as configurações acima para personalizar a experiência.
+            Os clientes verao seus pontos e progresso no modal de fidelidade.
+            Use as configuracoes acima para personalizar a experiencia.
           </p>
 
-          {/* Recompensas do nível Prata */}
+          {/* Recompensas do nivel Prata */}
           <div className={`mt-4 ${isDark ? "" : ""}`}>
             <p className={`text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-              Recompensas disponíveis no nível Prata:
+              Recompensas disponiveis no nivel Prata:
             </p>
             {(() => {
               const nivelPrata = levels.find(l => l.nome === "Prata");
               if (!nivelPrata || !nivelPrata.recompensaId) {
                 return (
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Nenhuma recompensa associada a este nível ainda.
+                    Nenhuma recompensa associada a este nivel ainda.
                   </p>
                 );
               }
@@ -994,20 +1045,20 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               if (!recompensaPrata) {
                 return (
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Recompensa associada não encontrada.
+                    Recompensa associada nao encontrada.
                   </p>
                 );
               }
 
               return (
-                <div className="flex items-center gap-2 rounded-xl border px-3 py-2 ${isDark ? "border-white/10" : "border-zinc-200"}">
+                <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${isDark ? "border-white/10" : "border-zinc-200"}`}>
                   <Gift className={`h-4 w-4 ${isDark ? "text-blue-400" : "text-blue-500"}`} />
                   <div className="flex-1">
                     <p className={`text-xs font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>{recompensaPrata.nome}</p>
                     <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
                       {recompensaPrata.valorPontos} pontos • {recompensaPrata.tipo === "DESCONTO_PERCENTUAL" && `${recompensaPrata.descontoPercentual}%`}
                       {recompensaPrata.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensaPrata.descontoValorFixo}`}
-                      {recompensaPrata.tipo === "PRODUTO_GRATIS" && "Produto grátis"}
+                      {recompensaPrata.tipo === "PRODUTO_GRATIS" && "Produto gratis"}
                     </p>
                   </div>
                 </div>
@@ -1019,7 +1070,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
         </>
       ) : (
         <>
-          {/* Conteúdo da aba Recompensas */}
+          {/* Conteudo da aba Recompensas */}
           <div className={`rounded-2xl border p-6 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
             <h3 className={`mb-4 flex items-center gap-2 text-lg font-bold ${isDark ? "text-white" : "text-zinc-900"}`}>
               {editingRecompensa ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
@@ -1051,13 +1102,13 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 >
                   <option value="DESCONTO_PERCENTUAL">Desconto Percentual</option>
                   <option value="DESCONTO_VALOR_FIXO">Desconto Valor Fixo</option>
-                  <option value="PRODUTO_GRATIS">Produto Grátis</option>
+                  <option value="PRODUTO_GRATIS">Produto Gratis</option>
                 </select>
               </div>
 
               <div>
                 <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-                  Pontos Necessários *
+                  Pontos Necessarios *
                 </label>
                 <input
                   type="number"
@@ -1112,7 +1163,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               {novaRecompensa.tipo === "PRODUTO_GRATIS" && (
                 <div>
                   <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-                    Produto Grátis *
+                    Produto Gratis *
                   </label>
                   {carregandoProdutos ? (
                     <div className={`w-full rounded-xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-zinc-200 bg-white"}`}>
@@ -1152,17 +1203,17 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                     </select>
                   )}
                   <p className={`mt-1 text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Produto que será dado como brinde ao cliente
+                    Produto que sera dado como brinde ao cliente
                   </p>
                 </div>
               )}
 
               <div>
                 <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-                  Descrição
+                  Descricao
                 </label>
                 <textarea
-                  placeholder="Descrição da recompensa"
+                  placeholder="Descricao da recompensa"
                   value={novaRecompensa.descricao}
                   onChange={(e) => setNovaRecompensa({...novaRecompensa, descricao: e.target.value})}
                   rows="2"
@@ -1185,7 +1236,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
               <div>
                 <label className={`block text-sm font-semibold mb-2 ${isDark ? "text-white/80" : "text-zinc-700"}`}>
-                  Data Início (opcional)
+                  Data Inicio (opcional)
                 </label>
                 <input
                   type="datetime-local"
@@ -1272,7 +1323,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                             <p className={`text-sm ${isDark ? "text-white/60" : "text-zinc-500"}`}>
                               {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}% de desconto`}
                               {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo} de desconto`}
-                              {recompensa.tipo === "PRODUTO_GRATIS" && `Produto grátis (ID: ${recompensa.produtoId})`}
+                              {recompensa.tipo === "PRODUTO_GRATIS" && `Produto gratis (ID: ${recompensa.produtoId})`}
                             </p>
                             <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-400"}`}>
                               {recompensa.descricao}
@@ -1335,3 +1386,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 };
 
 export default GerenciarFidelidade;
+
+
+
+

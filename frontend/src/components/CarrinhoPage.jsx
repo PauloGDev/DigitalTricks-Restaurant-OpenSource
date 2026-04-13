@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import CarrinhoItensSection from "./carrinhoPage/CarrinhoItensSection";
 import EnderecoSection from "./carrinhoPage/EnderecoSection";
@@ -26,6 +26,8 @@ const toNumber = (value) => {
 
   return Number.isFinite(n) ? n : 0;
 };
+
+const PENDING_LOYALTY_COUPON_KEY = (slug) => `fidelidade_cupom_${slug}`;
 
 export default function CarrinhoPage() {
   const { slug } = useParams();
@@ -68,6 +70,7 @@ export default function CarrinhoPage() {
   const [cpf, setCpf] = useState("");
   const [telefone, setTelefone] = useState("");
   const [tipoEntrega, setTipoEntrega] = useState("DELIVERY");
+  const applyingLoyaltyCouponRef = useRef(false);
 
   useEffect(() => {
   const carregarEmpresaDoRestaurante = async () => {
@@ -88,6 +91,49 @@ export default function CarrinhoPage() {
 
   carregarEmpresaDoRestaurante();
 }, [API_URL, slug]);
+
+  useEffect(() => {
+    const aplicarCupomFidelidadePendente = async () => {
+      if (!slug || !carrinho?.itens?.length || carrinho?.cupom || applyingLoyaltyCouponRef.current) {
+        return;
+      }
+
+      const rawPendingCoupon = localStorage.getItem(PENDING_LOYALTY_COUPON_KEY(slug));
+      if (!rawPendingCoupon) {
+        return;
+      }
+
+      let pendingCoupon = null;
+      try {
+        pendingCoupon = JSON.parse(rawPendingCoupon);
+      } catch {
+        localStorage.removeItem(PENDING_LOYALTY_COUPON_KEY(slug));
+        return;
+      }
+
+      if (!pendingCoupon?.codigo) {
+        localStorage.removeItem(PENDING_LOYALTY_COUPON_KEY(slug));
+        return;
+      }
+
+      applyingLoyaltyCouponRef.current = true;
+      try {
+        await aplicarCupom(pendingCoupon.codigo, slug);
+        localStorage.removeItem(PENDING_LOYALTY_COUPON_KEY(slug));
+        showNotification(
+          `Recompensa de fidelidade aplicada: ${pendingCoupon.codigo}`,
+          "success"
+        );
+      } catch (error) {
+        console.error("Erro ao aplicar cupom de fidelidade:", error);
+        localStorage.removeItem(PENDING_LOYALTY_COUPON_KEY(slug));
+      } finally {
+        applyingLoyaltyCouponRef.current = false;
+      }
+    };
+
+    aplicarCupomFidelidadePendente();
+  }, [aplicarCupom, carrinho?.cupom, carrinho?.itens, showNotification, slug]);
 
   const calcularFrete = async (endereco) => {
     try {
@@ -310,13 +356,13 @@ export default function CarrinhoPage() {
                     </div>
                     <div>
                       <p className="text-sm font-extrabold text-gray/80">Número da Mesa <span className="font-normal text-gray/50 text-xs">(opcional)</span></p>
-                      <p className="text-xs text-gray/55">Informe a mesa para pedidos no local</p>
+                      <p className="text-xs text-gray/55">Informe a mesa para pedidos no local. Deixe em branco se escaneou um QR Universal.</p>
                     </div>
                   </div>
                   <input
                     type="number"
                     min="1"
-                    placeholder="Ex: 5"
+                    placeholder="Ex: 5 (deixe em branco se QR Universal)"
                     value={numeroMesa}
                     onChange={(e) => setNumeroMesa(e.target.value)}
                     className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-semibold text-gray/80 placeholder:text-gray/40 focus:outline-none focus:ring-2 focus:ring-red-500/40"

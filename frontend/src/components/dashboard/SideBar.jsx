@@ -15,6 +15,7 @@ import {
   X,
   BarChart3,
   QrCode,
+  Trophy,
 } from "lucide-react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -258,6 +259,15 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
       };
     }
 
+    if (section === "fidelidade") {
+      return {
+        label: "Programa de Fidelidade",
+        tone: isDark
+          ? "border-purple-500/20 bg-purple-500/10 text-purple-300"
+          : "border-purple-200 bg-purple-50 text-purple-700",
+      };
+    }
+
     return {
       label: "Painel ativo",
       tone: isDark
@@ -471,6 +481,18 @@ const Sidebar = ({ section, changeSection, sidebarOpen, setSidebarOpen }) => {
                     icon={QrCode}
                     label="QR Code Cardápio"
                     hint="Gerar QR codes para mesas"
+                    isDark={isDark}
+                  />
+
+                  <NavItemButton
+                    active={section === "fidelidade"}
+                    onClick={() => {
+                      changeSection("fidelidade");
+                      closeMobile();
+                    }}
+                    icon={Trophy}
+                    label="Fidelidade"
+                    hint="Pontos, níveis e recompensas"
                     isDark={isDark}
                   />
 

@@ -1,6 +1,21 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Star, Gift, Sparkles, Trophy, Award, Package, Percent, DollarSign, Check, Zap } from "lucide-react";
+﻿import { motion, AnimatePresence } from "framer-motion";
+import {
+  X,
+  Star,
+  Gift,
+  Sparkles,
+  Trophy,
+  Award,
+  Package,
+  Percent,
+  DollarSign,
+  Check,
+  Zap,
+} from "lucide-react";
 import { useState, useEffect } from "react";
+import { useCarrinho } from "../../context/CarrinhoContext";
+
+const PENDING_LOYALTY_COUPON_KEY = (slug) => `fidelidade_cupom_${slug}`;
 
 const levels = [
   { nome: "Bronze", min: 0, cor: "text-orange-500", bg: "bg-orange-500", border: "border-orange-200", bgSoft: "bg-orange-50" },
@@ -36,7 +51,15 @@ function progresso(pontos) {
 const formatBRL = (v) =>
   new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v || 0));
 
-export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onClose, empresaId }) {
+export default function FidelidadeModal({
+  pontos,
+  totalPedidos,
+  totalGasto,
+  onClose,
+  empresaId,
+  onResgateSuccess,
+}) {
+  const { carrinho, carregarCarrinho, restauranteSlug } = useCarrinho();
   const nivel = nivelAtual(pontos || 0);
   const prox = proximoNivel(pontos || 0);
   const pct = progresso(pontos || 0);
@@ -45,12 +68,6 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
   const [recompensaSelecionada, setRecompensaSelecionada] = useState(null);
   const [mensagem, setMensagem] = useState("");
 
-  useEffect(() => {
-    if (empresaId && pontos > 0) {
-      carregarRecompensas();
-    }
-  }, [empresaId, pontos]);
-
   const carregarRecompensas = async () => {
     if (!empresaId) return;
     setCarregando(true);
@@ -58,16 +75,16 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
       const API_URL = import.meta.env.VITE_API_URL || "";
 
       if (!API_URL) {
-        throw new Error("API_URL não configurada");
+        throw new Error("API_URL nao configurada");
       }
 
-      const response = await fetch(`${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`);
+      const response = await fetch(
+        `${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`
+      );
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Nenhuma recompensa disponível ou endpoint não implementado
           setRecompensas([]);
-          setCarregando(false);
           return;
         }
         throw new Error(`Erro ${response.status}: ${response.statusText}`);
@@ -75,57 +92,20 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
 
       const data = await response.json();
       setRecompensas(data);
-      setCarregando(false);
     } catch (err) {
       console.error("Erro ao carregar recompensas:", err);
-      // Fallback para mock data em desenvolvimento
-      setTimeout(() => {
-        setRecompensas([
-          {
-            id: 1,
-            nome: "10% de desconto",
-            descricao: "Desconto em qualquer pedido",
-            tipo: "DESCONTO_PERCENTUAL",
-            valorPontos: 10,
-            descontoPercentual: 10,
-            descontoValorFixo: null,
-            produtoId: null,
-            ativo: true,
-            estoque: 0,
-            estoqueUtilizado: 5
-          },
-          {
-            id: 2,
-            nome: "Coca-Cola Grátis",
-            descricao: "Refrigerante 350ml",
-            tipo: "PRODUTO_GRATIS",
-            valorPontos: 5,
-            descontoPercentual: null,
-            descontoValorFixo: null,
-            produtoId: 123,
-            produtoNome: "Coca-Cola 350ml",
-            ativo: true,
-            estoque: 50,
-            estoqueUtilizado: 12
-          },
-          {
-            id: 3,
-            nome: "R$ 5,00 de desconto",
-            descricao: "Desconto no próximo pedido",
-            tipo: "DESCONTO_VALOR_FIXO",
-            valorPontos: 15,
-            descontoPercentual: null,
-            descontoValorFixo: 5,
-            produtoId: null,
-            ativo: true,
-            estoque: 20,
-            estoqueUtilizado: 3
-          }
-        ].filter(r => r.valorPontos <= pontos));
-        setCarregando(false);
-      }, 500);
+      setMensagem("Nao foi possivel carregar as recompensas agora.");
+      setRecompensas([]);
+    } finally {
+      setCarregando(false);
     }
   };
+
+  useEffect(() => {
+    if (empresaId && pontos > 0) {
+      carregarRecompensas();
+    }
+  }, [empresaId, pontos]);
 
   const resgatarRecompensa = async (recompensa) => {
     if (!empresaId) return;
@@ -140,17 +120,24 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
       const API_URL = import.meta.env.VITE_API_URL || "";
       const token = localStorage.getItem("token");
 
-      if (!API_URL) {
-        throw new Error("API_URL não configurada");
+      if (!token) {
+        throw new Error("Voce precisa estar logado para resgatar");
       }
 
-      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/recompensas-fidelidade/${recompensa.id}/registrar-uso`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      if (!API_URL) {
+        throw new Error("API_URL nao configurada");
+      }
+
+      const response = await fetch(
+        `${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/${recompensa.id}/resgatar`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -158,16 +145,43 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
       }
 
       const data = await response.json();
+      const codigoCupom = data?.codigoCupom;
+      const cupomAplicadoNoCarrinho = Boolean(data?.cupomAplicadoNoCarrinho);
 
-      setMensagem(`Recompensa "${recompensa.nome}" resgatada com sucesso!`);
+      if (codigoCupom && restauranteSlug) {
+        if (cupomAplicadoNoCarrinho) {
+          localStorage.removeItem(PENDING_LOYALTY_COUPON_KEY(restauranteSlug));
+        } else {
+          localStorage.setItem(
+            PENDING_LOYALTY_COUPON_KEY(restauranteSlug),
+            JSON.stringify({
+              codigo: codigoCupom,
+              recompensaId: recompensa.id,
+              recompensaNome: recompensa.nome,
+              criadoEm: new Date().toISOString(),
+            })
+          );
+        }
+      }
+
+      if (cupomAplicadoNoCarrinho) {
+        await carregarCarrinho();
+      }
+
+      const mensagemSucesso = cupomAplicadoNoCarrinho
+        ? data?.mensagem || `Recompensa "${recompensa.nome}" aplicada no carrinho!`
+        : codigoCupom
+          ? `Recompensa resgatada! Seu cupom ${codigoCupom} sera aplicado no carrinho.`
+          : data?.mensagem || `Recompensa "${recompensa.nome}" resgatada com sucesso!`;
+
+      setMensagem(mensagemSucesso);
       setRecompensaSelecionada(recompensa);
-      setCarregando(false);
-
-      // Atualizar lista de recompensas para refletir estoque atualizado
-      setRecompensas(prev => prev.map(r => r.id === recompensa.id ? data : r));
+      onResgateSuccess?.();
+      await carregarRecompensas();
     } catch (err) {
       console.error("Erro ao resgatar recompensa:", err);
       setMensagem("Erro ao resgatar recompensa: " + err.message);
+    } finally {
       setCarregando(false);
     }
   };
@@ -186,11 +200,10 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
           animate={{ y: 0 }}
           exit={{ y: "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 inset-x-0 z-50 max-h-[90vh] overflow-hidden rounded-t-[2rem] bg-zinc-50 md:max-w-lg md:mx-auto md:rounded-[2rem]"
+          className="fixed bottom-0 inset-x-0 z-50 max-h-[90vh] overflow-hidden rounded-t-[2rem] bg-zinc-50 md:mx-auto md:max-w-lg md:rounded-[2rem]"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="sticky top-0 z-10 border-b border-zinc-200 bg-white px-5 pt-5 pb-4">
+          <div className="sticky top-0 z-10 border-b border-zinc-200 bg-white px-5 pb-4 pt-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
@@ -198,9 +211,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-zinc-900">Programa Fidelidade</h2>
-                  <p className="text-xs text-zinc-500">
-                    Ganhe 1 ponto a cada pedido
-                  </p>
+                  <p className="text-xs text-zinc-500">Ganhe 1 ponto a cada pedido</p>
                 </div>
               </div>
               <button
@@ -212,9 +223,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
             </div>
           </div>
 
-          {/* Content */}
-          <div className="overflow-y-auto px-4 pt-5 pb-24 max-h-[calc(90vh-80px)]">
-            {/* Points display */}
+          <div className="max-h-[calc(90vh-80px)] overflow-y-auto px-4 pb-24 pt-5">
             <div className={`rounded-3xl border ${nivel.border} ${nivel.bgSoft} p-6 text-center`}>
               <div className={`inline-flex items-center gap-2 rounded-full ${nivel.bg} px-4 py-1.5`}>
                 <Trophy className="h-4 w-4 text-white" />
@@ -223,11 +232,12 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
               <p className="mt-4 text-5xl font-black text-zinc-900">{pontos || 0}</p>
               <p className="text-sm text-zinc-500">ponto{pontos !== 1 ? "s" : ""} acumulados</p>
 
-              {/* Progress bar */}
               {prox ? (
                 <div className="mt-4">
                   <div className="mb-2 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-zinc-600">Faltam {prox.min - (pontos || 0)} para {prox.nome}</span>
+                    <span className="font-semibold text-zinc-600">
+                      Faltam {prox.min - (pontos || 0)} para {prox.nome}
+                    </span>
                     <span className="font-bold text-zinc-400">{pct}%</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
@@ -247,7 +257,6 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
               )}
             </div>
 
-            {/* Stats */}
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-zinc-200 bg-white p-4 text-center">
                 <Gift className="mx-auto mb-2 h-5 w-5 text-zinc-400" />
@@ -261,7 +270,6 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
               </div>
             </div>
 
-            {/* Levels guide */}
             <div className="mt-6">
               <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-700">
                 <Award className="h-4 w-4" />
@@ -297,29 +305,35 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
               </div>
             </div>
 
-            {/* Recompensas Disponíveis */}
             {pontos > 0 && (
               <div className="mt-6">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-700">
                   <Gift className="h-4 w-4" />
-                  Recompensas Disponíveis ({pontos} pontos)
+                  Recompensas Disponiveis ({pontos} pontos)
                 </h3>
                 {mensagem && (
                   <div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
                     {mensagem}
                   </div>
                 )}
+                {!mensagem && carrinho?.cupom?.codigo && (
+                  <div className="mb-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800">
+                    Cupom ativo no carrinho: {carrinho.cupom.codigo}
+                  </div>
+                )}
                 {carregando ? (
                   <div className="flex items-center justify-center py-8 text-zinc-400">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600"></div>
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
                     <span className="ml-2 text-sm">Carregando recompensas...</span>
                   </div>
                 ) : recompensas.length === 0 ? (
                   <div className="rounded-xl border border-zinc-200 bg-white p-6 text-center">
                     <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
-                    <p className="text-sm font-bold text-zinc-700">Nenhuma recompensa disponível</p>
+                    <p className="text-sm font-bold text-zinc-700">Nenhuma recompensa disponivel</p>
                     <p className="text-xs text-zinc-500">
-                      {pontos < 5 ? "Acumule mais pontos para desbloquear recompensas" : "Nenhuma recompensa configurada para seus pontos"}
+                      {pontos < 5
+                        ? "Acumule mais pontos para desbloquear recompensas"
+                        : "Nenhuma recompensa configurada para seus pontos"}
                     </p>
                   </div>
                 ) : (
@@ -327,15 +341,29 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                     {recompensas.map((recompensa) => (
                       <div
                         key={recompensa.id}
-                        className={`rounded-xl border p-4 transition ${recompensaSelecionada?.id === recompensa.id ? "border-amber-300 bg-amber-50" : "border-zinc-200 bg-white"}`}
+                        className={`rounded-xl border p-4 transition ${
+                          recompensaSelecionada?.id === recompensa.id
+                            ? "border-amber-300 bg-amber-50"
+                            : "border-zinc-200 bg-white"
+                        }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <div className={`flex h-10 w-10 items-center justify-center rounded-full ${recompensaSelecionada?.id === recompensa.id ? "bg-amber-100" : "bg-zinc-100"}`}>
-                                {recompensa.tipo === "DESCONTO_PERCENTUAL" && <Percent className="h-5 w-5 text-amber-600" />}
-                                {recompensa.tipo === "DESCONTO_VALOR_FIXO" && <DollarSign className="h-5 w-5 text-emerald-600" />}
-                                {recompensa.tipo === "PRODUTO_GRATIS" && <Package className="h-5 w-5 text-blue-600" />}
+                              <div
+                                className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                                  recompensaSelecionada?.id === recompensa.id ? "bg-amber-100" : "bg-zinc-100"
+                                }`}
+                              >
+                                {recompensa.tipo === "DESCONTO_PERCENTUAL" && (
+                                  <Percent className="h-5 w-5 text-amber-600" />
+                                )}
+                                {recompensa.tipo === "DESCONTO_VALOR_FIXO" && (
+                                  <DollarSign className="h-5 w-5 text-emerald-600" />
+                                )}
+                                {recompensa.tipo === "PRODUTO_GRATIS" && (
+                                  <Package className="h-5 w-5 text-blue-600" />
+                                )}
                               </div>
                               <div>
                                 <p className="font-bold text-zinc-900">{recompensa.nome}</p>
@@ -347,7 +375,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                                   </span>
                                   {recompensa.estoque > 0 && (
                                     <span className="text-xs text-zinc-400">
-                                      {recompensa.estoqueUtilizado || 0}/{recompensa.estoque} disponíveis
+                                      {recompensa.estoqueUtilizado || 0}/{recompensa.estoque} disponiveis
                                     </span>
                                   )}
                                 </div>
@@ -360,7 +388,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                             )}
                             {recompensa.tipo === "DESCONTO_VALOR_FIXO" && (
                               <div className="mt-2 text-sm text-zinc-700">
-                                <span className="font-semibold">Desconto:</span> R$ {recompensa.descontoValorFixo} no próximo pedido
+                                <span className="font-semibold">Desconto:</span> R$ {recompensa.descontoValorFixo} no proximo pedido
                               </div>
                             )}
                             {recompensa.tipo === "PRODUTO_GRATIS" && (
@@ -372,11 +400,15 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                           <button
                             onClick={() => resgatarRecompensa(recompensa)}
                             disabled={carregando || pontos < recompensa.valorPontos}
-                            className={`ml-4 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold ${pontos >= recompensa.valorPontos ? "bg-amber-500 text-white hover:bg-amber-600" : "bg-zinc-100 text-zinc-400"} disabled:opacity-50`}
+                            className={`ml-4 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold ${
+                              pontos >= recompensa.valorPontos
+                                ? "bg-amber-500 text-white hover:bg-amber-600"
+                                : "bg-zinc-100 text-zinc-400"
+                            } disabled:opacity-50`}
                           >
                             {carregando && recompensaSelecionada?.id === recompensa.id ? (
                               <>
-                                <div className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent"></div>
+                                <div className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
                                 Resgatando...
                               </>
                             ) : (
@@ -390,7 +422,7 @@ export default function FidelidadeModal({ pontos, totalPedidos, totalGasto, onCl
                         {recompensaSelecionada?.id === recompensa.id && (
                           <div className="mt-2 rounded-lg bg-emerald-50 p-2 text-center text-xs text-emerald-700">
                             <Check className="mx-auto mb-1 h-4 w-4" />
-                            Recompensa resgatada! Use no próximo pedido.
+                            Recompensa resgatada! Use no proximo pedido.
                           </div>
                         )}
                       </div>

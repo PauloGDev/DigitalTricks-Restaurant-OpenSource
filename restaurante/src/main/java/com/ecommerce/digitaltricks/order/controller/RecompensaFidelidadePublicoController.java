@@ -1,7 +1,9 @@
 package com.ecommerce.digitaltricks.order.controller;
 
+import com.ecommerce.digitaltricks.admin.dto.RecompensaFidelidadeResgateResponseDTO;
 import com.ecommerce.digitaltricks.admin.dto.RecompensaFidelidadeResponseDTO;
 import com.ecommerce.digitaltricks.admin.service.RecompensaFidelidadeService;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,5 +32,18 @@ public class RecompensaFidelidadePublicoController {
             @PathVariable Integer pontosCliente) {
         List<RecompensaFidelidadeResponseDTO> recompensas = recompensaService.listarDisponiveisPorPontos(empresaId, pontosCliente);
         return ResponseEntity.ok(recompensas);
+    }
+
+    @PatchMapping("/{recompensaId}/resgatar")
+    public ResponseEntity<RecompensaFidelidadeResgateResponseDTO> resgatar(
+            @PathVariable Long empresaId,
+            @PathVariable Long recompensaId,
+            Authentication authentication) {
+        RecompensaFidelidadeResgateResponseDTO response = recompensaService.resgatarParaCliente(
+                empresaId,
+                recompensaId,
+                authentication.getName()
+        );
+        return ResponseEntity.ok(response);
     }
 }

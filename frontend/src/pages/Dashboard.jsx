@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ShoppingBag, ChevronRight, Package, Users, TicketPercent, BarChart3, Store, QrCode } from "lucide-react";
+import { Bell, ShoppingBag, ChevronRight, Package, Users, TicketPercent, BarChart3, Store, QrCode, Trophy } from "lucide-react";
 import PageTitle from "../context/PageTitle";
 import GerenciarProdutos from "../components/dashboard/GerenciarProdutos";
 import GerenciarUsuarios from "../components/dashboard/GerenciarUsuarios";
@@ -11,6 +11,7 @@ import GerenciarCupons from "../components/dashboard/cupons/GerenciarCupons";
 import DashboardAnalytics from "../components/dashboard/analytics/DashboardAnalytics";
 import GerenciarPerfil from "../components/dashboard/GerenciarPerfil";
 import GerenciarQRCode from "../components/dashboard/GerenciarQRCode";
+import GerenciarFidelidade from "../components/dashboard/GerenciarFidelidade";
 import { useRestaurantNotifications } from "../context/RestaurantNotificationContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -67,7 +68,7 @@ const Dashboard = () => {
       const hash = window.location.hash.replace("#", "");
 
       if (
-        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics", "perfil", "qrcode"].includes(hash)
+        ["produtos", "usuarios", "clientes", "pedidos", "cupons", "analytics", "perfil", "qrcode", "fidelidade"].includes(hash)
       ) {
         setSection(hash);
       }
@@ -114,6 +115,7 @@ const Dashboard = () => {
     analytics: <DashboardAnalytics isDark={isDark} empresaId={empresaId} />,
     perfil: <GerenciarPerfil isDark={isDark} empresaId={empresaId} />,
     qrcode: <GerenciarQRCode isDark={isDark} empresaId={empresaId} />,
+    fidelidade: <GerenciarFidelidade isDark={isDark} empresaId={empresaId} />,
   }[section];
 
   const sectionLabel =
@@ -133,6 +135,8 @@ const Dashboard = () => {
       ? "Perfil do restaurante"
       : section === "qrcode"
       ? "QR Code Cardápio"
+      : section === "fidelidade"
+      ? "Fidelidade"
       : "Dashboard";
 
   const sectionDescription =
@@ -148,6 +152,8 @@ const Dashboard = () => {
       ? "as métricas e indicadores"
       : section === "perfil"
       ? "os dados, endereço e pagamentos do restaurante"
+      : section === "fidelidade"
+      ? "o programa de fidelidade"
       : "os pedidos em tempo real";
 
   const sectionMeta = useMemo(() => {
@@ -208,6 +214,16 @@ const Dashboard = () => {
         badgeClass: isDark
           ? "border-gray-500/20 bg-gray-500/10 text-gray-300"
           : "border-gray-200 bg-gray-50 text-gray-700",
+      };
+    }
+
+    if (section === "fidelidade") {
+      return {
+        icon: Trophy,
+        badge: "Programa de pontos",
+        badgeClass: isDark
+          ? "border-purple-500/20 bg-purple-500/10 text-purple-300"
+          : "border-purple-200 bg-purple-50 text-purple-700",
       };
     }
 

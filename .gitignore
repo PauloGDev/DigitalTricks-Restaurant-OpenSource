@@ -6,6 +6,7 @@ restaurante/.env
 frontend/node_modules/
 frontend/build/
 frontend/dist/
+docs/
 
 # Java / Spring Boot
 restaurante/target/

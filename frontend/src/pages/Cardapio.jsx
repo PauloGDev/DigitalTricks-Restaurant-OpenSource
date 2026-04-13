@@ -315,7 +315,7 @@ const produtosEmOferta = useMemo(() => {
     fetchEnderecoPadrao();
   }, [api]);
 
-  useEffect(() => {
+  const fetchFidelidade = useCallback(() => {
     const token = localStorage.getItem("token");
     if (!token || !slug) return;
 
@@ -329,6 +329,10 @@ const produtosEmOferta = useMemo(() => {
       .then((res) => setFidelidade(res.data || { pontos: 0, totalPedidos: 0, totalGasto: 0 }))
       .catch(() => setFidelidade({ pontos: 0, totalPedidos: 0, totalGasto: 0 }));
   }, [slug]);
+
+  useEffect(() => {
+    fetchFidelidade();
+  }, [fetchFidelidade]);
 
   const fetchRestaurante = useCallback(async () => {
     try {
@@ -1033,7 +1037,8 @@ const produtosEmOferta = useMemo(() => {
           pontos={fidelidade.pontos}
           totalPedidos={fidelidade.totalPedidos}
           totalGasto={fidelidade.totalGasto}
-          empresaId={null} // TODO: obter empresaId do contexto/API
+          empresaId={restauranteView.id ?? null}
+          onResgateSuccess={fetchFidelidade}
           onClose={() => setShowFidelidade(false)}
         />
       )}

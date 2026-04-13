@@ -380,6 +380,13 @@ public class PedidoFacadeService {
         pedido.setNumeroMesa(pedidoRequest.numeroMesa());
 
         Pedido salvo = pedidoRepository.save(pedido);
+
+        if (carrinho != null && carrinho.getCupom() != null) {
+            cupomService.registrarUso(carrinho.getCupom(), cliente, salvo);
+            cupomService.removerDoCarrinho(carrinho);
+            carrinhoRepository.save(carrinho);
+        }
+
         pedidoStatusService.registrarStatusInicial(salvo);
         clienteEmpresaService.registrarPedido(salvo);
 

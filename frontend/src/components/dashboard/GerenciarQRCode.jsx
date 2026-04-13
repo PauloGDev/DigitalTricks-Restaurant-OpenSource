@@ -22,7 +22,7 @@ function MesaQRCard({ slug, mesa, isDark, onRemove }) {
   const handleDownload = () => {
     if (!canvasRef.current) return;
     const link = document.createElement("a");
-    link.download = `qr-mesa-${mesa || "sem-mesa"}.png`;
+    link.download = `qr-${mesa ? `mesa-${mesa}` : "universal"}.png`;
     link.href = canvasRef.current.toDataURL("image/png");
     link.click();
   };
@@ -45,7 +45,7 @@ function MesaQRCard({ slug, mesa, isDark, onRemove }) {
           className={`rounded-2xl border ${isDark ? "border-white/10" : "border-zinc-200"}`}
         />
         <p className={`mt-3 text-sm font-extrabold ${isDark ? "text-white" : "text-zinc-900"}`}>
-          Mesa {mesa || "N/A"}
+          {mesa ? `Mesa ${mesa}` : "QR Universal"}
         </p>
         <p className={`mt-0.5 max-w-full truncate text-xs ${isDark ? "text-white/40" : "text-zinc-500"}`}>
           {url}
@@ -242,8 +242,17 @@ export default function GerenciarQRCode({ isDark, empresaId }) {
       {/* QR Code sem mesa */}
       <div>
         <h3 className={`mb-3 text-sm font-extrabold uppercase tracking-[0.12em] ${isDark ? "text-white/40" : "text-zinc-400"}`}>
-          QR genérico
+          QR Universal (sem mesa definida)
         </h3>
+        <div className={`mb-3 rounded-2xl border p-4 ${isDark ? "border-sky-500/20 bg-sky-500/5" : "border-blue-200 bg-blue-50"}`}>
+          <p className={`text-sm font-bold ${isDark ? "text-sky-300" : "text-blue-700"}`}>💡 Como funciona:</p>
+          <ul className={`mt-2 space-y-1 text-xs ${isDark ? "text-white/60" : "text-zinc-600"}`}>
+            <li>• Cliente escaneia este QR e acessa o cardápio</li>
+            <li>• O número da mesa pode ser informado durante o pedido</li>
+            <li>• Ideal para entrada, balcão ou áreas comuns</li>
+            <li>• Útil quando não sabe qual mesa o cliente vai ocupar</li>
+          </ul>
+        </div>
         <div className="grid max-w-xs">
           <MesaQRCard slug={slug} mesa={null} isDark={isDark} />
         </div>
@@ -253,8 +262,17 @@ export default function GerenciarQRCode({ isDark, empresaId }) {
       {mesas.length > 0 && (
         <div>
           <h3 className={`mb-3 text-sm font-extrabold uppercase tracking-[0.12em] ${isDark ? "text-white/40" : "text-zinc-400"}`}>
-            Mesas cadastradas ({mesas.length})
+            QR por Mesa ({mesas.length})
           </h3>
+          <div className={`mb-3 rounded-2xl border p-4 ${isDark ? "border-emerald-500/20 bg-emerald-500/5" : "border-emerald-200 bg-emerald-50"}`}>
+            <p className={`text-sm font-bold ${isDark ? "text-emerald-300" : "text-emerald-700"}`}>📋 QR por mesa específica:</p>
+            <ul className={`mt-2 space-y-1 text-xs ${isDark ? "text-white/60" : "text-zinc-600"}`}>
+              <li>• Cada mesa tem seu próprio QR code exclusivo</li>
+              <li>• A mesa é preenchida automaticamente no pedido</li>
+              <li>• Ideal para restaurantes com mesas fixas numeradas</li>
+              <li>• O cliente não precisa informar a mesa manualmente</li>
+            </ul>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {mesas.sort((a, b) => a - b).map((m) => (
               <MesaQRCard key={m} slug={slug} mesa={m} isDark={isDark} onRemove={removeMesa} />

@@ -28,6 +28,9 @@ import com.ecommerce.digitaltricks.product.enums.TipoSelecaoOpcional;
 import com.ecommerce.digitaltricks.admin.enums.StatusUsuario;
 import com.ecommerce.digitaltricks.admin.enums.PapelEmpresa;
 import com.ecommerce.digitaltricks.admin.enums.StatusEmpresa;
+import com.ecommerce.digitaltricks.admin.enums.TipoRecompensaFidelidade;
+import com.ecommerce.digitaltricks.admin.model.RecompensaFidelidade;
+import com.ecommerce.digitaltricks.admin.repository.RecompensaFidelidadeRepository;
 import com.ecommerce.digitaltricks.customer.enums.Genero;
 import com.ecommerce.digitaltricks.product.model.*;
 import com.ecommerce.digitaltricks.product.repository.CategoriaRepository;
@@ -36,6 +39,7 @@ import com.ecommerce.digitaltricks.customer.service.EnderecoGeocodingService;
 import jakarta.transaction.Transactional;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -68,6 +72,7 @@ public class ProdutoInitializer implements CommandLineRunner {
     private final EnderecoGeocodingService enderecoGeocodingService;
     private final CategoriaRepository categoriaRepository;
     private final CupomRepository cupomRepository;
+    private final RecompensaFidelidadeRepository recompensaFidelidadeRepository;
 
     public ProdutoInitializer(
             ProdutoRepository produtoRepository,
@@ -80,7 +85,8 @@ public class ProdutoInitializer implements CommandLineRunner {
             PasswordEncoder passwordEncoder,
             EnderecoGeocodingService enderecoGeocodingService,
             CategoriaRepository categoriaRepository,
-            CupomRepository cupomRepository) {
+            CupomRepository cupomRepository,
+            RecompensaFidelidadeRepository recompensaFidelidadeRepository) {
         this.produtoRepository = produtoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -92,6 +98,7 @@ public class ProdutoInitializer implements CommandLineRunner {
         this.enderecoGeocodingService = enderecoGeocodingService;
         this.categoriaRepository = categoriaRepository;
         this.cupomRepository = cupomRepository;
+        this.recompensaFidelidadeRepository = recompensaFidelidadeRepository;
     }
 
     private static final String HORARIOS_PADRAO =
@@ -112,6 +119,7 @@ public class ProdutoInitializer implements CommandLineRunner {
         List<Categoria> categorias1 = criarCategorias(saborDaPraca);
         inicializarProdutos(saborDaPraca, categorias1);
         criarCupons(saborDaPraca);
+        criarRecompensasFidelidade(saborDaPraca);
         gerarPedidosFake(saborDaPraca);
 
         Empresa burgerKingDom = getOrCreateEmpresaBurgerKingDom();
@@ -120,6 +128,7 @@ public class ProdutoInitializer implements CommandLineRunner {
         List<Categoria> categorias2 = criarCategoriasBurger(burgerKingDom);
         inicializarProdutosBurger(burgerKingDom, categorias2);
         criarCuponsBurger(burgerKingDom);
+        criarRecompensasFidelidade(burgerKingDom);
         gerarPedidosFake(burgerKingDom);
 
         migrarHorariosDeTodasEmpresas();
@@ -1139,6 +1148,105 @@ public class ProdutoInitializer implements CommandLineRunner {
         if (cupom.getApenasNovoUsuario() == null) cupom.setApenasNovoUsuario(false);
         if (cupom.getAplicaEmItensPromocionais() == null) cupom.setAplicaEmItensPromocionais(true);
         if (cupom.getFreteGratis() == null) cupom.setFreteGratis(false);
+    }
+
+    private void criarRecompensasFidelidade(Empresa empresa) {
+        if (recompensaFidelidadeRepository.countByEmpresa(empresa) > 0) return;
+
+        List<RecompensaFidelidade> recompensas = new ArrayList<>();
+        recompensas.add(criarRecompensaDescontoPercentual(
+                empresa,
+                "10% OFF Fidelidade",
+                "Ganhe 10% de desconto ao atingir 10 pontos.",
+                10,
+                "10.00"
+        ));
+        recompensas.add(criarRecompensaDescontoFixo(
+                empresa,
+                "R$ 15 OFF Fidelidade",
+                "Desconto de R$ 15 para usar em um proximo pedido.",
+                18,
+                "15.00"
+        ));
+
+        produtoRepository.findByEmpresaId(empresa.getId(), PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .ifPresent(produto -> recompensas.add(criarRecompensaProdutoGratis(
+                        empresa,
+                        produto,
+                        "Brinde da Casa",
+                        "Resgate um item gratis do cardapio da empresa.",
+                        25
+                )));
+
+        recompensaFidelidadeRepository.saveAll(recompensas);
+        System.out.println("[ProdutoInitializer] " + recompensas.size()
+                + " recompensas de fidelidade criadas para: " + empresa.getNomeFantasia());
+    }
+
+    private RecompensaFidelidade criarRecompensaDescontoPercentual(
+            Empresa empresa,
+            String nome,
+            String descricao,
+            int valorPontos,
+            String descontoPercentual
+    ) {
+        RecompensaFidelidade recompensa = criarBaseRecompensa(empresa, nome, descricao, valorPontos);
+        recompensa.setTipo(TipoRecompensaFidelidade.DESCONTO_PERCENTUAL);
+        recompensa.setDescontoPercentual(new BigDecimal(descontoPercentual));
+        return recompensa;
+    }
+
+    private RecompensaFidelidade criarRecompensaDescontoFixo(
+            Empresa empresa,
+            String nome,
+            String descricao,
+            int valorPontos,
+            String descontoValorFixo
+    ) {
+        RecompensaFidelidade recompensa = criarBaseRecompensa(empresa, nome, descricao, valorPontos);
+        recompensa.setTipo(TipoRecompensaFidelidade.DESCONTO_VALOR_FIXO);
+        recompensa.setDescontoValorFixo(new BigDecimal(descontoValorFixo));
+        return recompensa;
+    }
+
+    private RecompensaFidelidade criarRecompensaProdutoGratis(
+            Empresa empresa,
+            Produto produto,
+            String nome,
+            String descricao,
+            int valorPontos
+    ) {
+        RecompensaFidelidade recompensa = criarBaseRecompensa(empresa, nome, descricao, valorPontos);
+        recompensa.setTipo(TipoRecompensaFidelidade.PRODUTO_GRATIS);
+        recompensa.setProdutoId(produto.getId());
+        recompensa.setImagemUrl(produto.getImagemUrl());
+        recompensa.setEstoque(30);
+        return recompensa;
+    }
+
+    private RecompensaFidelidade criarBaseRecompensa(
+            Empresa empresa,
+            String nome,
+            String descricao,
+            int valorPontos
+    ) {
+        LocalDateTime agora = LocalDateTime.now();
+
+        RecompensaFidelidade recompensa = new RecompensaFidelidade();
+        recompensa.setEmpresa(empresa);
+        recompensa.setNome(nome);
+        recompensa.setDescricao(descricao);
+        recompensa.setValorPontos(valorPontos);
+        recompensa.setAtivo(true);
+        recompensa.setEstoque(0);
+        recompensa.setEstoqueUtilizado(0);
+        recompensa.setDataInicio(agora);
+        recompensa.setDataFim(agora.plusMonths(6));
+        recompensa.setCriadoEm(agora);
+        recompensa.setAtualizadoEm(agora);
+        return recompensa;
     }
 
     // ──────────────────── PEDIDOS FAKES ────────────────────
