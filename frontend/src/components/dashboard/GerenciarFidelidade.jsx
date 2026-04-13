@@ -10,10 +10,10 @@ const fadeUp = {
 };
 
 const initialLevels = [
-  { id: 1, nome: "Bronze", minPontos: 0, cor: "#f97316", descricao: "Cliente inicial", recompensaIds: [] },
-  { id: 2, nome: "Prata", minPontos: 5, cor: "#71717a", descricao: "Cliente frequente", recompensaIds: [] },
-  { id: 3, nome: "Ouro", minPontos: 10, cor: "#f59e0b", descricao: "Cliente VIP", recompensaIds: [] },
-  { id: 4, nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente Mestre", recompensaIds: [] },
+  { id: 1, nome: "Bronze", minPontos: 0, cor: "#f97316", descricao: "Cliente inicial", recompensaId: null },
+  { id: 2, nome: "Prata", minPontos: 5, cor: "#71717a", descricao: "Cliente frequente", recompensaId: null },
+  { id: 3, nome: "Ouro", minPontos: 10, cor: "#f59e0b", descricao: "Cliente VIP", recompensaId: null },
+  { id: 4, nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente Mestre", recompensaId: null },
 ];
 
 const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
@@ -30,7 +30,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
   const [salvandoRecompensa, setSalvandoRecompensa] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [erro, setErro] = useState("");
-  const [novoLevel, setNovoLevel] = useState({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaIds: [] });
+  const [novoLevel, setNovoLevel] = useState({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaId: null });
   const [recompensas, setRecompensas] = useState([]);
   const [editingRecompensa, setEditingRecompensa] = useState(null);
   const [novaRecompensa, setNovaRecompensa] = useState({
@@ -119,7 +119,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     const maxId = levels.length > 0 ? Math.max(...levels.map(l => l.id)) : 0;
     const novoId = maxId + 1;
     setLevels([...levels, { ...novoLevel, id: novoId }].sort((a, b) => a.minPontos - b.minPontos));
-    setNovoLevel({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaIds: [] });
+    setNovoLevel({ nome: "", minPontos: 0, cor: "#3b82f6", descricao: "", recompensaId: null });
     setErro("");
   };
 
@@ -486,10 +486,10 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
     }
   }, [empresaId, recompensas]);
 
-  const salvarRecompensasLevel = (levelId, recompensaIds) => {
-    setLevels(levels.map(l => l.id === levelId ? { ...l, recompensaIds } : l));
+  const salvarRecompensasLevel = (levelId, recompensaId) => {
+    setLevels(levels.map(l => l.id === levelId ? { ...l, recompensaId } : l));
     setLevelEditandoRecompensas(null);
-    setMensagem("Recompensas associadas ao nível com sucesso!");
+    setMensagem("Recompensa associada ao nível com sucesso!");
   };
 
   useEffect(() => {
@@ -808,7 +808,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                     {level.descricao}
                   </p>
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Recompensas: {level.recompensaIds?.length || 0} associadas
+                    Recompensa: {level.recompensaId ? "Associada" : "Nenhuma"}
                   </p>
                 </div>
 
@@ -848,7 +848,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             </div>
 
             <p className={`mb-4 text-sm ${isDark ? "text-white/70" : "text-zinc-600"}`}>
-              Selecione as recompensas que serão automaticamente oferecidas aos clientes quando atingem este nível.
+              Selecione UMA recompensa que será automaticamente oferecida aos clientes quando atingem este nível.
             </p>
 
             {recompensas.length === 0 ? (
@@ -862,19 +862,28 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {recompensas.map(recompensa => (
                   <div
                     key={recompensa.id}
-                    className={`flex items-center justify-between rounded-xl border p-3 ${isDark ? "border-white/10" : "border-zinc-200"}`}
+                    onClick={() => {
+                      // Se clicar na mesma recompensa, desmarca (null)
+                      const newRecompensaId = levelEditandoRecompensas.recompensaId === recompensa.id ? null : recompensa.id;
+                      setLevelEditandoRecompensas({...levelEditandoRecompensas, recompensaId: newRecompensaId});
+                    }}
+                    className={`flex items-center justify-between rounded-xl border p-3 cursor-pointer transition ${isDark ? "border-white/10 hover:border-white/30" : "border-zinc-200 hover:border-zinc-300"} ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "bg-blue-500/20 border-blue-500/30" : "bg-blue-50 border-blue-200") : ""}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`h-3 w-3 rounded-full ${levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? (isDark ? "bg-blue-500" : "bg-blue-500") : (isDark ? "bg-white/20" : "bg-zinc-200")}`} />
+                      <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "border-blue-300 bg-blue-500" : "border-blue-400 bg-blue-500") : (isDark ? "border-white/30" : "border-zinc-300")}`}>
+                        {levelEditandoRecompensas.recompensaId === recompensa.id && (
+                          <div className={`h-2 w-2 rounded-full ${isDark ? "bg-white" : "bg-white"}`} />
+                        )}
+                      </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>
+                        <p className={`text-sm font-semibold ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "text-blue-300" : "text-blue-700") : (isDark ? "text-white" : "text-zinc-900")}`}>
                           {recompensa.nome}
                         </p>
-                        <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                        <p className={`text-xs ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "text-blue-300/80" : "text-blue-600") : (isDark ? "text-white/50" : "text-zinc-500")}`}>
                           {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}% de desconto`}
                           {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo} de desconto`}
                           {recompensa.tipo === "PRODUTO_GRATIS" && `Produto grátis`}
@@ -882,24 +891,21 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs ${isDark ? "text-white/60" : "text-zinc-500"}`}>
+                      <span className={`text-xs ${levelEditandoRecompensas.recompensaId === recompensa.id ? (isDark ? "text-blue-300" : "text-blue-600") : (isDark ? "text-white/60" : "text-zinc-500")}`}>
                         {recompensa.valorPontos} pontos
                       </span>
-                      <button
-                        onClick={() => {
-                          const currentIds = levelEditandoRecompensas.recompensaIds;
-                          const newIds = currentIds.includes(recompensa.id)
-                            ? currentIds.filter(id => id !== recompensa.id)
-                            : [...currentIds, recompensa.id];
-                          setLevelEditandoRecompensas({...levelEditandoRecompensas, recompensaIds: newIds});
-                        }}
-                        className={`rounded-full px-3 py-1 text-xs font-bold ${levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? (isDark ? "bg-blue-500 text-white" : "bg-blue-500 text-white") : (isDark ? "bg-white/10 text-white/70" : "bg-zinc-100 text-zinc-700")}`}
-                      >
-                        {levelEditandoRecompensas.recompensaIds.includes(recompensa.id) ? "Remover" : "Adicionar"}
-                      </button>
                     </div>
                   </div>
                 ))}
+                <div
+                  onClick={() => setLevelEditandoRecompensas({...levelEditandoRecompensas, recompensaId: null})}
+                  className={`flex items-center justify-center rounded-xl border p-3 cursor-pointer transition ${isDark ? "border-white/10 hover:border-white/30" : "border-zinc-200 hover:border-zinc-300"} ${levelEditandoRecompensas.recompensaId === null ? (isDark ? "bg-red-500/20 border-red-500/30" : "bg-red-50 border-red-200") : ""}`}
+                >
+                  <X className={`h-4 w-4 mr-2 ${levelEditandoRecompensas.recompensaId === null ? (isDark ? "text-red-300" : "text-red-600") : (isDark ? "text-white/50" : "text-zinc-500")}`} />
+                  <span className={`text-sm ${levelEditandoRecompensas.recompensaId === null ? (isDark ? "text-red-300" : "text-red-700") : (isDark ? "text-white/70" : "text-zinc-600")}`}>
+                    Nenhuma recompensa
+                  </span>
+                </div>
               </div>
             )}
 
@@ -911,10 +917,10 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 Cancelar
               </button>
               <button
-                onClick={() => salvarRecompensasLevel(levelEditandoRecompensas.id, levelEditandoRecompensas.recompensaIds)}
+                onClick={() => salvarRecompensasLevel(levelEditandoRecompensas.id, levelEditandoRecompensas.recompensaId)}
                 className="rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-4 py-2 font-bold text-white"
               >
-                Salvar Associações
+                Salvar Associação
               </button>
             </div>
           </div>
@@ -953,7 +959,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             </p>
             {(() => {
               const nivelPrata = levels.find(l => l.nome === "Prata");
-              if (!nivelPrata || nivelPrata.recompensaIds.length === 0) {
+              if (!nivelPrata || !nivelPrata.recompensaId) {
                 return (
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
                     Nenhuma recompensa associada a este nível ainda.
@@ -961,30 +967,26 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
                 );
               }
 
-              const recompensasPrata = recompensas.filter(r => nivelPrata.recompensaIds.includes(r.id));
-              if (recompensasPrata.length === 0) {
+              const recompensaPrata = recompensas.find(r => r.id === nivelPrata.recompensaId);
+              if (!recompensaPrata) {
                 return (
                   <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                    Recompensas associadas não encontradas.
+                    Recompensa associada não encontrada.
                   </p>
                 );
               }
 
               return (
-                <div className="space-y-2">
-                  {recompensasPrata.map(recompensa => (
-                    <div key={recompensa.id} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${isDark ? "border-white/10" : "border-zinc-200"}`}>
-                      <Gift className={`h-4 w-4 ${isDark ? "text-blue-400" : "text-blue-500"}`} />
-                      <div className="flex-1">
-                        <p className={`text-xs font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>{recompensa.nome}</p>
-                        <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
-                          {recompensa.valorPontos} pontos • {recompensa.tipo === "DESCONTO_PERCENTUAL" && `${recompensa.descontoPercentual}%`}
-                          {recompensa.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensa.descontoValorFixo}`}
-                          {recompensa.tipo === "PRODUTO_GRATIS" && "Produto grátis"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2 rounded-xl border px-3 py-2 ${isDark ? "border-white/10" : "border-zinc-200"}">
+                  <Gift className={`h-4 w-4 ${isDark ? "text-blue-400" : "text-blue-500"}`} />
+                  <div className="flex-1">
+                    <p className={`text-xs font-semibold ${isDark ? "text-white" : "text-zinc-900"}`}>{recompensaPrata.nome}</p>
+                    <p className={`text-xs ${isDark ? "text-white/50" : "text-zinc-500"}`}>
+                      {recompensaPrata.valorPontos} pontos • {recompensaPrata.tipo === "DESCONTO_PERCENTUAL" && `${recompensaPrata.descontoPercentual}%`}
+                      {recompensaPrata.tipo === "DESCONTO_VALOR_FIXO" && `R$ ${recompensaPrata.descontoValorFixo}`}
+                      {recompensaPrata.tipo === "PRODUTO_GRATIS" && "Produto grátis"}
+                    </p>
+                  </div>
                 </div>
               );
             })()}
