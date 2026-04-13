@@ -1,6 +1,7 @@
 package com.ecommerce.digitaltricks.order.controller;
 
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
+import com.ecommerce.digitaltricks.customer.service.ClienteEmpresaService;
 import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
 import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;
 import com.ecommerce.digitaltricks.order.enums.StatusPagamento;
@@ -27,17 +28,20 @@ public class MercadoPagoWebhookController {
     private final PedidoRepository pedidoRepository;
     private final PedidoStatusService pedidoStatusService;
     private final EmpresaRepository empresaRepository;
+    private final ClienteEmpresaService clienteEmpresaService;
 
     public MercadoPagoWebhookController(
             MercadoPagoService mercadoPagoService,
             PedidoRepository pedidoRepository,
             PedidoStatusService pedidoStatusService,
-            EmpresaRepository empresaRepository
+            EmpresaRepository empresaRepository,
+            ClienteEmpresaService clienteEmpresaService
     ) {
         this.mercadoPagoService = mercadoPagoService;
         this.pedidoRepository = pedidoRepository;
         this.pedidoStatusService = pedidoStatusService;
         this.empresaRepository = empresaRepository;
+        this.clienteEmpresaService = clienteEmpresaService;
     }
 
     @PostMapping
@@ -61,14 +65,6 @@ public class MercadoPagoWebhookController {
 
             if (optPedido.isPresent()) {
                 Pedido ped = optPedido.get();
-
-                // Evita processamento duplicado de notificacoes MP
-                if (ped.getMpPaymentId() != null && ped.getMpPaymentId().equals(paymentId)
-                        && ped.getStatus() != StatusPedido.AGUARDANDO_PAGAMENTO
-                        && ped.getStatus() != StatusPedido.RECEBIDO) {
-                    log.info("Pedido {} ja processado MP paymentId={}, status={}", ped.getId(), paymentId, ped.getStatus());
-                    return ResponseEntity.ok("ok");
-                }
 
                 String token = ped.getEmpresa() != null
                         ? empresaRepository.findById(ped.getEmpresa().getId())
@@ -94,8 +90,16 @@ public class MercadoPagoWebhookController {
                     }
                     log.info("Pedido {} -> {} (mpStatus={})", ped.getId(), ped.getStatus(), mpStatus);
                 } else {
-                    pedidoRepository.save(ped);
+                    ped = pedidoRepository.save(ped);
                 }
+
+                if (ped.getStatus() == StatusPedido.CANCELADO) {
+                    clienteEmpresaService.estornarFidelidadeSeNecessario(ped);
+                } else {
+                    clienteEmpresaService.processarFidelidadeSeElegivel(ped);
+                }
+
+                pedidoRepository.save(ped);
             }
 
             return ResponseEntity.ok("ok");

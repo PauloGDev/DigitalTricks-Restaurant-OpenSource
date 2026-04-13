@@ -388,7 +388,7 @@ public class PedidoFacadeService {
         }
 
         pedidoStatusService.registrarStatusInicial(salvo);
-        clienteEmpresaService.registrarPedido(salvo);
+        clienteEmpresaService.processarFidelidadeSeElegivel(salvo);
 
         // WhatsApp é opcional - não pode bloquear o pedido
         numeroWhatsappRepository

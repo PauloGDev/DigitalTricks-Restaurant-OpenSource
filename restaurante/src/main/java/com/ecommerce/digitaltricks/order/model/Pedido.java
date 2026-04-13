@@ -125,6 +125,12 @@ public class Pedido {
     @Column(precision = 12, scale = 2)
     private BigDecimal descontoCupom = BigDecimal.ZERO;
 
+    @Column(name = "fidelidade_processada", nullable = false)
+    private Boolean fidelidadeProcessada = false;
+
+    @Column(name = "fidelidade_estornada", nullable = false)
+    private Boolean fidelidadeEstornada = false;
+
     public Pedido() {}
 
     public Long getId() {
@@ -397,5 +403,21 @@ public class Pedido {
 
     public void setNumeroMesa(Integer numeroMesa) {
         this.numeroMesa = numeroMesa;
+    }
+
+    public Boolean getFidelidadeProcessada() {
+        return fidelidadeProcessada;
+    }
+
+    public void setFidelidadeProcessada(Boolean fidelidadeProcessada) {
+        this.fidelidadeProcessada = fidelidadeProcessada;
+    }
+
+    public Boolean getFidelidadeEstornada() {
+        return fidelidadeEstornada;
+    }
+
+    public void setFidelidadeEstornada(Boolean fidelidadeEstornada) {
+        this.fidelidadeEstornada = fidelidadeEstornada;
     }
 }

@@ -480,9 +480,7 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      // TODO: Verificar endpoint correto para buscar produtos
-      // Usando endpoint provisorio baseado no padrao do sistema
-      const response = await fetch(`${API_URL}/admin/empresas/${empresaId}/produtos`, {
+      const response = await fetch(`${API_URL}/empresas/${empresaId}/produtos?size=100`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -491,7 +489,15 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setProdutos(data);
+        const listaProdutos = Array.isArray(data?.produtos)
+          ? data.produtos
+          : Array.isArray(data)
+            ? data
+            : [];
+
+        setProdutos(listaProdutos);
+      } else {
+        throw new Error(`Falha ao buscar produtos (${response.status})`);
       }
     } catch (err) {
       console.error("Erro ao buscar produtos:", err);
@@ -735,6 +741,16 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
           Configuracao Geral
         </h3>
 
+        <div className={`mb-5 rounded-2xl border p-4 ${isDark ? "border-amber-500/20 bg-amber-500/10" : "border-amber-200 bg-amber-50"}`}>
+          <p className={`text-sm font-semibold ${isDark ? "text-amber-200" : "text-amber-800"}`}>
+            Tutorial rapido
+          </p>
+          <p className={`mt-2 text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+            Ative o programa, defina quantos pontos o cliente ganha e personalize a mensagem inicial.
+            Depois ajuste os niveis logo abaixo e salve tudo nesta mesma tela.
+          </p>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <div>
@@ -822,6 +838,27 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
             {salvando ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {salvando ? "Salvando..." : "Salvar Configuracao"}
           </button>
+        </div>
+
+        <div className="mb-5 grid gap-3 md:grid-cols-3">
+          <div className={`rounded-2xl border p-4 ${isDark ? "border-blue-500/20 bg-blue-500/10" : "border-blue-200 bg-blue-50"}`}>
+            <p className={`text-sm font-semibold ${isDark ? "text-blue-200" : "text-blue-800"}`}>1. Crie o nivel</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+              Escolha nome, pontuacao minima, cor e uma descricao curta para identificar a faixa.
+            </p>
+          </div>
+          <div className={`rounded-2xl border p-4 ${isDark ? "border-purple-500/20 bg-purple-500/10" : "border-purple-200 bg-purple-50"}`}>
+            <p className={`text-sm font-semibold ${isDark ? "text-purple-200" : "text-purple-800"}`}>2. Ligue a recompensa</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+              Use o icone de presente para associar uma recompensa especifica a cada nivel.
+            </p>
+          </div>
+          <div className={`rounded-2xl border p-4 ${isDark ? "border-emerald-500/20 bg-emerald-500/10" : "border-emerald-200 bg-emerald-50"}`}>
+            <p className={`text-sm font-semibold ${isDark ? "text-emerald-200" : "text-emerald-800"}`}>3. Salve no final</p>
+            <p className={`mt-1 text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+              Quando concluir as alteracoes, clique em salvar para persistir a configuracao dos niveis.
+            </p>
+          </div>
         </div>
 
         <div className="mb-6 space-y-4">
@@ -1152,6 +1189,17 @@ const GerenciarFidelidade = ({ empresaId, isDark = true }) => {
               {editingRecompensa ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
               {editingRecompensa ? "Editar Recompensa" : "Nova Recompensa"}
             </h3>
+
+            <div className={`mb-5 rounded-2xl border p-4 ${isDark ? "border-purple-500/20 bg-purple-500/10" : "border-purple-200 bg-purple-50"}`}>
+              <p className={`text-sm font-semibold ${isDark ? "text-purple-200" : "text-purple-800"}`}>
+                Dica de configuracao
+              </p>
+              <p className={`mt-2 text-sm ${isDark ? "text-white/70" : "text-zinc-700"}`}>
+                Desconto percentual funciona bem para beneficios leves, desconto fixo ajuda em campanhas promocionais
+                e produto gratis e ideal para brindes. Depois de criar a recompensa, volte para a aba de configuracao
+                e associe ela a um nivel.
+              </p>
+            </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <div>

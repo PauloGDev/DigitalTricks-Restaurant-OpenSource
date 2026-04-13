@@ -1,5 +1,6 @@
 package com.ecommerce.digitaltricks.order.service;
 
+import com.ecommerce.digitaltricks.customer.service.ClienteEmpresaService;
 import com.ecommerce.digitaltricks.order.enums.MotivoCancelamento;
 import com.ecommerce.digitaltricks.order.enums.OrigemCancelamento;
 import com.ecommerce.digitaltricks.order.enums.StatusPedido;
@@ -19,6 +20,7 @@ public class PedidoStatusService {
 
     private final PedidoRepository pedidoRepository;
     private final PedidoStatusLogRepository pedidoStatusLogRepository;
+    private final ClienteEmpresaService clienteEmpresaService;
 
     // Fluxo de status — inclui delivery e retirada
     private static final Map<StatusPedido, List<StatusPedido>> FLUXO = Map.of(
@@ -61,10 +63,12 @@ public class PedidoStatusService {
 
     public PedidoStatusService(
             PedidoRepository pedidoRepository,
-            PedidoStatusLogRepository pedidoStatusLogRepository
+            PedidoStatusLogRepository pedidoStatusLogRepository,
+            ClienteEmpresaService clienteEmpresaService
     ) {
         this.pedidoRepository = pedidoRepository;
         this.pedidoStatusLogRepository = pedidoStatusLogRepository;
+        this.clienteEmpresaService = clienteEmpresaService;
     }
 
     public void registrarStatusInicial(Pedido pedido) {
@@ -95,7 +99,8 @@ public class PedidoStatusService {
             pedido.setStatus(novoStatus);
             Pedido salvo = pedidoRepository.save(pedido);
             pedidoStatusLogRepository.save(new PedidoStatusLog(salvo, novoStatus, LocalDateTime.now()));
-            return salvo;
+            sincronizarFidelidade(salvo);
+            return pedidoRepository.save(salvo);
         }
 
         if (statusAtual == novoStatus) {
@@ -110,8 +115,9 @@ public class PedidoStatusService {
         pedido.setStatus(novoStatus);
         Pedido salvo = pedidoRepository.save(pedido);
         pedidoStatusLogRepository.save(new PedidoStatusLog(salvo, novoStatus, LocalDateTime.now()));
+        sincronizarFidelidade(salvo);
 
-        return salvo;
+        return pedidoRepository.save(salvo);
     }
 
     /**
@@ -149,6 +155,8 @@ public class PedidoStatusService {
             pedido.setStatus(proximo);
             pedido = pedidoRepository.save(pedido);
             pedidoStatusLogRepository.save(new PedidoStatusLog(pedido, proximo, LocalDateTime.now()));
+            sincronizarFidelidade(pedido);
+            pedido = pedidoRepository.save(pedido);
         }
 
         return pedido;
@@ -277,6 +285,15 @@ public class PedidoStatusService {
             case CANCELADO -> "Cancelado";
             default -> status.name();
         };
+    }
+
+    private void sincronizarFidelidade(Pedido pedido) {
+        if (pedido.getStatus() == StatusPedido.CANCELADO) {
+            clienteEmpresaService.estornarFidelidadeSeNecessario(pedido);
+            return;
+        }
+
+        clienteEmpresaService.processarFidelidadeSeElegivel(pedido);
     }
 
     public static class TransicaoInfo {
