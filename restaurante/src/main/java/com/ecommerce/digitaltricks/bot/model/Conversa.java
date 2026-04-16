@@ -1,18 +1,26 @@
 package com.ecommerce.digitaltricks.bot.model;
 
+import com.ecommerce.digitaltricks.admin.model.Empresa;
 import com.ecommerce.digitaltricks.bot.enums.EstadoBot;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
+@Table(
+        uniqueConstraints = @UniqueConstraint(columnNames = {"telefone", "empresaId"})
+)
 public class Conversa {
 
     @Id
     @GeneratedValue
     private Long id;
 
-    private String telefone;
+    private String telefone; // SEMPRE formato internacional
 
-    private Long empresaId; // MULTI-TENANT
+    @ManyToOne
+    @JoinColumn(name = "empresa_id")
+    private Empresa empresa;
 
     @Enumerated(EnumType.STRING)
     private EstadoBot estado;
@@ -20,6 +28,10 @@ public class Conversa {
     private Long produtoSelecionadoId;
 
     private Long pedidoRascunhoId;
+
+    private LocalDateTime ultimaInteracao;
+
+    private Boolean ativo = true;
 
     public Long getId() {
         return id;
@@ -37,12 +49,12 @@ public class Conversa {
         this.telefone = telefone;
     }
 
-    public Long getEmpresaId() {
-        return empresaId;
+    public Empresa getEmpresa() {
+        return empresa;
     }
 
-    public void setEmpresaId(Long empresaId) {
-        this.empresaId = empresaId;
+    public void setEmpresa(Empresa empresa) {
+        this.empresa = empresa;
     }
 
     public EstadoBot getEstado() {
@@ -67,5 +79,21 @@ public class Conversa {
 
     public void setPedidoRascunhoId(Long pedidoRascunhoId) {
         this.pedidoRascunhoId = pedidoRascunhoId;
+    }
+
+    public LocalDateTime getUltimaInteracao() {
+        return ultimaInteracao;
+    }
+
+    public void setUltimaInteracao(LocalDateTime ultimaInteracao) {
+        this.ultimaInteracao = ultimaInteracao;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }

@@ -24,23 +24,20 @@ public class BotFlowService {
         this.pedidoRepository = pedidoRepository;
     }
 
-    public void handle(Conversa conversa, String texto, NumeroWhatsapp numero){
+    public void handle(Conversa conversa, String texto, NumeroWhatsapp numero) {
+        String textoNormalizado = texto == null ? "" : texto.trim();
 
         if (conversa.getEstado() == null) {
             conversa.setEstado(EstadoBot.INICIO);
         }
 
         switch (conversa.getEstado()) {
-
             case INICIO -> iniciar(conversa, numero);
-
-            case MENU_PRINCIPAL -> menu(conversa, texto, numero);
-
+            case MENU_PRINCIPAL -> menu(conversa, textoNormalizado, numero);
             case AGUARDANDO_HUMANO -> {
                 sender.sendText(numero, conversa.getTelefone(),
                         "👨‍💼 Você já está sendo atendido por um humano.");
             }
-
             default -> iniciar(conversa, numero);
         }
 
@@ -57,23 +54,17 @@ public class BotFlowService {
     }
 
     private void menu(Conversa c, String texto, NumeroWhatsapp numero) {
-
         switch (texto) {
-
             case "1" -> verPedidoAtual(c, numero);
-
             case "2" -> chamarAtendente(c, numero);
-
-            default -> sender.sendText(numero, c.getTelefone(), "Não entendi 🤔\n\nDigite:\n1️⃣ Ver pedido\n2️⃣ Falar com atendente");
+            default -> sender.sendText(numero, c.getTelefone(),
+                    "Não entendi 🤔\n\nDigite:\n1️⃣ Ver pedido\n2️⃣ Falar com atendente");
         }
     }
 
     private void verPedidoAtual(Conversa c, NumeroWhatsapp numero) {
-
-        // buscar último pedido pelo telefone
         Pedido pedido = pedidoRepository
-                .findTopByTelefoneOrderByDataDesc(c.getTelefone())
-                .orElse(null);
+                .findTopByTelefoneAndEmpresaIdOrderByDataDesc(c.getTelefone(), c.getEmpresa().getId());
 
         if (pedido == null) {
             sender.sendText(numero, c.getTelefone(), "📭 Você não possui pedidos.");
@@ -87,7 +78,6 @@ public class BotFlowService {
     }
 
     private void chamarAtendente(Conversa c, NumeroWhatsapp numero) {
-
         c.setEstado(EstadoBot.AGUARDANDO_HUMANO);
 
         sender.sendText(numero, c.getTelefone(),

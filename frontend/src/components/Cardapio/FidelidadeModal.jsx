@@ -12,40 +12,79 @@ import {
   Check,
   Zap,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCarrinho } from "../../context/CarrinhoContext";
 
 const PENDING_LOYALTY_COUPON_KEY = (slug) => `fidelidade_cupom_${slug}`;
 
-const levels = [
-  { nome: "Bronze", min: 0, cor: "text-orange-500", bg: "bg-orange-500", border: "border-orange-200", bgSoft: "bg-orange-50" },
-  { nome: "Prata", min: 5, cor: "text-zinc-500", bg: "bg-zinc-400", border: "border-zinc-200", bgSoft: "bg-zinc-50" },
-  { nome: "Ouro", min: 10, cor: "text-amber-500", bg: "bg-amber-400", border: "border-amber-200", bgSoft: "bg-amber-50" },
-  { nome: "Mestre", min: 15, cor: "text-purple-600", bg: "bg-purple-500", border: "border-purple-200", bgSoft: "bg-purple-50" },
+const DEFAULT_LEVELS = [
+  { id: "bronze", nome: "Bronze", minPontos: 0, cor: "#f97316", descricao: "Nivel inicial", recompensaId: null },
+  { id: "prata", nome: "Prata", minPontos: 5, cor: "#71717a", descricao: "Cliente frequente", recompensaId: null },
+  { id: "ouro", nome: "Ouro", minPontos: 10, cor: "#f59e0b", descricao: "Cliente VIP", recompensaId: null },
+  { id: "mestre", nome: "Mestre", minPontos: 15, cor: "#8b5cf6", descricao: "Cliente mestre", recompensaId: null },
 ];
 
-function nivelAtual(pontos) {
+function hexToRgba(hex, alpha) {
+  const normalized = (hex || "").replace("#", "").trim();
+  if (normalized.length !== 6) return `rgba(245, 158, 11, ${alpha})`;
+  const value = parseInt(normalized, 16);
+  const r = (value >> 16) & 255;
+  const g = (value >> 8) & 255;
+  const b = value & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function normalizeLevels(levels) {
+  const base = Array.isArray(levels) && levels.length > 0 ? levels : DEFAULT_LEVELS;
+  return [...base]
+    .sort((a, b) => (a.minPontos || 0) - (b.minPontos || 0))
+    .map((level, index) => ({
+      id: level.id ?? `${level.nome}-${index}`,
+      nome: level.nome || `Nivel ${index + 1}`,
+      minPontos: Number(level.minPontos || 0),
+      cor: level.cor || "#f59e0b",
+      descricao: level.descricao || "",
+      recompensaId: level.recompensaId ?? null,
+    }));
+}
+
+function nivelAtual(levels, pontos) {
   let nivel = levels[0];
   for (const l of levels) {
-    if (pontos >= l.min) nivel = l;
+    if (pontos >= l.minPontos) nivel = l;
   }
   return nivel;
 }
 
-function proximoNivel(pontos) {
+function proximoNivel(levels, pontos) {
   for (const l of levels) {
-    if (pontos < l.min) return l;
+    if (pontos < l.minPontos) return l;
   }
   return null;
 }
 
-function progresso(pontos) {
-  const atual = nivelAtual(pontos);
-  const prox = proximoNivel(pontos);
+function progresso(levels, pontos) {
+  const atual = nivelAtual(levels, pontos);
+  const prox = proximoNivel(levels, pontos);
   if (!prox) return 100;
-  const inicio = atual.min;
-  const fim = prox.min;
+  const inicio = atual.minPontos;
+  const fim = prox.minPontos;
+  if (fim <= inicio) return 100;
   return Math.min(100, Math.round(((pontos - inicio) / (fim - inicio)) * 100));
+}
+
+function getLevelStyles(level) {
+  const color = level?.cor || "#f59e0b";
+  return {
+    dot: { backgroundColor: color },
+    soft: {
+      backgroundColor: hexToRgba(color, 0.12),
+      borderColor: hexToRgba(color, 0.28),
+    },
+    badge: { backgroundColor: color, color: "#ffffff" },
+    text: { color },
+    progress: { backgroundColor: color },
+  };
 }
 
 const formatBRL = (v) =>
@@ -60,15 +99,24 @@ export default function FidelidadeModal({
   onResgateSuccess,
 }) {
   const { carrinho, carregarCarrinho, restauranteSlug } = useCarrinho();
-  const nivel = nivelAtual(pontos || 0);
-  const prox = proximoNivel(pontos || 0);
-  const pct = progresso(pontos || 0);
   const [recompensas, setRecompensas] = useState([]);
+  const [catalogoRecompensas, setCatalogoRecompensas] = useState([]);
+  const [levels, setLevels] = useState(DEFAULT_LEVELS);
   const [carregando, setCarregando] = useState(false);
   const [recompensaSelecionada, setRecompensaSelecionada] = useState(null);
   const [mensagem, setMensagem] = useState("");
+  const pontosAtuais = pontos || 0;
+  const niveisOrdenados = useMemo(() => normalizeLevels(levels), [levels]);
+  const nivel = nivelAtual(niveisOrdenados, pontosAtuais);
+  const prox = proximoNivel(niveisOrdenados, pontosAtuais);
+  const pct = progresso(niveisOrdenados, pontosAtuais);
+  const recompensaPorId = useMemo(
+    () => new Map(catalogoRecompensas.map((recompensa) => [recompensa.id, recompensa])),
+    [catalogoRecompensas]
+  );
+  const estiloNivelAtual = getLevelStyles(nivel);
 
-  const carregarRecompensas = async () => {
+  const carregarDadosFidelidade = async () => {
     if (!empresaId) return;
     setCarregando(true);
     try {
@@ -78,38 +126,56 @@ export default function FidelidadeModal({
         throw new Error("API_URL nao configurada");
       }
 
-      const response = await fetch(
-        `${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontos}`
-      );
+      const [niveisResponse, recompensasDisponiveisResponse, catalogoResponse] = await Promise.all([
+        fetch(`${API_URL}/restaurantes/${empresaId}/niveis-fidelidade`),
+        fetch(`${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis/${pontosAtuais}`),
+        fetch(`${API_URL}/restaurantes/${empresaId}/recompensas-fidelidade/disponiveis`),
+      ]);
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          setRecompensas([]);
-          return;
-        }
-        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      if (niveisResponse.ok) {
+        const niveisData = await niveisResponse.json();
+        setLevels(Array.isArray(niveisData) && niveisData.length > 0 ? niveisData : DEFAULT_LEVELS);
+      } else {
+        setLevels(DEFAULT_LEVELS);
       }
 
-      const data = await response.json();
-      setRecompensas(data);
+      if (!recompensasDisponiveisResponse.ok) {
+        if (recompensasDisponiveisResponse.status === 404) {
+          setRecompensas([]);
+        } else {
+          throw new Error(`Erro ${recompensasDisponiveisResponse.status}: ${recompensasDisponiveisResponse.statusText}`);
+        }
+      } else {
+        const data = await recompensasDisponiveisResponse.json();
+        setRecompensas(Array.isArray(data) ? data : []);
+      }
+
+      if (catalogoResponse.ok) {
+        const catalogoData = await catalogoResponse.json();
+        setCatalogoRecompensas(Array.isArray(catalogoData) ? catalogoData : []);
+      } else {
+        setCatalogoRecompensas([]);
+      }
     } catch (err) {
-      console.error("Erro ao carregar recompensas:", err);
-      setMensagem("Nao foi possivel carregar as recompensas agora.");
+      console.error("Erro ao carregar fidelidade:", err);
+      setMensagem("Nao foi possivel carregar as informacoes de fidelidade agora.");
+      setLevels(DEFAULT_LEVELS);
       setRecompensas([]);
+      setCatalogoRecompensas([]);
     } finally {
       setCarregando(false);
     }
   };
 
   useEffect(() => {
-    if (empresaId && pontos > 0) {
-      carregarRecompensas();
+    if (empresaId) {
+      carregarDadosFidelidade();
     }
-  }, [empresaId, pontos]);
+  }, [empresaId, pontosAtuais]);
 
   const resgatarRecompensa = async (recompensa) => {
     if (!empresaId) return;
-    if (pontos < recompensa.valorPontos) {
+    if (pontosAtuais < recompensa.valorPontos) {
       setMensagem("Pontos insuficientes para esta recompensa");
       return;
     }
@@ -177,7 +243,7 @@ export default function FidelidadeModal({
       setMensagem(mensagemSucesso);
       setRecompensaSelecionada(recompensa);
       onResgateSuccess?.();
-      await carregarRecompensas();
+      await carregarDadosFidelidade();
     } catch (err) {
       console.error("Erro ao resgatar recompensa:", err);
       setMensagem("Erro ao resgatar recompensa: " + err.message);
@@ -224,19 +290,19 @@ export default function FidelidadeModal({
           </div>
 
           <div className="max-h-[calc(90vh-80px)] overflow-y-auto px-4 pb-24 pt-5">
-            <div className={`rounded-3xl border ${nivel.border} ${nivel.bgSoft} p-6 text-center`}>
-              <div className={`inline-flex items-center gap-2 rounded-full ${nivel.bg} px-4 py-1.5`}>
+            <div className="rounded-3xl border p-6 text-center" style={estiloNivelAtual.soft}>
+              <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5" style={estiloNivelAtual.badge}>
                 <Trophy className="h-4 w-4 text-white" />
                 <span className="text-sm font-black text-white">{nivel.nome}</span>
               </div>
-              <p className="mt-4 text-5xl font-black text-zinc-900">{pontos || 0}</p>
-              <p className="text-sm text-zinc-500">ponto{pontos !== 1 ? "s" : ""} acumulados</p>
+              <p className="mt-4 text-5xl font-black text-zinc-900">{pontosAtuais}</p>
+              <p className="text-sm text-zinc-500">ponto{pontosAtuais !== 1 ? "s" : ""} acumulados</p>
 
               {prox ? (
                 <div className="mt-4">
                   <div className="mb-2 flex items-center justify-between text-xs">
                     <span className="font-semibold text-zinc-600">
-                      Faltam {prox.min - (pontos || 0)} para {prox.nome}
+                      Faltam {prox.minPontos - pontosAtuais} para {prox.nome}
                     </span>
                     <span className="font-bold text-zinc-400">{pct}%</span>
                   </div>
@@ -245,12 +311,13 @@ export default function FidelidadeModal({
                       initial={{ width: 0 }}
                       animate={{ width: `${pct}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
-                      className={`h-full rounded-full ${nivel.bg}`}
+                      className="h-full rounded-full"
+                      style={estiloNivelAtual.progress}
                     />
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 flex items-center justify-center gap-1.5 text-sm font-bold text-purple-600">
+                <div className="mt-4 flex items-center justify-center gap-1.5 text-sm font-bold" style={estiloNivelAtual.text}>
                   <Trophy className="h-4 w-4" />
                   Nivel maximo atingido!
                 </div>
@@ -276,40 +343,54 @@ export default function FidelidadeModal({
                 Tabela de niveis
               </h3>
               <div className="space-y-2">
-                {levels.map((l) => {
-                  const ativo = nivel === l;
+                {niveisOrdenados.map((levelItem) => {
+                  const ativo = nivel.id === levelItem.id;
+                  const recompensaAssociada = levelItem.recompensaId
+                    ? recompensaPorId.get(levelItem.recompensaId)
+                    : null;
+                  const levelStyles = getLevelStyles(levelItem);
                   return (
                     <div
-                      key={l.nome}
-                      className={`flex items-center justify-between rounded-xl border px-4 py-3 transition ${
-                        ativo ? `${l.bgSoft} ${l.border} shadow-sm` : "border-zinc-100 bg-white"
-                      }`}
+                      key={levelItem.id}
+                      className={`rounded-xl border px-4 py-3 transition ${ativo ? "shadow-sm" : "border-zinc-100 bg-white"}`}
+                      style={ativo ? levelStyles.soft : undefined}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-3 w-3 rounded-full ${l.bg}`} />
-                        <span className={`text-sm font-bold ${ativo ? l.cor : "text-zinc-600"}`}>
-                          {l.nome}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="h-3 w-3 rounded-full" style={levelStyles.dot} />
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm font-bold" style={ativo ? levelStyles.text : { color: "#52525b" }}>
+                                {levelItem.nome}
+                              </span>
+                              {ativo && (
+                                <span className="rounded-full px-2 py-0.5 text-[10px] font-black text-white" style={levelStyles.badge}>
+                                  Atual
+                                </span>
+                              )}
+                            </div>
+                            <p className="truncate text-xs text-zinc-500">
+                              {recompensaAssociada
+                                ? `Recompensa: ${recompensaAssociada.nome}`
+                                : "Sem recompensa associada"}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-xs text-zinc-500">
+                          {levelItem.minPontos === 0 ? "Inicio" : `${levelItem.minPontos} pontos`}
                         </span>
-                        {ativo && (
-                          <span className={`rounded-full ${l.bg} px-2 py-0.5 text-[10px] font-black text-white`}>
-                            Atual
-                          </span>
-                        )}
                       </div>
-                      <span className="text-xs text-zinc-500">
-                        {l.min === 0 ? "Inicio" : `${l.min} pedidos`}
-                      </span>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {pontos > 0 && (
+            {pontosAtuais > 0 && (
               <div className="mt-6">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-zinc-700">
                   <Gift className="h-4 w-4" />
-                  Recompensas Disponiveis ({pontos} pontos)
+                  Recompensas Disponiveis ({pontosAtuais} pontos)
                 </h3>
                 {mensagem && (
                   <div className="mb-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
@@ -331,7 +412,7 @@ export default function FidelidadeModal({
                     <Package className="mx-auto mb-2 h-8 w-8 text-zinc-400" />
                     <p className="text-sm font-bold text-zinc-700">Nenhuma recompensa disponivel</p>
                     <p className="text-xs text-zinc-500">
-                      {pontos < 5
+                      {pontosAtuais < 5
                         ? "Acumule mais pontos para desbloquear recompensas"
                         : "Nenhuma recompensa configurada para seus pontos"}
                     </p>
@@ -399,9 +480,9 @@ export default function FidelidadeModal({
                           </div>
                           <button
                             onClick={() => resgatarRecompensa(recompensa)}
-                            disabled={carregando || pontos < recompensa.valorPontos}
+                            disabled={carregando || pontosAtuais < recompensa.valorPontos}
                             className={`ml-4 flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold ${
-                              pontos >= recompensa.valorPontos
+                              pontosAtuais >= recompensa.valorPontos
                                 ? "bg-amber-500 text-white hover:bg-amber-600"
                                 : "bg-zinc-100 text-zinc-400"
                             } disabled:opacity-50`}

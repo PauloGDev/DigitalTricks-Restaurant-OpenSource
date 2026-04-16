@@ -45,6 +45,8 @@ public class SecurityConfig {
                                 "/api/empresas/mp/callback"
                         ).permitAll()
 
+                        .requestMatchers("/h2-console/**").permitAll()
+
                         .requestMatchers("/ws", "/ws/**").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
@@ -88,6 +90,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/me").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/pedidos/fidelidade").hasAnyRole("CLIENTE", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/restaurantes/*/recompensas-fidelidade/*/resgatar").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/niveis-fidelidade").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/restaurantes/*/recompensas-fidelidade/**").permitAll()
 
                         // =========================

@@ -6,6 +6,8 @@ import com.ecommerce.digitaltricks.admin.repository.ClienteEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.EmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioEmpresaRepository;
 import com.ecommerce.digitaltricks.admin.repository.UsuarioRepository;
+import com.ecommerce.digitaltricks.bot.model.NumeroWhatsapp;
+import com.ecommerce.digitaltricks.bot.repository.NumeroWhatsappRepository;
 import com.ecommerce.digitaltricks.customer.model.Cliente;
 import com.ecommerce.digitaltricks.customer.model.ClientePerfil;
 import com.ecommerce.digitaltricks.customer.model.Endereco;
@@ -73,6 +75,7 @@ public class ProdutoInitializer implements CommandLineRunner {
     private final CategoriaRepository categoriaRepository;
     private final CupomRepository cupomRepository;
     private final RecompensaFidelidadeRepository recompensaFidelidadeRepository;
+    private final NumeroWhatsappRepository numeroWhatsappRepository;
 
     public ProdutoInitializer(
             ProdutoRepository produtoRepository,
@@ -86,7 +89,7 @@ public class ProdutoInitializer implements CommandLineRunner {
             EnderecoGeocodingService enderecoGeocodingService,
             CategoriaRepository categoriaRepository,
             CupomRepository cupomRepository,
-            RecompensaFidelidadeRepository recompensaFidelidadeRepository) {
+            RecompensaFidelidadeRepository recompensaFidelidadeRepository, NumeroWhatsappRepository numeroWhatsappRepository) {
         this.produtoRepository = produtoRepository;
         this.empresaRepository = empresaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -99,6 +102,7 @@ public class ProdutoInitializer implements CommandLineRunner {
         this.categoriaRepository = categoriaRepository;
         this.cupomRepository = cupomRepository;
         this.recompensaFidelidadeRepository = recompensaFidelidadeRepository;
+        this.numeroWhatsappRepository = numeroWhatsappRepository;
     }
 
     private static final String HORARIOS_PADRAO =
@@ -114,6 +118,13 @@ public class ProdutoInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         Empresa saborDaPraca = getOrCreateEmpresaSeed();
+
+        getOrCreateNumeroWhatsapp(
+                saborDaPraca,
+                "5585921743200",
+                "SEU_PHONE_NUMBER_ID",
+                "SEU_TOKEN"
+        );
         inicializarUsuariosInternos(saborDaPraca, PapelEmpresa.DONO);
         inicializarClientes(saborDaPraca);
         List<Categoria> categorias1 = criarCategorias(saborDaPraca);
@@ -398,6 +409,23 @@ public class ProdutoInitializer implements CommandLineRunner {
                 });
 
         clienteEmpresaRepository.save(rel);
+    }
+
+    private void getOrCreateNumeroWhatsapp(Empresa empresa, String numero, String phoneNumberId, String token) {
+
+        numeroWhatsappRepository.findByPhoneNumberId(phoneNumberId)
+                .orElseGet(() -> {
+                    NumeroWhatsapp n = new NumeroWhatsapp();
+                    n.setEmpresa(empresa);
+                    n.setNumero(numero);
+                    n.setPhoneNumberId(phoneNumberId);
+                    n.setToken(token);
+                    n.setAtivo(true);
+
+                    System.out.println("[Bootstrap] WhatsApp configurado para empresa: " + empresa.getNomeFantasia());
+
+                    return numeroWhatsappRepository.save(n);
+                });
     }
 
     // ──────────────────── CATEGORIAS ────────────────────

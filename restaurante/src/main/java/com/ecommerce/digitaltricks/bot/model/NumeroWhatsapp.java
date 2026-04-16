@@ -14,7 +14,7 @@ public class NumeroWhatsapp {
 
     private String numero; // +558599999999
 
-    private String token; // access token
+    private String tokenCriptografado;
 
     private Boolean ativo = true;
 
@@ -47,11 +47,11 @@ public class NumeroWhatsapp {
     }
 
     public String getToken() {
-        return token;
+        return tokenCriptografado;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setToken(String tokenCriptografado) {
+        this.tokenCriptografado = tokenCriptografado;
     }
 
     public Boolean getAtivo() {

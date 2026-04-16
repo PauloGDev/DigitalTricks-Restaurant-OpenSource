@@ -9,9 +9,13 @@ import java.util.Map;
 @Service
 public class WhatsAppSenderService {
 
-    public void sendText(NumeroWhatsapp numero, String to, String message) {
-        WebClient.create("https://graph.facebook.com/v19.0/" + numero.getPhoneNumberId() + "/messages")
-                .post()
+    private final WebClient webClient = WebClient.builder()
+            .baseUrl("https://graph.facebook.com")
+            .build();
+
+    public String sendText(NumeroWhatsapp numero, String to, String message) {
+        return webClient.post()
+                .uri("/v19.0/{phoneNumberId}/messages", numero.getPhoneNumberId())
                 .header("Authorization", "Bearer " + numero.getToken())
                 .bodyValue(Map.of(
                         "messaging_product", "whatsapp",
@@ -21,6 +25,6 @@ public class WhatsAppSenderService {
                 ))
                 .retrieve()
                 .bodyToMono(String.class)
-                .subscribe();
+                .block();
     }
 }

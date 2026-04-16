@@ -16,4 +16,6 @@ public interface EmpresaRepository extends JpaRepository<Empresa, Long> {
     boolean existsBySlugIgnoreCase(String slug);
 
     Empresa getEmpresaBySlug(String slug);
+
+    Empresa getEmpresaById(Long id);
 }
