@@ -16,6 +16,60 @@ O sistema foi pensado para operar o ciclo completo de um restaurante digital:
 - gestao de produtos, cupons, clientes e equipe
 - fidelidade com niveis, recompensas e resgate por pontos
 
+## Para Quem Este Projeto E
+
+Este repositorio pode ser util para:
+
+- desenvolvedores que querem uma base real de restaurante com frontend e backend separados
+- freelancers e estudios que precisam acelerar um MVP ou produto white-label
+- equipes que querem estudar fluxo de pedidos, checkout, dashboard operacional e fidelidade
+- pessoas que procuram uma referencia pratica de integracao entre React, Spring Boot e Mercado Pago
+
+Este projeto ainda nao e a melhor escolha para quem precisa:
+
+- uma base pronta para producao sem adaptacoes
+- cobertura alta de testes automatizados desde o primeiro dia
+- arquitetura ja estabilizada para multi-tenant enterprise
+- documentacao completa de deploy, observabilidade e operacao em escala
+
+## O Que Ainda Falta Implementar Ou Consolidar
+
+Antes de adotar o projeto como produto final ou base de cliente, vale considerar estes pontos:
+
+### Funcionalidades ainda incompletas
+
+- configuracao geral da fidelidade no dashboard ainda esta sendo consolidada
+- estatisticas completas da fidelidade ainda precisam ser fechadas
+- parte da experiencia publica da fidelidade ainda esta em refinamento
+- gestao completa de entregadores ainda nao esta fechada
+- atribuicao de entregador ao pedido ainda nao esta consolidada
+- pedidos agendados ainda nao estao fechados
+- relatorios exportaveis em PDF ou CSV ainda nao foram finalizados
+- envio real de email para alguns fluxos ainda precisa de validacao completa
+- rastreamento de entrega em tempo real ainda nao esta pronto
+- refresh token e reautenticacao silenciosa ainda nao estao implementados
+- rate limiting e protecoes anti-spam ainda precisam ser reforcados
+
+### Maturidade tecnica ainda em aberto
+
+- suite de testes do backend ainda e pequena para o tamanho do sistema
+- ambiente de teste ainda depende de melhor tratamento para `JWT_SECRET`
+- alguns servicos centrais concentram responsabilidades demais
+- o build do frontend ainda apresenta warnings de bundle e assets
+- a documentacao tecnica ainda esta em evolucao
+
+## Aviso Para Quem Pretende Usar Em Producao
+
+Se voce quer usar este projeto em operacao real, trate a base atual como um ponto de partida forte, nao como produto final plug-and-play.
+
+Antes de publicar para clientes reais, o recomendado e:
+
+1. revisar seguranca, segredos e politicas de acesso
+2. substituir configuracoes de desenvolvimento por infraestrutura de producao
+3. ampliar testes de auth, pedidos, pagamentos e fidelidade
+4. validar todas as integracoes com credenciais reais e ambientes controlados
+5. revisar fluxo de erro, logs, observabilidade e backup
+
 ## Principais Funcionalidades
 
 ### Cliente
@@ -206,7 +260,7 @@ O projeto ja esta utilizavel como produto, mas ainda nao esta totalmente consoli
 - fechar persistencia completa da fidelidade no dashboard
 - reduzir acoplamento em servicos centrais de pedido
 - melhorar performance do frontend
-- publicar guia de contribuicao e definir licenca
+- ampliar a documentacao para contribuidores
 
 ## Contribuindo
 
@@ -236,18 +290,18 @@ Ao contribuir:
 
 Antes da publicacao aberta, ainda vale fechar estes itens:
 
-- adicionar arquivo `LICENSE`
-- adicionar `CONTRIBUTING.md`
 - revisar segredos, seeds e dados demo
-- publicar exemplos de ambiente (`.env.example`)
+- validar exemplos de ambiente em onboarding real
 - fortalecer a suite minima de testes
 
 ## Licenca
 
-Este repositorio ainda precisa de um arquivo de licenca antes da publicacao open source oficial.
+Distribuido sob a licenca MIT. Veja [`LICENSE`](LICENSE).
 
 ## Referencias
 
 - Mapa funcional: `docs/feature-map.excalidraw`
 - Backend principal: `restaurante/`
 - Frontend principal: `frontend/`
+- Guia de contribuicao: `CONTRIBUTING.md`
+- Exemplos de ambiente: `restaurante/.env.example` e `frontend/.env.example`
