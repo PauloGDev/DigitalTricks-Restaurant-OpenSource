@@ -32,6 +32,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * Gerencia recompensas e resgates do programa de fidelidade.
+ *
+ * <p>O service atende tanto o painel administrativo quanto o fluxo publico do
+ * cliente, garantindo consistencia entre pontos, estoque e cupom gerado.</p>
+ */
 public class RecompensaFidelidadeService {
 
     private final RecompensaFidelidadeRepository recompensaRepository;

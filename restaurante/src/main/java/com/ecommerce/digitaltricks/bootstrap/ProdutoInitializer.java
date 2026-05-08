@@ -117,6 +117,8 @@ public class ProdutoInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // A seed e idempotente no nivel das entidades principais para permitir
+        // subir o projeto local varias vezes sem recriar tudo manualmente.
         Empresa saborDaPraca = getOrCreateEmpresaSeed();
 
         getOrCreateNumeroWhatsapp(

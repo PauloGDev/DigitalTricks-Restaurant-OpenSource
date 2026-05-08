@@ -27,6 +27,13 @@ import java.security.MessageDigest;
 import java.util.*;
 
 @Service
+/**
+ * Mantem o estado do carrinho do cliente.
+ *
+ * <p>Este service resolve cliente e empresa, garante que o item configurado
+ * pertence ao catalogo correto e recalcula os totais sempre que o carrinho
+ * muda.</p>
+ */
 public class CarrinhoService {
 
     private final CarrinhoRepository carrinhoRepository;
@@ -61,6 +68,8 @@ public class CarrinhoService {
     }
 
     private Cliente buscarOuCriarClientePorTelefone(String telefone) {
+        // O carrinho guest usa telefone como ancora. Se o cliente ainda nao
+        // existe no backend, a relacao minima e criada para nao perder estado.
         System.out.println("[CARRINHO.SERVICE] buscarOuCriarCliente: telefone=" + telefone + " (len=" + (telefone != null ? telefone.length() : "null") + ")");
         Optional<Cliente> existente = clienteRepository.findByTelefone(telefone);
         if (existente.isPresent()) {
@@ -95,6 +104,8 @@ public class CarrinhoService {
             return carrinho;
         }
 
+        // Um carrinho sempre nasce vinculado a uma unica empresa para evitar
+        // mistura de itens entre restaurantes diferentes.
         System.out.println("[CARRINHO.SERVICE] Carrinho NAO ENCONTRADO, criando novo");
         Carrinho carrinho = new Carrinho();
         carrinho.setCliente(cliente);
@@ -169,6 +180,8 @@ public class CarrinhoService {
                         obs
         );
 
+        // A assinatura permite consolidar itens configurados exatamente da mesma
+        // forma, sem depender apenas do id do produto.
         System.out.println("[CARRINHO.SERVICE] ADD signature=" + signature.substring(0, Math.min(16, signature.length())) + "+");
 
         Optional<CarrinhoItem> existente = carrinho.getItens().stream()

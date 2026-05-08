@@ -11,11 +11,17 @@ import java.util.Date;
 import java.util.Set;
 
 @Component
+/**
+ * Encapsula a emissao e leitura dos tokens JWT usados pela API.
+ *
+ * <p>O backend usa um unico segredo para tokens de cliente e de area
+ * administrativa. As claims variam conforme o tipo de autenticacao.</p>
+ */
 public class JwtUtil {
 
     private final SecretKey secretKey;
 
-    // 24h
+    // Mantem um tempo unico para simplificar a validade no frontend e no backend.
     private static final long JWT_EXPIRATION = 1000 * 60 * 60 * 24;
 
     public JwtUtil(@Value("${jwt.secret}") String secret) {
@@ -23,6 +29,8 @@ public class JwtUtil {
     }
 
     public String generateToken(Long id, String username, Set<String> roles, Long empresaId) {
+        // Token da equipe interna. Carrega empresaId para facilitar as regras
+        // de acesso ligadas ao restaurante atual.
         return Jwts.builder()
                 .setSubject(username)
                 .claim("id", id)
@@ -35,6 +43,8 @@ public class JwtUtil {
     }
 
     public String generateClienteToken(Long clienteId, String telefone) {
+        // Token do cliente final. Aqui o subject e o telefone porque ele e a
+        // principal chave de login no fluxo publico.
         return Jwts.builder()
                 .setSubject(telefone)
                 .claim("id", clienteId)

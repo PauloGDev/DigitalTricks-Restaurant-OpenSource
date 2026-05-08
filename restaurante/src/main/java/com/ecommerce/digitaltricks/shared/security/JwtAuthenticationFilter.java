@@ -19,6 +19,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 @Component
+/**
+ * Filtro que traduz o header Authorization em autenticacao Spring Security.
+ *
+ * <p>Ele nao cria sessao e so atua quando o request realmente traz um Bearer
+ * token. Se o token for invalido, a resposta ja sai padronizada como 401.</p>
+ */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
@@ -37,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
+            // Requisicoes publicas ou anonimas seguem o fluxo normal sem custo extra.
             chain.doFilter(request, response);
             return;
         }
@@ -61,6 +68,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()
                         );
 
+                // Preserva detalhes do request atual para auditoria e regras
+                // que dependem do contexto HTTP.
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }

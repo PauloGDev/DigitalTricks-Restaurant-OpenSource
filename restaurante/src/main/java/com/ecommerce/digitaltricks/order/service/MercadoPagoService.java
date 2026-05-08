@@ -20,6 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+/**
+ * Cliente HTTP para a API do Mercado Pago.
+ *
+ * <p>Isola construcao de headers, idempotencia, timeouts e tratamento de erro
+ * para que o restante do dominio de pedidos nao precise conhecer detalhes da
+ * integracao externa.</p>
+ */
 public class MercadoPagoService {
 
     private static final Logger log = LoggerFactory.getLogger(MercadoPagoService.class);
@@ -56,6 +63,8 @@ public class MercadoPagoService {
         h.setAccept(List.of(MediaType.APPLICATION_JSON));
         h.setBearerAuth(accessToken);
 
+        // Operacoes de pagamento precisam de idempotencia para evitar cobranca
+        // duplicada em retries de rede ou reenvio do frontend.
         if (idempotencyKey != null && !idempotencyKey.isBlank()) {
             h.set("X-Idempotency-Key", idempotencyKey);
         }
@@ -67,6 +76,8 @@ public class MercadoPagoService {
     }
 
     private String resolveToken(String restauranteToken) {
+        // Se a empresa tiver credencial propria, ela tem prioridade sobre o
+        // token padrao configurado para o ambiente.
         return (restauranteToken != null && !restauranteToken.isBlank())
                 ? restauranteToken : fallbackAccessToken;
     }

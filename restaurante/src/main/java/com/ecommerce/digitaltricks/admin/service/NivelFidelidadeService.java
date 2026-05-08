@@ -16,6 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+/**
+ * Mantem a configuracao dos niveis de fidelidade por empresa.
+ *
+ * <p>Os niveis sao persistidos como configuracao da loja e podem apontar para
+ * recompensas existentes, sempre respeitando o contexto da mesma empresa.</p>
+ */
 public class NivelFidelidadeService {
 
     private final EmpresaRepository empresaRepository;
@@ -38,6 +44,8 @@ public class NivelFidelidadeService {
         List<NivelFidelidade> niveis = nivelFidelidadeRepository.findByEmpresaOrderByMinPontosAscOrdemExibicaoAsc(empresa);
 
         if (niveis.isEmpty()) {
+            // A criacao lazy evita exigir setup manual logo no primeiro acesso
+            // ao modulo de fidelidade.
             niveis = criarNiveisPadrao(empresa);
         }
 
@@ -54,6 +62,8 @@ public class NivelFidelidadeService {
 
         nivelFidelidadeRepository.deleteByEmpresa(empresa);
 
+        // O dashboard envia a lista inteira e o backend recria a configuracao
+        // para manter ordem e associacoes em um estado previsivel.
         List<NivelFidelidade> niveis = new ArrayList<>();
         for (int i = 0; i < request.size(); i++) {
             NivelFidelidadeRequestDTO dto = request.get(i);

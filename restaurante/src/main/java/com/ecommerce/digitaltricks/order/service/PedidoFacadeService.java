@@ -35,6 +35,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * Orquestra a criacao e consulta de pedidos.
+ *
+ * <p>Esta classe concentra a montagem do pedido final a partir do payload do
+ * checkout, validando empresa, itens, entrega, cupom, notificacoes e efeitos
+ * colaterais como status inicial e fidelidade.</p>
+ */
 public class PedidoFacadeService {
 
     private final PedidoRepository pedidoRepository;
@@ -80,6 +87,8 @@ public class PedidoFacadeService {
             throw new RuntimeException("Produto não pertence à empresa informada: " + produto.getId());
         }
 
+        // O catalogo acompanha quantas vezes um produto aparece em pedidos para
+        // alimentar analytics e ordenacoes internas.
         produtoService.atualizarPedidosProduto(empresa.getId(), i.produtoId());
 
         Variacao variacaoSelecionada = null;
@@ -122,6 +131,8 @@ public class PedidoFacadeService {
         item.setObservacao(i.observacao());
 
         if (i.opcionais() != null) {
+            // Cada grupo selecionado e revalidado contra o produto para evitar
+            // confiar em ids enviados pelo cliente sem rechecagem.
             for (GrupoOpcionalSelecionadoDTO grupoSelecionado : i.opcionais()) {
                 if (grupoSelecionado.itens() == null || grupoSelecionado.itens().isEmpty()) {
                     continue;
@@ -310,7 +321,8 @@ public class PedidoFacadeService {
             }
         }
 
-        // Buscar carrinho para obter desconto de cupom aplicado
+        // O pedido reaproveita o estado final do carrinho para preservar o
+        // desconto efetivamente aplicado no checkout.
         Carrinho carrinho = carrinhoRepository.findByClienteTelefoneAndEmpresaId(
                 perfil.getTelefone(), empresa.getId()).orElse(null);
 
@@ -332,7 +344,8 @@ public class PedidoFacadeService {
             total = BigDecimal.ZERO;
         }
 
-        // Somar frete ao total se DELIVERY
+        // O frete entra apenas no fluxo de delivery. Retirada nao deve inflar
+        // o total com dados residuais do frontend.
         BigDecimal valorFrete = BigDecimal.ZERO;
         if (tipoEntrega == TipoEntrega.DELIVERY && pedidoRequest.frete() != null) {
             valorFrete = pedidoRequest.frete().valor() != null
@@ -382,6 +395,8 @@ public class PedidoFacadeService {
         Pedido salvo = pedidoRepository.save(pedido);
 
         if (carrinho != null && carrinho.getCupom() != null) {
+            // O uso do cupom e registrado no momento em que o pedido nasce,
+            // evitando reaproveitamento no mesmo carrinho depois da compra.
             cupomService.registrarUso(carrinho.getCupom(), cliente, salvo);
             cupomService.removerDoCarrinho(carrinho);
             carrinhoRepository.save(carrinho);

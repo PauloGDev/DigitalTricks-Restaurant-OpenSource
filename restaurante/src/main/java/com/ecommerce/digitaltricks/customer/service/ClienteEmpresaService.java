@@ -19,6 +19,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * Mantem o relacionamento entre cliente e empresa.
+ *
+ * <p>Esse vinculo agrega indicadores de recorrencia, gasto e fidelidade por
+ * restaurante, sem misturar o historico global do cliente.</p>
+ */
 public class ClienteEmpresaService {
 
     private final ClienteEmpresaRepository clienteEmpresaRepository;
@@ -51,6 +57,8 @@ public class ClienteEmpresaService {
                 ? clienteEmpresa.getPontosFidelidade()
                 : 0;
 
+        // O relacionamento concentra os indicadores derivados do pedido para
+        // consultas rapidas no dashboard e na area do cliente.
         clienteEmpresa.setTotalPedidos(totalPedidosAtual + 1);
         clienteEmpresa.setTotalGasto(
                 totalGastoAtual.add(
@@ -91,6 +99,8 @@ public class ClienteEmpresaService {
                 : 0;
         BigDecimal valorPedido = pedido.getTotal() != null ? pedido.getTotal() : BigDecimal.ZERO;
 
+        // O estorno e defensivo para evitar numeros negativos caso o pedido ja
+        // tenha passado por mais de uma reconciliacao.
         clienteEmpresa.setTotalPedidos(Math.max(0, totalPedidosAtual - 1));
         clienteEmpresa.setTotalGasto(totalGastoAtual.subtract(valorPedido).max(BigDecimal.ZERO));
         clienteEmpresa.setPontosFidelidade(Math.max(0, pontosAtual - 1));
@@ -172,6 +182,8 @@ public class ClienteEmpresaService {
         return clienteEmpresaRepository
                 .findByClienteIdAndEmpresaId(cliente.getId(), empresa.getId())
                 .orElseGet(() -> {
+                    // O relacionamento e criado sob demanda porque nem todo
+                    // cliente existe no contexto da empresa antes do primeiro pedido.
                     ClienteEmpresa novo = new ClienteEmpresa();
                     novo.setCliente(cliente);
                     novo.setEmpresa(empresa);
@@ -185,6 +197,8 @@ public class ClienteEmpresaService {
     }
 
     private boolean isPedidoElegivelParaFidelidade(Pedido pedido) {
+        // O objetivo aqui e creditar pontos apenas quando o pedido realmente
+        // chegou a uma fase confiavel para reconhecimento de receita.
         if (pedido == null
                 || pedido.getCliente() == null
                 || pedido.getEmpresa() == null

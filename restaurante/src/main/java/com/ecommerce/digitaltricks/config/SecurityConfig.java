@@ -14,6 +14,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+/**
+ * Define a politica de seguranca HTTP da aplicacao.
+ *
+ * <p>Esta configuracao separa o que e publico, o que exige cliente autenticado
+ * e o que fica restrito ao painel administrativo, sempre em modelo stateless
+ * com JWT.</p>
+ */
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
