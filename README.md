@@ -1,124 +1,253 @@
-# 🍽️ Digital Tricks — Sistema para Restaurantes
+# Digital Tricks Restaurantes
 
-Plataforma completa de gestão para restaurantes, com cardápio digital, carrinho de compras, checkout com pagamento via Mercado Pago, painel administrativo Kanban e notificações em tempo real via WebSocket.
+Plataforma full-stack para restaurantes com cardapio digital, checkout, painel operacional, pagamentos e programa de fidelidade.
 
----
+Este projeto esta sendo preparado para uso open source. A base atual ja cobre fluxo de cliente, operacao do restaurante e integracoes de pagamento, mas ainda existem areas em consolidacao, especialmente testes automatizados e partes do dashboard de fidelidade.
 
-## 🌟 Funcionalidades
+## Visao Geral
 
-- 🛒 **Cardápio digital** com categorias, variações, opcionais e observações
-- 📱 **Carrinho guest** (sem login) com sincronização automática ao logar
-- 💳 **Checkout** com Mercado Pago (PIX, Crédito, Boleto)
-- 🔔 **Notificações em tempo real** via WebSocket para novos pedidos
-- 📋 **Painel Kanban** para gerenciar pedidos (Recebido → Em Preparo → Pronto → Entrega → Entregue)
-- 📊 **Dashboard** com métricas e análises
-- 👥 **Gestão de clientes, produtos, cupons e equipe**
-- 🔐 **Autenticação JWT** para clientes e equipe administrativa
+O sistema foi pensado para operar o ciclo completo de um restaurante digital:
 
----
+- vitrine publica por restaurante
+- cardapio com categorias, variacoes e opcionais
+- carrinho guest e logado
+- checkout com PIX, cartao e pagamento na entrega
+- painel administrativo com pedidos em tempo real
+- gestao de produtos, cupons, clientes e equipe
+- fidelidade com niveis, recompensas e resgate por pontos
 
-## ⚙️ Tecnologias
+## Principais Funcionalidades
 
-| Camada     | Tecnologia                        |
-|------------|-----------------------------------|
-| Backend    | Java 17 / Spring Boot 3           |
-| Frontend   | React 18 + Vite + Tailwind CSS    |
-| Banco      | PostgreSQL                        |
-| Pagamento  | Mercado Pago SDK                  |
-| Real-time  | WebSocket (STOMP)                 |
-| Notificação| WhatsApp (Twilio API) / Toast     |
+### Cliente
 
----
+- cardapio publico por `slug`
+- carrinho persistente
+- checkout com multiplas formas de pagamento
+- historico de pedidos
+- painel do cliente
+- enderecos com CEP e calculo de frete
+- fidelidade e recompensas
 
-## 📂 Estrutura
+### Operacao
 
-```
+- dashboard administrativo
+- kanban de pedidos
+- dashboard TV/cozinha
+- notificacoes em tempo real
+- gestao de produtos, categorias e opcionais
+- gestao de equipe e clientes
+- cupons e ofertas
+- analytics basico
+
+### Integracoes
+
+- Mercado Pago
+- Cloudinary
+- ViaCEP
+- geocoding por endereco
+- WhatsApp / bot flow
+
+## Stack
+
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React 18, Vite, Tailwind CSS |
+| Backend | Java 21, Spring Boot 3.5 |
+| Banco | H2 no desenvolvimento, PostgreSQL suportado |
+| Auth | JWT + Spring Security |
+| Tempo real | WebSocket, STOMP, SockJS |
+| Pagamentos | Mercado Pago |
+
+## Estrutura do Repositorio
+
+```text
 Digital Tricks - Restaurantes/
-├── restaurante/                    # Spring Boot (backend)
-│   └── src/main/java/com/ecommerce/digitaltricks
-│       ├── config/                 # CORS, Security, WebSocket
-│       ├── admin/                  # Gestão empresa/usuarios (back-office)
-│       ├── customer/               # Cliente (auth, perfil, endereços)
-│       ├── product/                # Catálogo (produtos, categorias, opcionais)
-│       ├── order/                  # Pedidos, pagamentos, cupons, analytics
-│       ├── cart/                   # Carrinho (guest + logado)
-│       ├── bot/                    # WhatsApp bot
-│       ├── integration/            # APIs externas (ViaCEP, Nominatim)
-│       ├── shared/                 # Exception, security, validation, util
-│       └── bootstrap/              # Seed de dados iniciais
-├── frontend/                       # React (Vite + Tailwind)
-│   └── src/
-│       ├── components/             # Componentes reutilizáveis
-│       ├── context/                # Providers (Auth, Carrinho, etc.)
-│       ├── hooks/                  # Custom hooks
-│       ├── utils/                  # Utilitários (ACL, helpers, services)
-│       ├── pages/                  # Páginas (Cardápio, Login, etc.)
-│       └── assets/                 # Imagens, sons, estilos
-└── docs/                           # Imagens e documentação
+|-- frontend/      # Aplicacao React + Vite
+|-- restaurante/   # API Spring Boot
+|-- docs/          # Diagramas, mapas e documentacao auxiliar
+`-- README.md
 ```
 
----
-
-## ▶️ Execução
+## Modulos Principais
 
 ### Backend
 
-```bash
-cd restaurante
-mvn clean package
-mvn spring-boot:run
-```
-
-Configure o `application.yml` com as credenciais do banco de dados e chaves de API.
+- `admin/`: empresa, usuarios, dashboard e operacao
+- `customer/`: autenticacao, perfil, enderecos e fidelidade do cliente
+- `product/`: catalogo, categorias, opcionais e promocoes
+- `order/`: pedidos, pagamentos, cupons, analytics e status
+- `cart/`: carrinho guest/logado
+- `bot/`: integracao de mensagens
+- `integration/`: servicos externos
+- `shared/`: seguranca, validacao, exceptions e utilitarios
+- `bootstrap/`: seed de dados iniciais
 
 ### Frontend
+
+- `pages/`: telas principais
+- `components/`: UI reutilizavel
+- `context/`: auth, carrinho e notificacoes
+- `hooks/`: hooks customizados
+- `utils/`: ACL, services e helpers
+
+## Como Rodar Localmente
+
+### Requisitos
+
+- Node.js 18+
+- npm
+- Java 21
+- Maven Wrapper (`./mvnw` ja incluido)
+
+### 1. Backend
+
+Entre na pasta do backend:
+
+```bash
+cd restaurante
+```
+
+Defina ao menos a variavel obrigatoria abaixo:
+
+```bash
+JWT_SECRET=uma-chave-base64-ou-chave-longa-segura
+```
+
+Variaveis opcionais, dependendo do que voce quer testar:
+
+```bash
+MP_ACCESS_TOKEN=
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+MAIL_USERNAME=
+MAIL_PASSWORD=
+WHATSAPP_VERIFY_TOKEN=
+DB_URL=
+DB_DRIVER=
+DB_USERNAME=
+DB_PASSWORD=
+CORS_ALLOWED_ORIGINS=
+SERVER_PORT=
+```
+
+Por padrao, o projeto sobe com H2 em memoria:
+
+```bash
+./mvnw spring-boot:run
+```
+
+API local: `http://localhost:8080`
+
+### 2. Frontend
+
+Entre na pasta do frontend:
 
 ```bash
 cd frontend
 npm install
+```
+
+Opcionalmente, configure variaveis do Vite:
+
+```bash
+VITE_API_URL=http://localhost:8080
+VITE_MERCADO_PAGO_PUBLIC_KEY=
+```
+
+Suba o ambiente de desenvolvimento:
+
+```bash
 npm run dev
 ```
 
-O frontend abre em `http://localhost:5173`.  
-O backend em `http://localhost:8080`.
+Frontend local: `http://localhost:5173`
 
----
+## Scripts Uteis
 
-## 🛒 Fluxo do Carrinho
+### Backend
 
-1. **Guest**: usuário adiciona itens ao carrinho sem login (localStorage)
-2. **Login**: ao logar, itens do localStorage são sincronizados para o backend automaticamente
-3. **Logado**: todo carrinho é gerenciado pelo backend (dados completos)
+```bash
+./mvnw spring-boot:run
+./mvnw -q -DskipTests compile
+./mvnw test
+```
 
----
+### Frontend
 
-## 📋 Painel Kanban
+```bash
+npm run dev
+npm run build
+npm run preview
+```
 
-O painel de pedidos usa drag-and-drop para mover pedidos entre status:
+## Estado Atual do Projeto
 
-| Coluna        | Status                           |
-|---------------|----------------------------------|
-| Recebido      | `AGUARDANDO_PAGAMENTO`, `RECEBIDO` |
-| Preparo       | `EM_PREPARO`, `PRONTO`            |
-| Logística     | `SAIU_PARA_ENTREGA`, `AGUARDANDO_RETIRADA` |
-| Finalizados   | `ENTREGUE`, `RETIRADO`, `CANCELADO` |
+O projeto ja esta utilizavel como produto, mas ainda nao esta totalmente consolidado como base open source.
 
-**Mudança de status:**
-- Transições diretas → realizadas sem confirmação
-- Pular etapas → abre modal mostrando o caminho intermediário
-- O backend registra cada etapa no `PedidoStatusLog`
+### Ja funciona bem
 
----
+- fluxo principal de cardapio, carrinho e pedido
+- painel administrativo de operacao
+- integracao principal com Mercado Pago
+- autenticacao de cliente e equipe
+- fidelidade com niveis, recompensas e resgate em evolucao real
 
-## 🔐 Observações
+### Pontos que ainda precisam de maturacao
 
-- ⚠️ Nunca comite o `.env` ou `application.yml` com credenciais reais
-- 🔑 O token JWT é armazenado no `localStorage`
-- 🔄 O WebSocket conecta automaticamente ao logar no painel admin
+- testes automatizados do backend ainda sao fracos
+- `JWT_SECRET` ainda precisa de melhor tratamento para ambiente de teste
+- parte da configuracao de fidelidade no admin ainda esta sendo consolidada
+- build do frontend ainda tem warnings de bundle grande e alguns assets
 
----
+## Roadmap Curto
 
-## 📬 Contato
+- fortalecer testes de backend
+- fechar persistencia completa da fidelidade no dashboard
+- reduzir acoplamento em servicos centrais de pedido
+- melhorar performance do frontend
+- publicar guia de contribuicao e definir licenca
 
-👨‍💻 **Digital Tricks**  
-🌐 [digitaltricks.com.br](https://digitaltricks.com.br)
+## Contribuindo
+
+Contribuicoes sao bem-vindas.
+
+Se voce quiser colaborar:
+
+1. abra uma issue descrevendo bug, ideia ou melhoria
+2. alinhe o escopo antes de mudancas grandes
+3. envie um pull request com contexto claro
+4. prefira mudancas pequenas e bem isoladas
+
+Ao contribuir:
+
+- nao commite segredos
+- mantenha compatibilidade com o fluxo principal do restaurante
+- documente comportamento novo ou mudanca relevante
+- inclua testes quando fizer sentido
+
+## Observacoes Importantes
+
+- o projeto usa JWT em `localStorage` no frontend atual
+- algumas integracoes dependem de credenciais reais para serem exercitadas por completo
+- o ambiente local pode rodar com H2, mas producao deve usar banco persistente
+
+## Open Source Checklist
+
+Antes da publicacao aberta, ainda vale fechar estes itens:
+
+- adicionar arquivo `LICENSE`
+- adicionar `CONTRIBUTING.md`
+- revisar segredos, seeds e dados demo
+- publicar exemplos de ambiente (`.env.example`)
+- fortalecer a suite minima de testes
+
+## Licenca
+
+Este repositorio ainda precisa de um arquivo de licenca antes da publicacao open source oficial.
+
+## Referencias
+
+- Mapa funcional: `docs/feature-map.excalidraw`
+- Backend principal: `restaurante/`
+- Frontend principal: `frontend/`
