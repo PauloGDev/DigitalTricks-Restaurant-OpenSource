@@ -6,6 +6,7 @@ restaurante/.env
 frontend/node_modules/
 frontend/build/
 frontend/dist/
+frontend/.vite/
 docs/
 
 # Java / Spring Boot
