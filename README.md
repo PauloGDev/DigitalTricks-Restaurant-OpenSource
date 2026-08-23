@@ -4,6 +4,16 @@ Plataforma full-stack para restaurantes com cardapio digital, checkout, painel o
 
 Este projeto esta sendo preparado para uso open source. A base atual ja cobre fluxo de cliente, operacao do restaurante e integracoes de pagamento, mas ainda existem areas em consolidacao, especialmente testes automatizados e partes do dashboard de fidelidade.
 
+## Interface
+
+### Página inicial
+
+![Página inicial da plataforma Geste](docs/home.png)
+
+### Recursos da plataforma
+
+![Cardápio, checkout, Kanban, analytics e atendimento](docs/recursos.png)
+
 ## Visao Geral
 
 O sistema foi pensado para operar o ciclo completo de um restaurante digital:
